@@ -21,6 +21,12 @@ export default function Home() {
           >
             MediaPipe Test →
           </Link>
+          <Link
+            href="/pushup-counter"
+            className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-semibold"
+          >
+            Push Up Counter 🏋️
+          </Link>
         </div>
 
         <div className="text-center text-sm text-muted-foreground">
