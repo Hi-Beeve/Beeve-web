@@ -2,28 +2,20 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { PoseLandmarker, FilesetResolver, DrawingUtils } from '@mediapipe/tasks-vision';
+import { PushupType, PushupState, PushupConfig } from '@/types/pushup';
+import { calculateAngle, startCameraStream, stopCameraStream } from '@/lib/pose-utils';
+import { PUSHUP_CONFIGS } from '@/config/pushup-types';
+import { playPushupCountSound } from '@/lib/sound-effects';
+import { useMeasurementTimer, TimerStatus } from './measurement-timer';
+import { MeasurementUI } from './measurement-ui';
 
-// 각도 계산 함수 (3점 사이의 각도)
-// a-b-c에서 b가 꼭지점
-const calculateAngle = (a: any, b: any, c: any): number => {
-  // 벡터 ba와 bc 계산
-  const ba = { x: a.x - b.x, y: a.y - b.y };
-  const bc = { x: c.x - b.x, y: c.y - b.y };
-  
-  // 내적과 벡터 크기로 각도 계산
-  const dotProduct = ba.x * bc.x + ba.y * bc.y;
-  const magnitudeBA = Math.sqrt(ba.x * ba.x + ba.y * ba.y);
-  const magnitudeBC = Math.sqrt(bc.x * bc.x + bc.y * bc.y);
-  
-  const cosAngle = dotProduct / (magnitudeBA * magnitudeBC);
-  const angle = Math.acos(Math.max(-1, Math.min(1, cosAngle))) * (180 / Math.PI);
-  
-  return angle;
-};
+interface PushupDetectorProps {
+  type: PushupType;
+  onBack?: () => void;
+}
 
-type PushupState = 'ready' | 'down' | 'up';
-
-export function PushupCounter() {
+export function PushupDetector({ type, onBack }: PushupDetectorProps) {
+  const config = PUSHUP_CONFIGS[type];
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [poseLandmarker, setPoseLandmarker] = useState<PoseLandmarker | null>(null);
@@ -35,18 +27,46 @@ export function PushupCounter() {
   const [leftElbowAngle, setLeftElbowAngle] = useState(0);
   const [rightElbowAngle, setRightElbowAngle] = useState(0);
   const [bodyAngle, setBodyAngle] = useState(0);
+  
+  // 타이머 상태
+  const [timerStatus, setTimerStatus] = useState<TimerStatus>('idle');
+  const [preparingTime, setPreparingTime] = useState(10);
+  const [remainingTime, setRemainingTime] = useState(60);
+  
+  // 전신 감지 상태
+  const [isFullBodyDetected, setIsFullBodyDetected] = useState(false);
+  const isFullBodyDetectedRef = useRef(false);
+  const fullBodyLostFramesRef = useRef(0);
+  const FULL_BODY_LOST_THRESHOLD = 30;
+  
+  // 화면 표시 모드
+  const [showSkeleton, setShowSkeleton] = useState(true);
+  
+  // 타이머 hook 사용
+  const { startMeasurement, resetTimer } = useMeasurementTimer({
+    timerStatus,
+    setTimerStatus,
+    preparingTime,
+    setPreparingTime,
+    remainingTime,
+    setRemainingTime,
+    isFullBodyDetected,
+    onTimerComplete: () => setFeedback('측정 완료!'),
+    prepareDuration: 10,
+    measureDuration: 60,
+  });
 
   const stateRef = useRef<PushupState>('ready');
   const downFrameCountRef = useRef(0);
   const upFrameCountRef = useRef(0);
   const downAngleRef = useRef(0); // DOWN 상태일 때의 최소 각도 기록
 
-  // 임계값 (실제 측정된 각도 기준으로 조정)
-  const ELBOW_DOWN_THRESHOLD = 115; // 팔을 구부린 상태 (115도 이하) - 로그 기준 88~112도
-  const ELBOW_UP_THRESHOLD = 155; // 팔을 편 상태 (155도 이상) - 로그 기준 162~164도
-  const BODY_ALIGNMENT_MIN = 120; // 몸통 체크 완화 (120도 이상) - 로그 기준 121~156도
-  const FRAME_THRESHOLD = 3; // 3프레임으로 반응성 향상
-  const ANGLE_CHANGE_MIN = 45; // DOWN->UP 사이 최소 각도 변화량 (88도→162도 = 74도)
+  // 타입별 임계값 (config에서 가져옴)
+  const ELBOW_DOWN_THRESHOLD = config.thresholds.elbowDown;
+  const ELBOW_UP_THRESHOLD = config.thresholds.elbowUp;
+  const BODY_ALIGNMENT_MIN = config.thresholds.bodyAlignment;
+  const FRAME_THRESHOLD = config.thresholds.frameThreshold;
+  const ANGLE_CHANGE_MIN = config.thresholds.angleChangeMin;
 
   // Ensure component is mounted on client side
   useEffect(() => {
@@ -86,24 +106,26 @@ export function PushupCounter() {
 
   // 카메라 시작
   const startCamera = async () => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined' || !videoRef.current) return;
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'user', width: 640, height: 480 }
-      });
-      
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        videoRef.current.onloadedmetadata = () => {
-          videoRef.current?.play();
-          detectPose();
-        };
-      }
+      await startCameraStream(videoRef.current);
+      detectPose();
     } catch (error) {
       console.error('카메라 접근 실패:', error);
       setFeedback('카메라 권한이 필요합니다');
     }
+  };
+
+  // 측정 시작 핸들러
+  const handleStartMeasurement = () => {
+    setCount(0);
+    setState('ready');
+    stateRef.current = 'ready';
+    downFrameCountRef.current = 0;
+    upFrameCountRef.current = 0;
+    downAngleRef.current = 0;
+    startMeasurement();
   };
 
   // 푸시업 인식 및 카운팅
@@ -159,6 +181,32 @@ export function PushupCounter() {
         const rightHip = landmarks[24];
         const leftKnee = landmarks[25];
         const rightKnee = landmarks[26];
+        const leftAnkle = landmarks[27];
+        const rightAnkle = landmarks[28];
+
+        // 전신 감지 체크 (어깨, 엉덩이, 무릎, 발목의 visibility 확인)
+        const keyPoints = [
+          leftShoulder, rightShoulder,
+          leftHip, rightHip,
+          leftKnee, rightKnee,
+          leftAnkle, rightAnkle
+        ];
+        
+        const allPointsVisible = keyPoints.every(point => 
+          point.visibility !== undefined && point.visibility > 0.5
+        );
+        
+        if (allPointsVisible) {
+          fullBodyLostFramesRef.current = 0;
+          setIsFullBodyDetected(true);
+          isFullBodyDetectedRef.current = true;
+        } else {
+          fullBodyLostFramesRef.current++;
+          if (fullBodyLostFramesRef.current > FULL_BODY_LOST_THRESHOLD) {
+            setIsFullBodyDetected(false);
+            isFullBodyDetectedRef.current = false;
+          }
+        }
 
         // 각도 계산 (양쪽 팔)
         const currentLeftElbowAngle = calculateAngle(leftShoulder, leftElbow, leftWrist);
@@ -192,73 +240,86 @@ export function PushupCounter() {
         let newFeedback = '';
         let newState = stateRef.current;
 
-        // 푸시업 로직 (개선된 정확도)
+        // 푸시업 로직 (측정 중일 때만 카운팅)
         
-        // DOWN 감지: 팔꿈치가 100도 이하 (팔을 구부림)
-        if (avgElbowAngle < ELBOW_DOWN_THRESHOLD) {
-          downFrameCountRef.current++;
-          upFrameCountRef.current = 0;
-          
-          // DOWN 상태에서 최소 각도 기록
-          if (stateRef.current === 'down') {
-            downAngleRef.current = Math.min(downAngleRef.current, avgElbowAngle);
-          }
-          
-          if (downFrameCountRef.current >= FRAME_THRESHOLD && stateRef.current !== 'down') {
-            newState = 'down';
-            downAngleRef.current = avgElbowAngle; // 초기 DOWN 각도 기록
-            newFeedback = '💪 좋아요! 이제 올라오세요';
-            console.log('✅ DOWN 상태 전환! 각도:', avgElbowAngle.toFixed(1));
-          } else if (stateRef.current === 'down') {
-            newFeedback = '💪 좋아요! 이제 올라오세요';
-          } else {
-            newFeedback = `더 내려가세요 (${avgElbowAngle.toFixed(0)}°)`;
-          }
-        } 
-        // UP 감지: DOWN 상태에서 팔꿈치가 150도 이상 + 충분한 각도 변화
-        else if (avgElbowAngle > ELBOW_UP_THRESHOLD && stateRef.current === 'down') {
-          const angleChange = avgElbowAngle - downAngleRef.current;
-          upFrameCountRef.current++;
-          downFrameCountRef.current = 0;
-          
-          // 충분한 각도 변화가 있어야 UP 인정
-          if (upFrameCountRef.current >= FRAME_THRESHOLD && angleChange >= ANGLE_CHANGE_MIN) {
-            newState = 'up';
-            setCount(prev => prev + 1);
-            newFeedback = '🎉 완벽합니다!';
-            console.log(`✅ UP 완료! 각도 변화: ${downAngleRef.current.toFixed(1)}° → ${avgElbowAngle.toFixed(1)}° (${angleChange.toFixed(1)}°)`);
-            downFrameCountRef.current = 0;
+        // 측정 중일 때만 카운팅 (전신이 감지될 때만)
+        if (timerStatus === 'measuring' && isFullBodyDetected) {
+          // DOWN 감지: 팔꿈치가 임계값 이하 (팔을 구부림)
+          if (avgElbowAngle < ELBOW_DOWN_THRESHOLD) {
+            downFrameCountRef.current++;
             upFrameCountRef.current = 0;
-            downAngleRef.current = 0;
             
-            // UP 상태는 즉시 ready로 전환
-            setTimeout(() => {
-              stateRef.current = 'ready';
-              setState('ready');
-            }, 500);
-          } else if (angleChange < ANGLE_CHANGE_MIN) {
-            newFeedback = `각도 변화 부족 (${angleChange.toFixed(0)}° / ${ANGLE_CHANGE_MIN}° 필요)`;
-          } else {
-            newFeedback = `계속 올라오세요 (${avgElbowAngle.toFixed(0)}°)`;
-          }
-        } 
-        // 중간 각도 (100도 ~ 150도)
-        else {
-          // DOWN 상태가 아니면 프레임 카운터 리셋
-          if (stateRef.current !== 'down') {
-            downFrameCountRef.current = 0;
-          }
-          upFrameCountRef.current = 0;
-          
-          if (stateRef.current === 'ready' || stateRef.current === 'up') {
-            if (!isBodyStraight) {
-              newFeedback = '⚠️ 몸을 일직선으로 유지하세요';
-            } else {
-              newFeedback = '푸시업 자세를 취하세요';
+            // DOWN 상태에서 최소 각도 기록
+            if (stateRef.current === 'down') {
+              downAngleRef.current = Math.min(downAngleRef.current, avgElbowAngle);
             }
-          } else if (stateRef.current === 'down') {
-            newFeedback = `계속 올라오세요 (${avgElbowAngle.toFixed(0)}°)`;
+            
+            if (downFrameCountRef.current >= FRAME_THRESHOLD && stateRef.current !== 'down') {
+              newState = 'down';
+              downAngleRef.current = avgElbowAngle; // 초기 DOWN 각도 기록
+              newFeedback = '💪 좋아요! 이제 올라오세요';
+              console.log('✅ DOWN 상태 전환! 각도:', avgElbowAngle.toFixed(1));
+            } else if (stateRef.current === 'down') {
+              newFeedback = '💪 좋아요! 이제 올라오세요';
+            } else {
+              newFeedback = `더 내려가세요 (${avgElbowAngle.toFixed(0)}°)`;
+            }
+          } 
+          // UP 감지: DOWN 상태에서 팔꿈치가 임계값 이상 + 충분한 각도 변화
+          else if (avgElbowAngle > ELBOW_UP_THRESHOLD && stateRef.current === 'down') {
+            const angleChange = avgElbowAngle - downAngleRef.current;
+            upFrameCountRef.current++;
+            downFrameCountRef.current = 0;
+            
+            // 충분한 각도 변화가 있어야 UP 인정
+            if (upFrameCountRef.current >= FRAME_THRESHOLD && angleChange >= ANGLE_CHANGE_MIN) {
+              newState = 'up';
+              setCount(prev => prev + 1);
+              playPushupCountSound(); // 푸시업 카운트 효과음
+              newFeedback = '🎉 완벽합니다!';
+              console.log(`✅ UP 완료! 각도 변화: ${downAngleRef.current.toFixed(1)}° → ${avgElbowAngle.toFixed(1)}° (${angleChange.toFixed(1)}°)`);
+              downFrameCountRef.current = 0;
+              upFrameCountRef.current = 0;
+              downAngleRef.current = 0;
+              
+              // UP 상태는 즉시 ready로 전환
+              setTimeout(() => {
+                stateRef.current = 'ready';
+                setState('ready');
+              }, 500);
+            } else if (angleChange < ANGLE_CHANGE_MIN) {
+              newFeedback = `각도 변화 부족 (${angleChange.toFixed(0)}° / ${ANGLE_CHANGE_MIN}° 필요)`;
+            } else {
+              newFeedback = `계속 올라오세요 (${avgElbowAngle.toFixed(0)}°)`;
+            }
+          } 
+          // 중간 각도
+          else {
+            // DOWN 상태가 아니면 프레임 카운터 리셋
+            if (stateRef.current !== 'down') {
+              downFrameCountRef.current = 0;
+            }
+            upFrameCountRef.current = 0;
+            
+            if (stateRef.current === 'ready' || stateRef.current === 'up') {
+              if (!isBodyStraight) {
+                newFeedback = '⚠️ 몸을 일직선으로 유지하세요';
+              } else {
+                newFeedback = '푸시업 자세를 취하세요';
+              }
+            } else if (stateRef.current === 'down') {
+              newFeedback = `계속 올라오세요 (${avgElbowAngle.toFixed(0)}°)`;
+            }
           }
+        } else if (timerStatus === 'measuring' && !isFullBodyDetected) {
+          // 전신 미감지시에는 피드백 표시 안함 (화면 상단 경고 배너로 충분)
+          newFeedback = '';
+        } else if (timerStatus === 'preparing') {
+          newFeedback = '준비 중...';
+        } else if (timerStatus === 'finished') {
+          newFeedback = '측정 완료!';
+        } else {
+          newFeedback = '측정 시작 버튼을 눌러주세요';
         }
 
         if (newState !== stateRef.current) {
@@ -302,6 +363,9 @@ export function PushupCounter() {
 
       } else {
         setFeedback('몸 전체가 화면에 보이도록 해주세요 (옆모습)');
+        setIsFullBodyDetected(false);
+        isFullBodyDetectedRef.current = false;
+        fullBodyLostFramesRef.current = FULL_BODY_LOST_THRESHOLD + 1;
       }
 
       requestAnimationFrame(detect);
@@ -310,7 +374,7 @@ export function PushupCounter() {
     detect();
   };
 
-  const resetCounter = () => {
+  const handleReset = () => {
     setCount(0);
     setState('ready');
     stateRef.current = 'ready';
@@ -318,6 +382,7 @@ export function PushupCounter() {
     downFrameCountRef.current = 0;
     upFrameCountRef.current = 0;
     downAngleRef.current = 0;
+    resetTimer();
   };
 
   if (!isMounted) {
@@ -329,79 +394,54 @@ export function PushupCounter() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white p-4">
-      <h1 className="text-3xl font-bold mb-4">Push Up Counter 🏋️</h1>
-      
+    <div className="flex flex-col h-screen bg-gray-900 text-white">
       {isLoading ? (
-        <div className="text-xl">MediaPipe 로딩 중...</div>
+        <div className="flex items-center justify-center flex-1">
+          <div className="text-xl">MediaPipe 로딩 중...</div>
+        </div>
       ) : (
-        <>
-          <div className="relative mb-4 border-4 border-blue-500 rounded-lg overflow-hidden">
-            <video
-              ref={videoRef}
-              className="block"
-              style={{ transform: 'scaleX(-1)' }}
-              width={640}
-              height={480}
-            />
-            <canvas
-              ref={canvasRef}
-              className="absolute top-0 left-0"
-              style={{ transform: 'scaleX(-1)' }}
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4 mb-4 w-full max-w-2xl">
-            <div className="bg-gray-800 p-4 rounded-lg text-center">
-              <div className="text-5xl font-bold text-blue-400">{count}</div>
-              <div className="text-lg text-gray-300 mt-2">푸시업 횟수</div>
+        <MeasurementUI
+          videoRef={videoRef}
+          canvasRef={canvasRef}
+          showSkeleton={showSkeleton}
+          setShowSkeleton={setShowSkeleton}
+          timerStatus={timerStatus}
+          preparingTime={preparingTime}
+          remainingTime={remainingTime}
+          count={count}
+          isFullBodyDetected={isFullBodyDetected}
+          feedback={feedback}
+          state={state}
+          additionalInfo={
+            <div className="bg-gray-800 p-4 rounded-lg mb-4">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm text-gray-400">팔꿈치 각도</span>
+                <span className="text-2xl font-bold text-green-400">{Math.round((leftElbowAngle + rightElbowAngle) / 2)}°</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-400">몸통 각도</span>
+                <span className="text-2xl font-bold text-yellow-400">{Math.round(bodyAngle)}°</span>
+              </div>
             </div>
-            
+          }
+          instructions={
             <div className="bg-gray-800 p-4 rounded-lg">
-              <div className="text-sm text-gray-400 mb-1">왼쪽 팔꿈치</div>
-              <div className="text-2xl font-bold text-green-400">{leftElbowAngle.toFixed(0)}°</div>
-              <div className="text-sm text-gray-400 mt-2">오른쪽 팔꿈치</div>
-              <div className="text-2xl font-bold text-green-400">{rightElbowAngle.toFixed(0)}°</div>
-              <div className="text-sm text-gray-400 mt-2">몸통 각도</div>
-              <div className="text-2xl font-bold text-yellow-400">{bodyAngle.toFixed(0)}°</div>
+              <div className="font-semibold text-white mb-2">💡 사용 방법:</div>
+              <ul className="list-disc list-inside space-y-1 text-sm text-gray-400">
+                <li><strong className="text-white">옆모습</strong>이 보이도록 카메라를 설치하세요</li>
+                <li>팔꿈치 각도가 <strong className="text-white">{ELBOW_DOWN_THRESHOLD}도 이하</strong>로 내려가면 DOWN</li>
+                <li>팔꿈치 각도가 <strong className="text-white">{ELBOW_UP_THRESHOLD}도 이상</strong>으로 올라가면 카운트!</li>
+                <li>{config.description}</li>
+              </ul>
             </div>
-          </div>
-
-          <div className="bg-gray-800 p-4 rounded-lg shadow-lg text-center w-full max-w-2xl mb-4">
-            <div className="text-xl font-semibold text-yellow-300">{feedback}</div>
-            <div className="text-sm text-gray-400 mt-2">
-              상태: <span className="text-blue-300 font-semibold">{state.toUpperCase()}</span>
-            </div>
-          </div>
-
-          <div className="flex gap-4">
-            {!videoRef.current?.srcObject ? (
-              <button
-                onClick={startCamera}
-                className="px-8 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-semibold transition text-lg"
-              >
-                📹 카메라 시작
-              </button>
-            ) : (
-              <button
-                onClick={resetCounter}
-                className="px-8 py-3 bg-red-600 hover:bg-red-700 rounded-lg font-semibold transition text-lg"
-              >
-                🔄 리셋
-              </button>
-            )}
-          </div>
-
-          <div className="mt-6 text-sm text-gray-400 max-w-2xl bg-gray-800 p-4 rounded-lg">
-            <div className="font-semibold text-white mb-2">💡 사용 방법:</div>
-            <ul className="list-disc list-inside space-y-1">
-              <li><strong>옆모습</strong>이 보이도록 카메라를 설치하세요</li>
-              <li>팔꿈치 각도가 <strong>90도 이하</strong>로 내려가면 DOWN</li>
-              <li>팔꿈치 각도가 <strong>160도 이상</strong>으로 올라가면 카운트!</li>
-              <li>몸통은 <strong>일직선</strong>을 유지해야 정확하게 측정됩니다</li>
-            </ul>
-          </div>
-        </>
+          }
+          onStartCamera={startCamera}
+          onStartMeasurement={handleStartMeasurement}
+          onStopMeasurement={handleReset}
+          onReset={handleReset}
+          countLabel="푸시업 개수"
+          timeLabel="남은 시간"
+        />
       )}
     </div>
   );
