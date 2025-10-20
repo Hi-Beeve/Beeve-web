@@ -180,16 +180,18 @@ export function SitupDetector({ onBack }: SitupDetectorProps) {
         const leftAnkle = landmarks[27];
         const rightAnkle = landmarks[28];
 
-        // 전신 감지 체크 (측면 촬영용 - 한쪽만 보이므로 더 유연하게)
-        // 어깨, 엉덩이, 무릎 중 적어도 한쪽씩은 보여야 함
-        const leftSideVisible = leftShoulder.visibility > 0.5 && leftHip.visibility > 0.5 && leftKnee.visibility > 0.5;
-        const rightSideVisible = rightShoulder.visibility > 0.5 && rightHip.visibility > 0.5 && rightKnee.visibility > 0.5;
+        // 전신 감지 체크
+        const keyPoints = [
+          leftShoulder, rightShoulder,
+          leftElbow, rightElbow,
+          leftHip, rightHip,
+          leftKnee, rightKnee,
+          leftAnkle, rightAnkle
+        ];
         
-        // 측면에서는 한쪽 팔꿈치라도 잘 보이면 OK
-        const elbowVisible = leftElbow.visibility > 0.5 || rightElbow.visibility > 0.5;
-        
-        // 한쪽 전체가 보이고 팔꿈치가 보이면 전신 감지로 간주
-        const allPointsVisible = (leftSideVisible || rightSideVisible) && elbowVisible;
+        const allPointsVisible = keyPoints.every(point => 
+          point.visibility !== undefined && point.visibility > 0.5
+        );
         
         if (allPointsVisible) {
           fullBodyLostFramesRef.current = 0;
@@ -203,7 +205,7 @@ export function SitupDetector({ onBack }: SitupDetectorProps) {
           }
         }
 
-        // 상체 각도 계산 (옆에서 측정 - 어깨-엉덩이-무릎 각도)
+        // 상체 각도 계산 (어깨-엉덩이-무릎)
         const shoulder = {
           x: (leftShoulder.x + rightShoulder.x) / 2,
           y: (leftShoulder.y + rightShoulder.y) / 2
@@ -217,54 +219,31 @@ export function SitupDetector({ onBack }: SitupDetectorProps) {
           y: (leftKnee.y + rightKnee.y) / 2
         };
 
-        // 옆에서 측정: 어깨-엉덩이-무릎 각도로 상체가 올라온 정도 측정
         const currentBodyAngle = calculateAngle(shoulder, hip, knee);
         setBodyAngle(currentBodyAngle);
 
-        // 팔꿈치 높이 변화로 터치 여부 판단 (측면 촬영 - 보이는 쪽 우선 사용)
-        let elbowY, kneeY;
-        
-        // 더 잘 보이는 쪽의 팔꿈치와 무릎 사용
-        if (leftElbow.visibility > rightElbow.visibility) {
-          elbowY = leftElbow.y;
-          kneeY = leftKnee.y;
-        } else {
-          elbowY = rightElbow.y;
-          kneeY = rightKnee.y;
-        }
-        
-        // 팔꿈치와 무릎 사이의 실제 거리 계산 (Y축 거리)
-        const elbowKneeDistance = Math.abs(elbowY - kneeY) * canvas.height;
-        const isElbowNearKnee = elbowKneeDistance < KNEE_ELBOW_DISTANCE_THRESHOLD; // 거리 기반 판단
-        setKneeElbowDistance(elbowKneeDistance);
+        // 팔꿈치와 무릎 사이의 거리 계산 (가장 가까운 거리)
+        const leftDistance = calculateDistance(leftElbow, leftKnee) * canvas.width;
+        const rightDistance = calculateDistance(rightElbow, rightKnee) * canvas.width;
+        const minDistance = Math.min(leftDistance, rightDistance);
+        setKneeElbowDistance(minDistance);
 
-        // 측면 자세 체크 (어깨 간격으로 판단)
-        const shoulderDistance = Math.abs(leftShoulder.x - rightShoulder.x);
-        const isSideView = shoulderDistance < 0.1; // 어깨가 겹쳐 보이면 측면
-
-        // 디버깅 로그 (더 자주 출력)
-        if (Math.random() < 0.3) {
+        // 디버깅 로그
+        if (Math.random() < 0.1) {
           console.log('=== 싯업 디버깅 ===');
-          console.log('상체 각도:', currentBodyAngle.toFixed(1), '/ 임계값:', BODY_ANGLE_THRESHOLD);
-          console.log('팔꿈치-무릎 거리:', elbowKneeDistance.toFixed(1), '/ 임계값:', KNEE_ELBOW_DISTANCE_THRESHOLD);
-          console.log('팔꿈치 근처 여부:', isElbowNearKnee);
-          console.log('어깨 간격:', shoulderDistance.toFixed(3), '/ 측면 자세:', isSideView);
+          console.log('상체 각도:', currentBodyAngle.toFixed(1));
+          console.log('팔꿈치-무릎 거리:', minDistance.toFixed(1));
           console.log('현재 상태:', stateRef.current);
           console.log('DOWN 프레임:', downFrameCountRef.current, '/ UP 프레임:', upFrameCountRef.current);
-          console.log('사용 중인 팔꿈치:', leftElbow.visibility > rightElbow.visibility ? 'LEFT' : 'RIGHT');
         }
 
         let newFeedback = '';
         let newState = stateRef.current;
-        
-        // 싯업 로직 (측정 중일 때만 카운팅) - 옆에서 측정
+
+        // 싯업 로직 (측정 중일 때만 카운팅)
         if (timerStatus === 'measuring' && isFullBodyDetected) {
-          // 측면 자세가 아니면 경고
-          if (!isSideView) {
-            newFeedback = '⚠️ 측면으로 누워주세요! (옆모습이 보이도록)';
-          }
-          // UP 감지: 팔꿈치가 무릎 근처에 있고 + 상체 각도가 충분히 올라옴
-          else if (isElbowNearKnee && currentBodyAngle < BODY_ANGLE_THRESHOLD) {
+          // UP 감지: 팔꿈치가 무릎에 가까워짐 + 상체 각도 증가
+          if (minDistance < KNEE_ELBOW_DISTANCE_THRESHOLD && currentBodyAngle > BODY_ANGLE_THRESHOLD) {
             upFrameCountRef.current++;
             downFrameCountRef.current = 0;
             
@@ -273,7 +252,7 @@ export function SitupDetector({ onBack }: SitupDetectorProps) {
               setCount(prev => prev + 1);
               playPushupCountSound(); // 싯업 카운트 효과음
               newFeedback = '🎉 완벽합니다!';
-              console.log('✅ UP 완료! 각도:', currentBodyAngle.toFixed(1), '팔꿈치 근처:', isElbowNearKnee);
+              console.log('✅ UP 완료! 각도:', currentBodyAngle.toFixed(1), '거리:', minDistance.toFixed(1));
               downFrameCountRef.current = 0;
               upFrameCountRef.current = 0;
               
@@ -285,11 +264,11 @@ export function SitupDetector({ onBack }: SitupDetectorProps) {
             } else if (stateRef.current === 'up') {
               newFeedback = '🎉 완벽합니다!';
             } else {
-              newFeedback = `계속 올라오세요! (각도: ${currentBodyAngle.toFixed(0)}°)`;
+              newFeedback = '계속 올라오세요!';
             }
           } 
-          // DOWN 감지: 누워있는 상태 (상체 각도가 높음 - 120~130도)
-          else if (currentBodyAngle > 110) {
+          // DOWN 감지: 누워있는 상태 (상체 각도 낮음)
+          else if (currentBodyAngle < BODY_ANGLE_THRESHOLD) {
             downFrameCountRef.current++;
             upFrameCountRef.current = 0;
             
@@ -300,7 +279,7 @@ export function SitupDetector({ onBack }: SitupDetectorProps) {
             } else if (stateRef.current === 'down') {
               newFeedback = '💪 좋아요! 이제 올라오세요';
             } else {
-              newFeedback = `누워서 준비하세요 (각도: ${currentBodyAngle.toFixed(0)}°)`;
+              newFeedback = '누워서 준비하세요';
             }
           }
           // 중간 상태
@@ -311,9 +290,9 @@ export function SitupDetector({ onBack }: SitupDetectorProps) {
             upFrameCountRef.current = 0;
             
             if (stateRef.current === 'ready' || stateRef.current === 'up') {
-              newFeedback = `싯업 자세를 취하세요 (각도: ${currentBodyAngle.toFixed(0)}°)`;
+              newFeedback = '싯업 자세를 취하세요';
             } else if (stateRef.current === 'down') {
-              newFeedback = `팔꿈치를 무릎에 터치하세요 (거리: ${elbowKneeDistance.toFixed(0)})`;
+              newFeedback = `팔꿈치를 무릎에 터치하세요`;
             }
           }
         } else if (timerStatus === 'measuring' && !isFullBodyDetected) {
@@ -342,7 +321,7 @@ export function SitupDetector({ onBack }: SitupDetectorProps) {
         ctx.strokeText(angleText, 10, 30);
         ctx.fillText(angleText, 10, 30);
 
-        const distanceText = `팔꿈치-무릎 거리: ${elbowKneeDistance.toFixed(0)}px`;
+        const distanceText = `팔꿈치-무릎 거리: ${minDistance.toFixed(0)}px`;
         ctx.strokeText(distanceText, 10, 60);
         ctx.fillText(distanceText, 10, 60);
 
@@ -416,12 +395,10 @@ export function SitupDetector({ onBack }: SitupDetectorProps) {
             <div className="bg-gray-800 p-4 rounded-lg">
               <div className="font-semibold text-white mb-2">💡 사용 방법:</div>
               <ul className="list-disc list-inside space-y-1 text-sm text-gray-400">
-                <li><strong className="text-white">옆모습</strong>이 보이도록 카메라를 옆에 설치하세요</li>
-                <li><strong className="text-white">측정 시작 전</strong> 양손을 뻗어 전신을 인식시키세요</li>
-                <li><strong className="text-white">바닥에 누워서</strong> 무릎을 세우고 시작하세요</li>
-                <li>상체를 올려 <strong className="text-white">팔꿈치가 무릎에 닿도록</strong> 하세요</li>
-                <li>한쪽 팔다리만 보여도 측정 가능합니다</li>
-                <li>상체 각도 <strong className="text-white">{BODY_ANGLE_THRESHOLD}도 이하</strong> + 팔꿈치-무릎 거리 <strong className="text-white">{KNEE_ELBOW_DISTANCE_THRESHOLD}px 이하</strong>면 카운트!</li>
+                <li><strong className="text-white">정면</strong>이 보이도록 카메라를 설치하세요</li>
+                <li>무릎을 세우고 누워서 <strong className="text-white">팔꿈치가 무릎에 닿도록</strong> 상체를 올리세요</li>
+                <li>상체 각도가 <strong className="text-white">{BODY_ANGLE_THRESHOLD}도 이상</strong>이고 팔꿈치가 무릎에 가까워지면 카운트!</li>
+                <li>{config.description}</li>
               </ul>
             </div>
           }
