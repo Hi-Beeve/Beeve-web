@@ -5,8 +5,8 @@ import { TimerStatus } from './measurement-timer';
 
 interface MeasurementUIProps {
   // 카메라 관련
-  videoRef: React.RefObject<HTMLVideoElement>;
-  canvasRef: React.RefObject<HTMLCanvasElement>;
+  videoRef: React.RefObject<HTMLVideoElement | null>;
+  canvasRef: React.RefObject<HTMLCanvasElement | null>;
   showSkeleton: boolean;
   setShowSkeleton: (show: boolean) => void;
   
