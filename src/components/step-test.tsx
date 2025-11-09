@@ -55,13 +55,17 @@ export function StepTest({ onBack }: StepTestProps) {
   const handlePreHeartRateComplete = (heartRate: number) => {
     setPreHeartRate(heartRate);
     setPhase('pre-exercise-rest');
-    startTimer(30, () => {
-      setPhase('exercise');
-      startTimer(180, () => {
-        setPhase('post-rest');
-        startTimer(60, handlePostRestComplete); // 1분 휴식 후 자동으로 심박수 측정
-      }); // 3분 운동
-    }); // 30초 휴식
+    startTimer(30, handlePreExerciseRestComplete); // 30초 휴식
+  };
+
+  const handlePreExerciseRestComplete = () => {
+    setPhase('exercise');
+    startTimer(180, handleExerciseComplete); // 3분 운동
+  };
+
+  const handleExerciseComplete = () => {
+    setPhase('post-rest');
+    startTimer(60, handlePostRestComplete); // 1분 휴식
   };
 
   const handlePostRestComplete = () => {

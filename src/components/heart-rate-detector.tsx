@@ -14,6 +14,8 @@ export function HeartRateDetector({ title, instruction, onComplete, onCancel }: 
   const [progress, setProgress] = useState(0);
   const [currentBPM, setCurrentBPM] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [showResult, setShowResult] = useState(false);
+  const [finalBPM, setFinalBPM] = useState(0);
   
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -134,10 +136,18 @@ export function HeartRateDetector({ title, instruction, onComplete, onCancel }: 
       } else {
         // 측정 완료
         console.log(`Measurement complete. Total samples: ${measurementRef.current.samples.length}`);
-        const finalBPM = calculateFinalHeartRate();
-        console.log(`Final BPM: ${finalBPM}`);
+        const calculatedBPM = calculateFinalHeartRate();
+        console.log(`Final BPM: ${calculatedBPM}`);
+        
         setIsDetecting(false);
-        onComplete(finalBPM);
+        setFinalBPM(calculatedBPM);
+        setShowResult(true);
+        
+        // 3초 후 다음 단계로 이동
+        setTimeout(() => {
+          setShowResult(false);
+          onComplete(calculatedBPM);
+        }, 3000);
       }
     };
     
@@ -294,6 +304,8 @@ export function HeartRateDetector({ title, instruction, onComplete, onCancel }: 
     setIsDetecting(false);
     setProgress(0);
     setCurrentBPM(0);
+    setShowResult(false);
+    setFinalBPM(0);
     
     if (animationRef.current) {
       cancelAnimationFrame(animationRef.current);
@@ -344,7 +356,17 @@ export function HeartRateDetector({ title, instruction, onComplete, onCancel }: 
         />
       </div>
 
-      {isDetecting ? (
+      {showResult ? (
+        <div className="text-center">
+          <div className="text-lg mb-4 text-green-400">측정 완료!</div>
+          <div className="text-5xl font-bold text-red-400 mb-4">
+            {finalBPM} BPM
+          </div>
+          <div className="text-sm text-gray-400">
+            잠시 후 다음 단계로 이동합니다...
+          </div>
+        </div>
+      ) : isDetecting ? (
         <div>
           <div className="text-lg mb-2">측정 중... {Math.round(progress)}%</div>
           {currentBPM > 0 && (
