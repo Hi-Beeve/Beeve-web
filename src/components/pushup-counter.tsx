@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { PoseLandmarker, FilesetResolver, DrawingUtils } from '@mediapipe/tasks-vision';
+import { PoseLandmarker, FilesetResolver } from '@mediapipe/tasks-vision';
 import { PushupType, PushupState, PushupConfig } from '@/types/pushup';
 import { calculateAngle, startCameraStream, stopCameraStream } from '@/lib/pose-utils';
 import { PUSHUP_CONFIGS } from '@/config/pushup-types';
@@ -17,7 +17,6 @@ interface PushupDetectorProps {
 export function PushupDetector({ type, onBack }: PushupDetectorProps) {
   const config = PUSHUP_CONFIGS[type];
   const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const [poseLandmarker, setPoseLandmarker] = useState<PoseLandmarker | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isMounted, setIsMounted] = useState(false);
@@ -38,9 +37,6 @@ export function PushupDetector({ type, onBack }: PushupDetectorProps) {
   const isFullBodyDetectedRef = useRef(false);
   const fullBodyLostFramesRef = useRef(0);
   const FULL_BODY_LOST_THRESHOLD = 30;
-  
-  // 화면 표시 모드
-  const [showSkeleton, setShowSkeleton] = useState(true);
   
   // 타이머 hook 사용
   const { startMeasurement, resetTimer } = useMeasurementTimer({
@@ -128,18 +124,11 @@ export function PushupDetector({ type, onBack }: PushupDetectorProps) {
     startMeasurement();
   };
 
-  // 푸시업 인식 및 카운팅
+  // 푸시업 인식 및 카운팅 (백그라운드 분석만)
   const detectPose = () => {
-    if (!videoRef.current || !canvasRef.current || !poseLandmarker) return;
+    if (!videoRef.current || !poseLandmarker) return;
 
     const video = videoRef.current;
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-
     let lastVideoTime = -1;
 
     const detect = async () => {
@@ -151,24 +140,8 @@ export function PushupDetector({ type, onBack }: PushupDetectorProps) {
 
       const results = poseLandmarker.detectForVideo(video, performance.now());
 
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
       if (results.landmarks && results.landmarks.length > 0) {
         const landmarks = results.landmarks[0];
-
-        // 골격 그리기
-        const drawingUtils = new DrawingUtils(ctx);
-        drawingUtils.drawLandmarks(landmarks, {
-          radius: (data: any) => {
-            // 주요 포인트는 크게
-            if ([11, 13, 15, 23].includes(data.index)) return 6;
-            return 2;
-          },
-        });
-        drawingUtils.drawConnectors(
-          landmarks,
-          PoseLandmarker.POSE_CONNECTIONS
-        );
 
         // 주요 포인트 추출 (양쪽 팔 모두)
         const leftShoulder = landmarks[11];
@@ -328,39 +301,6 @@ export function PushupDetector({ type, onBack }: PushupDetectorProps) {
         }
         setFeedback(newFeedback);
 
-        // 각도 표시 (더 상세하게)
-        ctx.fillStyle = '#FFFFFF';
-        ctx.font = 'bold 18px Arial';
-        ctx.strokeStyle = '#000000';
-        ctx.lineWidth = 4;
-        
-        const angleText = `팔꿈치: L ${currentLeftElbowAngle.toFixed(0)}° | R ${currentRightElbowAngle.toFixed(0)}° | Avg ${avgElbowAngle.toFixed(0)}°`;
-        ctx.strokeText(angleText, 10, 30);
-        ctx.fillText(angleText, 10, 30);
-
-        const bodyText = `몸통: ${currentBodyAngle.toFixed(0)}° | 상태: ${stateRef.current.toUpperCase()}`;
-        ctx.strokeText(bodyText, 10, 60);
-        ctx.fillText(bodyText, 10, 60);
-
-        // 프레임 카운터 표시
-        const frameText = `DOWN: ${downFrameCountRef.current}/${FRAME_THRESHOLD} | UP: ${upFrameCountRef.current}/${FRAME_THRESHOLD}`;
-        ctx.strokeText(frameText, 10, 90);
-        ctx.fillText(frameText, 10, 90);
-
-        // 상태 표시 (색상으로 구분)
-        const stateColor = isBodyStraight ? '#00FF00' : '#FF6600';
-        ctx.fillStyle = stateColor;
-        ctx.strokeStyle = '#000000';
-        const stateText = `자세: ${isBodyStraight ? '좋음 ✓' : '교정 필요'} (${BODY_ALIGNMENT_MIN}° 필요)`;
-        ctx.strokeText(stateText, 10, 120);
-        ctx.fillText(stateText, 10, 120);
-
-        // 임계값 가이드 (색상으로 현재 상태 표시)
-        ctx.fillStyle = avgElbowAngle < ELBOW_DOWN_THRESHOLD ? '#FF0000' : avgElbowAngle > ELBOW_UP_THRESHOLD ? '#00FF00' : '#FFFF00';
-        const thresholdText = `목표: 구부림 < ${ELBOW_DOWN_THRESHOLD}° | 펴기 > ${ELBOW_UP_THRESHOLD}°`;
-        ctx.strokeText(thresholdText, 10, 150);
-        ctx.fillText(thresholdText, 10, 150);
-
       } else {
         setFeedback('몸 전체가 화면에 보이도록 해주세요 (옆모습)');
         setIsFullBodyDetected(false);
@@ -402,9 +342,6 @@ export function PushupDetector({ type, onBack }: PushupDetectorProps) {
       ) : (
         <MeasurementUI
           videoRef={videoRef}
-          canvasRef={canvasRef}
-          showSkeleton={showSkeleton}
-          setShowSkeleton={setShowSkeleton}
           timerStatus={timerStatus}
           preparingTime={preparingTime}
           remainingTime={remainingTime}

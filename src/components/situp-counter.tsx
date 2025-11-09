@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { PoseLandmarker, FilesetResolver, DrawingUtils } from '@mediapipe/tasks-vision';
+import { PoseLandmarker, FilesetResolver } from '@mediapipe/tasks-vision';
 import { SitupState, SitupConfig, SITUP_CONFIG } from '@/types/situp';
 import { calculateAngle, startCameraStream, stopCameraStream } from '@/lib/pose-utils';
 import { playPushupCountSound } from '@/lib/sound-effects';
@@ -15,7 +15,6 @@ interface SitupDetectorProps {
 export function SitupDetector({ onBack }: SitupDetectorProps) {
   const config = SITUP_CONFIG;
   const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const [poseLandmarker, setPoseLandmarker] = useState<PoseLandmarker | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isMounted, setIsMounted] = useState(false);
@@ -38,9 +37,6 @@ export function SitupDetector({ onBack }: SitupDetectorProps) {
   const isFullBodyDetectedRef = useRef(false);
   const fullBodyLostFramesRef = useRef(0);
   const FULL_BODY_LOST_THRESHOLD = 30;
-  
-  // 화면 표시 모드
-  const [showSkeleton, setShowSkeleton] = useState(true);
   
   // 타이머 hook 사용
   const { startMeasurement, resetTimer } = useMeasurementTimer({
@@ -123,18 +119,11 @@ export function SitupDetector({ onBack }: SitupDetectorProps) {
   };
 
 
-  // 싯업 인식 및 카운팅
+  // 싯업 인식 및 카운팅 (백그라운드 분석만)
   const detectPose = () => {
-    if (!videoRef.current || !canvasRef.current || !poseLandmarker) return;
+    if (!videoRef.current || !poseLandmarker) return;
 
     const video = videoRef.current;
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-
     let lastVideoTime = -1;
 
     const detect = async () => {
@@ -146,24 +135,8 @@ export function SitupDetector({ onBack }: SitupDetectorProps) {
 
       const results = poseLandmarker.detectForVideo(video, performance.now());
 
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
       if (results.landmarks && results.landmarks.length > 0) {
         const landmarks = results.landmarks[0];
-
-        // 골격 그리기
-        const drawingUtils = new DrawingUtils(ctx);
-        drawingUtils.drawLandmarks(landmarks, {
-          radius: (data: any) => {
-            // 주요 포인트는 크게
-            if ([11, 12, 13, 14, 23, 24, 25, 26].includes(data.index)) return 6;
-            return 2;
-          },
-        });
-        drawingUtils.drawConnectors(
-          landmarks,
-          PoseLandmarker.POSE_CONNECTIONS
-        );
 
         // 주요 포인트 추출
         const leftShoulder = landmarks[11];
@@ -234,8 +207,8 @@ export function SitupDetector({ onBack }: SitupDetectorProps) {
         }
         
         // 2D 유클리드 거리 계산
-        const deltaX = (elbowX - kneeX) * canvas.width;
-        const deltaY = (elbowY - kneeY) * canvas.height;
+        const deltaX = (elbowX - kneeX) * video.videoWidth;
+        const deltaY = (elbowY - kneeY) * video.videoHeight;
         const elbowKneeDistance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
         setKneeElbowDistance(elbowKneeDistance);
 
@@ -366,24 +339,6 @@ export function SitupDetector({ onBack }: SitupDetectorProps) {
         }
         setFeedback(newFeedback);
 
-        // 각도 표시
-        ctx.fillStyle = '#FFFFFF';
-        ctx.font = 'bold 18px Arial';
-        ctx.strokeStyle = '#000000';
-        ctx.lineWidth = 4;
-        
-        const angleText = `상체 각도: ${currentBodyAngle.toFixed(0)}°`;
-        ctx.strokeText(angleText, 10, 30);
-        ctx.fillText(angleText, 10, 30);
-
-        const distanceText = `팔꿈치-무릎 거리: ${elbowKneeDistance.toFixed(0)}px`;
-        ctx.strokeText(distanceText, 10, 60);
-        ctx.fillText(distanceText, 10, 60);
-
-        const stateText = `상태: ${stateRef.current.toUpperCase()}`;
-        ctx.strokeText(stateText, 10, 90);
-        ctx.fillText(stateText, 10, 90);
-
       } else {
         setFeedback('몸 전체가 화면에 보이도록 해주세요');
         setIsFullBodyDetected(false);
@@ -425,9 +380,6 @@ export function SitupDetector({ onBack }: SitupDetectorProps) {
       ) : (
         <MeasurementUI
           videoRef={videoRef}
-          canvasRef={canvasRef}
-          showSkeleton={showSkeleton}
-          setShowSkeleton={setShowSkeleton}
           timerStatus={timerStatus}
           preparingTime={preparingTime}
           remainingTime={remainingTime}
