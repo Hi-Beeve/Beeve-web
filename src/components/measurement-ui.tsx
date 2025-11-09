@@ -79,13 +79,19 @@ export function MeasurementUI({
           <div className="relative mb-4 bg-gray-800 rounded-lg overflow-hidden border-4 border-blue-500">
             <video
               ref={videoRef}
-              className="block w-full"
-              style={{ transform: 'scaleX(-1)' }}
-              width={640}
-              height={480}
+              className="block w-full h-auto"
+              style={{ 
+                transform: 'scaleX(-1)',
+                aspectRatio: '4/3',
+                maxHeight: '70vh'
+              }}
               playsInline
               autoPlay
               muted
+              webkit-playsinline="true"
+              x5-playsinline="true"
+              x5-video-player-type="h5"
+              x5-video-player-fullscreen="false"
             />
             <canvas
               ref={canvasRef}
