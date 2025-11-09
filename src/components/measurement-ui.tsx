@@ -83,6 +83,9 @@ export function MeasurementUI({
               style={{ transform: 'scaleX(-1)' }}
               width={640}
               height={480}
+              playsInline
+              autoPlay
+              muted
             />
             <canvas
               ref={canvasRef}
