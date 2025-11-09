@@ -22,10 +22,10 @@ export function StepTest({ onBack }: StepTestProps) {
   const [recoveryHeartRate, setRecoveryHeartRate] = useState<number | null>(null);
   const [timeRemaining, setTimeRemaining] = useState(0);
   
-  // 사용자 정보
-  const [age, setAge] = useState<number>(25);
-  const [height, setHeight] = useState<number>(170);
-  const [weight, setWeight] = useState<number>(70);
+  // 사용자 정보 (국민체력100 예시 데이터 기본값)
+  const [age, setAge] = useState<number>(26);
+  const [height, setHeight] = useState<number>(165);
+  const [weight, setWeight] = useState<number>(60);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
