@@ -35,11 +35,12 @@ export const startCameraStream = async (
   
   videoRef.srcObject = stream;
   
-  return new Promise((resolve, reject) => {
+  // The `autoPlay` attribute on the <video> element will handle playback.
+  // We wait for the 'loadedmetadata' event to ensure the stream is ready.
+  return new Promise((resolve) => {
     videoRef.onloadedmetadata = () => {
-      videoRef.play().then(() => resolve(stream)).catch(reject);
+      resolve(stream);
     };
-    videoRef.onerror = reject;
   });
 };
 
