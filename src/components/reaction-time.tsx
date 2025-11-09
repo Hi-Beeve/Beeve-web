@@ -173,6 +173,7 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
     if (accelerometerRef.current) {
       window.removeEventListener('devicemotion', accelerometerRef.current);
       accelerometerRef.current = null;
+      console.log('🛑 가속도계 이벤트 리스너 제거 완료');
     }
   };
 
@@ -262,13 +263,29 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
 
   // 반응 기록
   const recordReaction = (reactionTime: number) => {
+    console.log('📝 recordReaction 호출됨:', { reactionTime, currentAttempt, phase });
+    
+    // 이미 결과 단계이면 중복 처리 방지
+    if (phase === 'result' || phase === 'final-result') {
+      console.log('⚠️ 이미 결과 단계 - 중복 처리 방지');
+      return;
+    }
+    
     const newRecord: ReactionRecord = {
       attempt: currentAttempt,
       reactionTime: reactionTime,
       valid: reactionTime > 100 && reactionTime < 2000 // 100ms ~ 2초 사이만 유효
     };
 
-    setRecords(prev => [...prev, newRecord]);
+    console.log('📊 새 기록 생성:', newRecord);
+    
+    setRecords(prev => {
+      const updated = [...prev, newRecord];
+      console.log('📋 기록 업데이트:', updated);
+      return updated;
+    });
+    
+    console.log('🔄 단계 변경: measuring → result');
     setPhase('result');
     setIsListening(false);
     
@@ -276,7 +293,12 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
     if (signalTimerRef.current) {
       clearTimeout(signalTimerRef.current);
       signalTimerRef.current = null;
+      console.log('⏰ 타이머 정리 완료');
     }
+    
+    // 가속도계 정지 (중복 감지 방지)
+    stopAccelerometer();
+    console.log('🛑 가속도계 정지');
   };
 
   // 랜덤 신호음 시작
@@ -301,6 +323,12 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
       playSignal();
       setSignalTime(performance.now());
       setPhase('measuring');
+      
+      // 측정 시작 시 가속도계 확실히 작동하는지 확인
+      if (!accelerometerRef.current) {
+        console.log('⚠️ 가속도계가 정지되어 있음 - 재시작');
+        startAccelerometer();
+      }
     }, waitTime);
   };
 
