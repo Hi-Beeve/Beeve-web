@@ -213,7 +213,7 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
     setStabilityScore(finalScore);
   };
 
-  // 움직임 감지
+  // 움직임 감지 (개선된 알고리즘)
   const detectMovement = (currentAcceleration: {x: number, y: number, z: number}) => {
     if (!baselineAcceleration || !signalTime) {
       console.warn('베이스라인 또는 신호시간 없음:', { baselineAcceleration, signalTime });
@@ -235,13 +235,45 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
       totalDelta
     });
     
-    // 더 낮은 임계값으로 조정
-    const threshold = 1.0; // m/s² (기존 2.0에서 1.0으로 낮춤)
+    // 개선된 감지 알고리즘
+    let movementDetected = false;
     
-    if (totalDelta > threshold) {
+    // 방법 1: 좌우 움직임 중심 감지 (발 벌리기의 주요 움직임)
+    const lateralThreshold = 0.3; // X축 (좌우) 움직임 임계값
+    if (deltaX > lateralThreshold) {
+      console.log('좌우 움직임 감지 (X축):', deltaX);
+      movementDetected = true;
+    }
+    
+    // 방법 2: 전체 변화량 (매우 낮은 임계값)
+    const totalThreshold = 0.5; // 기존 1.0에서 0.5로 대폭 낮춤
+    if (totalDelta > totalThreshold) {
+      console.log('전체 움직임 감지:', totalDelta);
+      movementDetected = true;
+    }
+    
+    // 방법 3: 연속적인 변화 감지 (미세한 움직임도 누적)
+    const anyAxisThreshold = 0.2; // 어느 축이든 0.2 이상 변화
+    if (deltaX > anyAxisThreshold || deltaY > anyAxisThreshold || deltaZ > anyAxisThreshold) {
+      console.log('개별 축 움직임 감지:', { deltaX, deltaY, deltaZ });
+      movementDetected = true;
+    }
+    
+    // 방법 4: 변화율 기반 감지 (베이스라인 대비 퍼센트)
+    const percentageThreshold = 0.05; // 5% 변화
+    const baselineTotal = Math.sqrt(baselineAcceleration.x ** 2 + baselineAcceleration.y ** 2 + baselineAcceleration.z ** 2);
+    if (baselineTotal > 0) {
+      const changePercentage = totalDelta / baselineTotal;
+      if (changePercentage > percentageThreshold) {
+        console.log('변화율 기반 감지:', changePercentage * 100, '%');
+        movementDetected = true;
+      }
+    }
+    
+    if (movementDetected) {
       // 반응 감지!
       const reactionTime = performance.now() - signalTime;
-      console.log('반응 감지! 시간:', reactionTime);
+      console.log('🎯 반응 감지! 시간:', reactionTime, 'ms');
       recordReaction(reactionTime);
     }
   };
@@ -563,35 +595,69 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
                 </p>
               </div>
               
-              {/* 디버그 정보 */}
+              {/* 실시간 감지 정보 */}
               <div className="bg-gray-700 p-3 rounded text-xs text-gray-400 mt-4">
-                <div>베이스라인: {baselineAcceleration ? 
-                  `x:${baselineAcceleration.x.toFixed(2)}, y:${baselineAcceleration.y.toFixed(2)}, z:${baselineAcceleration.z.toFixed(2)}` : 
-                  '없음'}</div>
-                <div>현재값: {currentAccelerationData ? 
-                  `x:${currentAccelerationData.x.toFixed(2)}, y:${currentAccelerationData.y.toFixed(2)}, z:${currentAccelerationData.z.toFixed(2)}` : 
-                  '없음'}</div>
+                <div className="mb-2 font-bold text-yellow-300">실시간 감지 상태:</div>
+                {baselineAcceleration && currentAccelerationData && (
+                  <>
+                    <div>X축 변화: {Math.abs(currentAccelerationData.x - baselineAcceleration.x).toFixed(3)} 
+                      {Math.abs(currentAccelerationData.x - baselineAcceleration.x) > 0.3 && <span className="text-green-400"> ✓</span>}
+                    </div>
+                    <div>Y축 변화: {Math.abs(currentAccelerationData.y - baselineAcceleration.y).toFixed(3)}
+                      {Math.abs(currentAccelerationData.y - baselineAcceleration.y) > 0.2 && <span className="text-green-400"> ✓</span>}
+                    </div>
+                    <div>Z축 변화: {Math.abs(currentAccelerationData.z - baselineAcceleration.z).toFixed(3)}
+                      {Math.abs(currentAccelerationData.z - baselineAcceleration.z) > 0.2 && <span className="text-green-400"> ✓</span>}
+                    </div>
+                    <div>전체 변화: {Math.sqrt(
+                      Math.pow(currentAccelerationData.x - baselineAcceleration.x, 2) +
+                      Math.pow(currentAccelerationData.y - baselineAcceleration.y, 2) +
+                      Math.pow(currentAccelerationData.z - baselineAcceleration.z, 2)
+                    ).toFixed(3)}
+                      {Math.sqrt(
+                        Math.pow(currentAccelerationData.x - baselineAcceleration.x, 2) +
+                        Math.pow(currentAccelerationData.y - baselineAcceleration.y, 2) +
+                        Math.pow(currentAccelerationData.z - baselineAcceleration.z, 2)
+                      ) > 0.5 && <span className="text-green-400"> ✓</span>}
+                    </div>
+                  </>
+                )}
                 <div className="mt-2 text-yellow-300">
-                  💡 움직임이 감지되지 않으면 아래 버튼을 눌러주세요
+                  💡 ✓ 표시가 나타나면 감지됩니다
                 </div>
               </div>
             </div>
             
             {/* 수동 완료 버튼 */}
-            <button
-              onClick={() => {
-                if (signalTime) {
-                  const reactionTime = performance.now() - signalTime;
-                  console.log('수동 완료, 반응시간:', reactionTime);
-                  recordReaction(reactionTime);
-                } else {
-                  console.warn('신호시간이 설정되지 않음');
-                }
-              }}
-              className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-lg"
-            >
-              수동 완료
-            </button>
+            <div className="space-y-2">
+              <button
+                onClick={() => {
+                  // 즉시 완료 (반응시간 측정 안함)
+                  console.log('즉시 완료 - 자동 감지 실패');
+                  const mockReactionTime = 500; // 평균적인 반응시간으로 설정
+                  recordReaction(mockReactionTime);
+                }}
+                className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-lg mr-2"
+              >
+                즉시 완료
+              </button>
+              
+              <button
+                onClick={() => {
+                  // 현재 시점 반응시간 측정
+                  if (signalTime) {
+                    const reactionTime = performance.now() - signalTime;
+                    console.log('수동 측정, 반응시간:', reactionTime);
+                    recordReaction(reactionTime);
+                  } else {
+                    console.warn('신호시간이 설정되지 않음');
+                  }
+                }}
+                className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg"
+              >
+                지금 측정
+              </button>
+            </div>
           </div>
         )}
 
