@@ -32,6 +32,7 @@ export function StepTest({ onBack }: StepTestProps) {
 
   // 타이머 시작 함수
   const startTimer = (duration: number, onComplete: () => void) => {
+    console.log(`Starting timer for ${duration} seconds`);
     setTimeRemaining(duration);
     
     if (intervalRef.current) {
@@ -40,7 +41,9 @@ export function StepTest({ onBack }: StepTestProps) {
     
     intervalRef.current = setInterval(() => {
       setTimeRemaining((prev) => {
+        console.log(`Time remaining: ${prev}`);
         if (prev <= 1) {
+          console.log('Timer completed, calling onComplete');
           clearInterval(intervalRef.current!);
           onComplete();
           return 0;
@@ -57,15 +60,28 @@ export function StepTest({ onBack }: StepTestProps) {
 
   const handleUserInfoComplete = () => {
     setPhase('exercise');
-    startTimer(180, handleExerciseComplete); // 3분 운동
+    startTimer(10, handleExerciseComplete); // 3분 운동
   };
 
   const handleExerciseComplete = () => {
+    console.log('Exercise completed, starting 1-minute rest...');
+    
+    // 이전 타이머 완전히 정리
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+    
     setPhase('post-rest');
-    startTimer(60, handlePostRestComplete); // 1분 휴식
+    
+    // 약간의 지연 후 휴식 타이머 시작
+    setTimeout(() => {
+      startTimer(60, handlePostRestComplete); // 1분 휴식
+    }, 100);
   };
 
   const handlePostRestComplete = () => {
+    console.log('1-minute rest completed, starting heart rate measurement...');
     setPhase('recovery-heart-rate');
   };
 
@@ -214,13 +230,15 @@ export function StepTest({ onBack }: StepTestProps) {
             <div className="text-6xl font-mono mb-2">{formatTime(timeRemaining)}</div>
             <div className="text-gray-400 mb-8">남은 시간</div>
             
-            <Metronome 
-              bpm={96} 
-              isPlaying={true}
-              onBeatCount={(count) => {
-                // 박자 수에 따른 추가 로직이 필요하면 여기에 구현
-              }}
-            />
+            {phase === 'exercise' && (
+              <Metronome 
+                bpm={96} 
+                isPlaying={true}
+                onBeatCount={(count) => {
+                  // 박자 수에 따른 추가 로직이 필요하면 여기에 구현
+                }}
+              />
+            )}
           </div>
         )}
 
