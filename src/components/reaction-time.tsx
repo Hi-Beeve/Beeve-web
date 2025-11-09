@@ -37,6 +37,7 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
   // 측정 관련 상태
   const [signalTime, setSignalTime] = useState<number | null>(null);
   const [baselineAcceleration, setBaselineAcceleration] = useState<{x: number, y: number, z: number} | null>(null);
+  const [currentAccelerationData, setCurrentAccelerationData] = useState<{x: number, y: number, z: number} | null>(null);
   
   // Refs
   const accelerometerRef = useRef<any>(null);
@@ -143,9 +144,17 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
       const currentAcceleration = { x, y, z };
       console.log('가속도 값:', currentAcceleration);
       
+      // 현재 가속도 데이터 저장
+      setCurrentAccelerationData(currentAcceleration);
+      
       // 안정성 체크 중일 때
       if (phase === 'stability-check') {
         checkStability(currentAcceleration);
+      }
+      
+      // 대기 중일 때 베이스라인 업데이트
+      if (phase === 'waiting') {
+        setBaselineAcceleration(currentAcceleration);
       }
       
       // 측정 중일 때
@@ -206,7 +215,10 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
 
   // 움직임 감지
   const detectMovement = (currentAcceleration: {x: number, y: number, z: number}) => {
-    if (!baselineAcceleration || !signalTime) return;
+    if (!baselineAcceleration || !signalTime) {
+      console.warn('베이스라인 또는 신호시간 없음:', { baselineAcceleration, signalTime });
+      return;
+    }
 
     // 가속도 변화량 계산
     const deltaX = Math.abs(currentAcceleration.x - baselineAcceleration.x);
@@ -216,12 +228,20 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
     // 전체 변화량
     const totalDelta = Math.sqrt(deltaX ** 2 + deltaY ** 2 + deltaZ ** 2);
     
-    // 임계값 (조정 필요)
-    const threshold = 2.0; // m/s²
+    console.log('움직임 감지:', {
+      current: currentAcceleration,
+      baseline: baselineAcceleration,
+      deltas: { deltaX, deltaY, deltaZ },
+      totalDelta
+    });
+    
+    // 더 낮은 임계값으로 조정
+    const threshold = 1.0; // m/s² (기존 2.0에서 1.0으로 낮춤)
     
     if (totalDelta > threshold) {
       // 반응 감지!
       const reactionTime = performance.now() - signalTime;
+      console.log('반응 감지! 시간:', reactionTime);
       recordReaction(reactionTime);
     }
   };
@@ -247,17 +267,23 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
 
   // 랜덤 신호음 시작
   const startRandomSignal = () => {
+    console.log('랜덤 신호음 시작');
     setPhase('waiting');
     setIsListening(true);
     
-    // 베이스라인 가속도 설정
-    // 실제로는 몇 초간 평균을 내야 함
-    setBaselineAcceleration({ x: 0, y: 0, z: -9.8 });
+    // 베이스라인은 waiting 단계에서 실시간으로 업데이트됨
+    console.log('현재 가속도 데이터:', currentAccelerationData);
+    if (currentAccelerationData) {
+      setBaselineAcceleration(currentAccelerationData);
+      console.log('초기 베이스라인 설정:', currentAccelerationData);
+    }
     
     // 2-8초 사이 랜덤 대기
     const waitTime = Math.random() * 6000 + 2000;
+    console.log('대기 시간:', waitTime, 'ms');
     
     signalTimerRef.current = setTimeout(() => {
+      console.log('신호음 재생 및 측정 시작');
       playSignal();
       setSignalTime(performance.now());
       setPhase('measuring');
@@ -530,13 +556,42 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
             <h2 className="text-3xl font-bold mb-6">측정 중...</h2>
             
             <div className="bg-gray-800 p-8 rounded-lg mb-8">
-              <div className="animate-bounce">
+              <div className="animate-bounce mb-4">
                 <div className="text-6xl mb-4 text-green-400">🔊</div>
                 <p className="text-green-400 font-bold text-xl">
                   지금 발을 벌리세요!
                 </p>
               </div>
+              
+              {/* 디버그 정보 */}
+              <div className="bg-gray-700 p-3 rounded text-xs text-gray-400 mt-4">
+                <div>베이스라인: {baselineAcceleration ? 
+                  `x:${baselineAcceleration.x.toFixed(2)}, y:${baselineAcceleration.y.toFixed(2)}, z:${baselineAcceleration.z.toFixed(2)}` : 
+                  '없음'}</div>
+                <div>현재값: {currentAccelerationData ? 
+                  `x:${currentAccelerationData.x.toFixed(2)}, y:${currentAccelerationData.y.toFixed(2)}, z:${currentAccelerationData.z.toFixed(2)}` : 
+                  '없음'}</div>
+                <div className="mt-2 text-yellow-300">
+                  💡 움직임이 감지되지 않으면 아래 버튼을 눌러주세요
+                </div>
+              </div>
             </div>
+            
+            {/* 수동 완료 버튼 */}
+            <button
+              onClick={() => {
+                if (signalTime) {
+                  const reactionTime = performance.now() - signalTime;
+                  console.log('수동 완료, 반응시간:', reactionTime);
+                  recordReaction(reactionTime);
+                } else {
+                  console.warn('신호시간이 설정되지 않음');
+                }
+              }}
+              className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-lg"
+            >
+              수동 완료
+            </button>
           </div>
         )}
 
