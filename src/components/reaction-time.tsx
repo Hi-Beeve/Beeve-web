@@ -235,27 +235,34 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
       totalDelta
     });
     
-    // 개선된 감지 알고리즘
+    // 개선된 감지 알고리즘 (발 벌리기 동작 최적화)
     let movementDetected = false;
     
-    // 방법 1: 좌우 움직임 중심 감지 (발 벌리기의 주요 움직임)
-    const lateralThreshold = 0.3; // X축 (좌우) 움직임 임계값
+    // 방법 1: 상하 움직임 중심 감지 (무릎 굽히기 → 일어서기의 핵심 움직임)
+    const verticalThreshold = 0.25; // Y축 (상하) 움직임 임계값 (가장 민감)
+    if (deltaY > verticalThreshold) {
+      console.log('🔥 상하 움직임 감지 (Y축):', deltaY);
+      movementDetected = true;
+    }
+    
+    // 방법 2: 좌우 움직임 보조 감지 (상체 흔들림)
+    const lateralThreshold = 0.35; // X축 (좌우) 움직임 임계값 (덜 민감)
     if (deltaX > lateralThreshold) {
       console.log('좌우 움직임 감지 (X축):', deltaX);
       movementDetected = true;
     }
     
-    // 방법 2: 전체 변화량 (매우 낮은 임계값)
-    const totalThreshold = 0.5; // 기존 1.0에서 0.5로 대폭 낮춤
+    // 방법 3: 전체 변화량 (종합적 판단)
+    const totalThreshold = 0.4; // 0.5에서 0.4로 더 민감하게
     if (totalDelta > totalThreshold) {
       console.log('전체 움직임 감지:', totalDelta);
       movementDetected = true;
     }
     
-    // 방법 3: 연속적인 변화 감지 (미세한 움직임도 누적)
-    const anyAxisThreshold = 0.2; // 어느 축이든 0.2 이상 변화
-    if (deltaX > anyAxisThreshold || deltaY > anyAxisThreshold || deltaZ > anyAxisThreshold) {
-      console.log('개별 축 움직임 감지:', { deltaX, deltaY, deltaZ });
+    // 방법 4: 개별축 세밀 감지 (미세한 움직임 포착)
+    const fineThreshold = 0.15; // 더 민감한 임계값
+    if (deltaY > fineThreshold || deltaX > 0.25 || deltaZ > 0.2) {
+      console.log('세밀 축 움직임 감지:', { deltaX, deltaY, deltaZ });
       movementDetected = true;
     }
     
@@ -597,51 +604,76 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
               
               {/* 실시간 감지 정보 */}
               <div className="bg-gray-700 p-3 rounded text-xs text-gray-400 mt-4">
-                <div className="mb-2 font-bold text-yellow-300">실시간 감지 상태:</div>
+                <div className="mb-2 font-bold text-yellow-300">실시간 감지 상태 (OR 조건):</div>
                 {baselineAcceleration && currentAccelerationData && (
                   <>
-                    <div>X축 변화: {Math.abs(currentAccelerationData.x - baselineAcceleration.x).toFixed(3)} 
-                      {Math.abs(currentAccelerationData.x - baselineAcceleration.x) > 0.3 && <span className="text-green-400"> ✓</span>}
-                    </div>
-                    <div>Y축 변화: {Math.abs(currentAccelerationData.y - baselineAcceleration.y).toFixed(3)}
-                      {Math.abs(currentAccelerationData.y - baselineAcceleration.y) > 0.2 && <span className="text-green-400"> ✓</span>}
-                    </div>
-                    <div>Z축 변화: {Math.abs(currentAccelerationData.z - baselineAcceleration.z).toFixed(3)}
-                      {Math.abs(currentAccelerationData.z - baselineAcceleration.z) > 0.2 && <span className="text-green-400"> ✓</span>}
-                    </div>
-                    <div>전체 변화: {Math.sqrt(
-                      Math.pow(currentAccelerationData.x - baselineAcceleration.x, 2) +
-                      Math.pow(currentAccelerationData.y - baselineAcceleration.y, 2) +
-                      Math.pow(currentAccelerationData.z - baselineAcceleration.z, 2)
-                    ).toFixed(3)}
-                      {Math.sqrt(
-                        Math.pow(currentAccelerationData.x - baselineAcceleration.x, 2) +
-                        Math.pow(currentAccelerationData.y - baselineAcceleration.y, 2) +
-                        Math.pow(currentAccelerationData.z - baselineAcceleration.z, 2)
-                      ) > 0.5 && <span className="text-green-400"> ✓</span>}
+                    <div className="grid grid-cols-1 gap-1">
+                      <div className="flex justify-between">
+                        <span>🔥 Y축(상하): {Math.abs(currentAccelerationData.y - baselineAcceleration.y).toFixed(3)}</span>
+                        {Math.abs(currentAccelerationData.y - baselineAcceleration.y) > 0.25 ? 
+                          <span className="text-green-400 font-bold">✓ 감지!</span> : 
+                          <span className="text-gray-500">&gt; 0.25</span>}
+                      </div>
+                      
+                      <div className="flex justify-between">
+                        <span>2️⃣ X축(좌우): {Math.abs(currentAccelerationData.x - baselineAcceleration.x).toFixed(3)}</span>
+                        {Math.abs(currentAccelerationData.x - baselineAcceleration.x) > 0.35 ? 
+                          <span className="text-green-400 font-bold">✓ 감지!</span> : 
+                          <span className="text-gray-500">&gt; 0.35</span>}
+                      </div>
+                      
+                      <div className="flex justify-between">
+                        <span>3️⃣ 전체변화: {Math.sqrt(
+                          Math.pow(currentAccelerationData.x - baselineAcceleration.x, 2) +
+                          Math.pow(currentAccelerationData.y - baselineAcceleration.y, 2) +
+                          Math.pow(currentAccelerationData.z - baselineAcceleration.z, 2)
+                        ).toFixed(3)}</span>
+                        {Math.sqrt(
+                          Math.pow(currentAccelerationData.x - baselineAcceleration.x, 2) +
+                          Math.pow(currentAccelerationData.y - baselineAcceleration.y, 2) +
+                          Math.pow(currentAccelerationData.z - baselineAcceleration.z, 2)
+                        ) > 0.4 ? 
+                          <span className="text-green-400 font-bold">✓ 감지!</span> : 
+                          <span className="text-gray-500">&gt; 0.4</span>}
+                      </div>
+                      
+                      <div className="flex justify-between">
+                        <span>4️⃣ 세밀감지: Y&gt;0.15 X&gt;0.25 Z&gt;0.2</span>
+                        {(Math.abs(currentAccelerationData.y - baselineAcceleration.y) > 0.15 || 
+                          Math.abs(currentAccelerationData.x - baselineAcceleration.x) > 0.25 ||
+                          Math.abs(currentAccelerationData.z - baselineAcceleration.z) > 0.2) ? 
+                          <span className="text-green-400 font-bold">✓ 감지!</span> : 
+                          <span className="text-gray-500">대기중</span>}
+                      </div>
+                      
+                      <div className="flex justify-between">
+                        <span>5️⃣ 변화율: {baselineAcceleration && Math.sqrt(baselineAcceleration.x ** 2 + baselineAcceleration.y ** 2 + baselineAcceleration.z ** 2) > 0 ? 
+                          ((Math.sqrt(
+                            Math.pow(currentAccelerationData.x - baselineAcceleration.x, 2) +
+                            Math.pow(currentAccelerationData.y - baselineAcceleration.y, 2) +
+                            Math.pow(currentAccelerationData.z - baselineAcceleration.z, 2)
+                          ) / Math.sqrt(baselineAcceleration.x ** 2 + baselineAcceleration.y ** 2 + baselineAcceleration.z ** 2)) * 100).toFixed(1) + '%' : 
+                          '계산불가'}</span>
+                        {baselineAcceleration && Math.sqrt(baselineAcceleration.x ** 2 + baselineAcceleration.y ** 2 + baselineAcceleration.z ** 2) > 0 && 
+                         (Math.sqrt(
+                           Math.pow(currentAccelerationData.x - baselineAcceleration.x, 2) +
+                           Math.pow(currentAccelerationData.y - baselineAcceleration.y, 2) +
+                           Math.pow(currentAccelerationData.z - baselineAcceleration.z, 2)
+                         ) / Math.sqrt(baselineAcceleration.x ** 2 + baselineAcceleration.y ** 2 + baselineAcceleration.z ** 2)) > 0.05 ? 
+                          <span className="text-green-400 font-bold">✓ 감지!</span> : 
+                          <span className="text-gray-500">&gt; 5%</span>}
+                      </div>
                     </div>
                   </>
                 )}
                 <div className="mt-2 text-yellow-300">
-                  💡 ✓ 표시가 나타나면 감지됩니다
+                  💡 하나라도 ✓ 감지되면 반응으로 인식됩니다
                 </div>
               </div>
             </div>
             
             {/* 수동 완료 버튼 */}
             <div className="space-y-2">
-              <button
-                onClick={() => {
-                  // 즉시 완료 (반응시간 측정 안함)
-                  console.log('즉시 완료 - 자동 감지 실패');
-                  const mockReactionTime = 500; // 평균적인 반응시간으로 설정
-                  recordReaction(mockReactionTime);
-                }}
-                className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-lg mr-2"
-              >
-                즉시 완료
-              </button>
-              
               <button
                 onClick={() => {
                   // 현재 시점 반응시간 측정
@@ -653,9 +685,21 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
                     console.warn('신호시간이 설정되지 않음');
                   }
                 }}
-                className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg"
+                className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg"
               >
-                지금 측정
+                지금 측정하기
+              </button>
+              
+              <button
+                onClick={() => {
+                  // 측정 건너뛰기 (무효 처리)
+                  console.log('측정 건너뛰기');
+                  const invalidReactionTime = 9999; // 무효한 시간으로 설정
+                  recordReaction(invalidReactionTime);
+                }}
+                className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg"
+              >
+                건너뛰기
               </button>
             </div>
           </div>
