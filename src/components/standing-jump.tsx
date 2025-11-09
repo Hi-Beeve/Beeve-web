@@ -28,6 +28,8 @@ export function StandingJump({ onBack }: StandingJumpProps) {
   const [records, setRecords] = useState<JumpRecord[]>([]);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
+  const [countdown, setCountdown] = useState<number | null>(null);
+  const [showJumpMessage, setShowJumpMessage] = useState(false);
   
   // 비디오 관련 refs
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -38,6 +40,7 @@ export function StandingJump({ onBack }: StandingJumpProps) {
   
   // 타이머 관련 refs
   const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const countdownTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // 카메라 시작
   const startCamera = async () => {
@@ -70,8 +73,67 @@ export function StandingJump({ onBack }: StandingJumpProps) {
     }
   };
 
-  // 녹화 시작
-  const startRecording = () => {
+  // 비프음 생성
+  const playBeep = (frequency: number = 800, duration: number = 200) => {
+    try {
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+      oscillator.type = 'sine';
+
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration / 1000);
+
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + duration / 1000);
+    } catch (error) {
+      console.warn('Audio playback failed:', error);
+    }
+  };
+
+  // 카운트다운과 함께 녹화 시작
+  const startCountdownAndRecording = () => {
+    if (!streamRef.current) return;
+
+    // 3초 카운트다운 시작
+    setCountdown(3);
+    playBeep(600, 200); // 낮은 음
+
+    countdownTimerRef.current = setInterval(() => {
+      setCountdown(prev => {
+        if (prev === null) return null;
+        
+        if (prev > 1) {
+          playBeep(600, 200); // 카운트다운 음
+          return prev - 1;
+        } else {
+          // 카운트다운 완료, 녹화 시작
+          clearInterval(countdownTimerRef.current!);
+          setCountdown(null);
+          setShowJumpMessage(true);
+          playBeep(1000, 500); // 높은 시작 음
+          
+          // 실제 녹화 시작
+          startActualRecording();
+          
+          // 2초 후 "뛰세요" 메시지 숨김
+          setTimeout(() => {
+            setShowJumpMessage(false);
+          }, 2000);
+          
+          return null;
+        }
+      });
+    }, 1000);
+  };
+
+  // 실제 녹화 시작
+  const startActualRecording = () => {
     if (!streamRef.current) return;
 
     recordedChunksRef.current = [];
@@ -146,6 +208,9 @@ export function StandingJump({ onBack }: StandingJumpProps) {
       if (recordingTimerRef.current) {
         clearInterval(recordingTimerRef.current);
       }
+      if (countdownTimerRef.current) {
+        clearInterval(countdownTimerRef.current);
+      }
     };
   }, [phase]);
 
@@ -191,7 +256,13 @@ export function StandingJump({ onBack }: StandingJumpProps) {
               </ul>
             </div>
             <button
-              onClick={() => setPhase('recording')}
+              onClick={() => {
+                setPhase('recording');
+                // 카메라 시작 후 바로 카운트다운 시작
+                setTimeout(() => {
+                  startCountdownAndRecording();
+                }, 500); // 카메라 초기화 대기
+              }}
               className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 px-8 rounded-full text-xl transition-transform transform hover:scale-105"
             >
               {currentAttempt}회차 측정 시작
@@ -212,6 +283,26 @@ export function StandingJump({ onBack }: StandingJumpProps) {
                 muted
                 className="w-full max-w-sm rounded-lg bg-black"
               />
+              
+              {/* 카운트다운 오버레이 */}
+              {countdown !== null && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-lg">
+                  <div className="text-8xl font-bold text-white animate-pulse">
+                    {countdown}
+                  </div>
+                </div>
+              )}
+              
+              {/* "뛰세요" 메시지 오버레이 */}
+              {showJumpMessage && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-lg">
+                  <div className="text-6xl font-bold text-green-400 animate-bounce">
+                    뛰세요!
+                  </div>
+                </div>
+              )}
+              
+              {/* 녹화 상태 표시 */}
               {isRecording && (
                 <div className="absolute top-4 right-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold">
                   REC {formatTime(recordingTime)}
@@ -219,20 +310,24 @@ export function StandingJump({ onBack }: StandingJumpProps) {
               )}
             </div>
 
-            <p className="text-gray-300 mb-6">
-              준비가 되면 녹화를 시작하고 제자리 높이뛰기를 해주세요.
-              <br />
-              (3초 후 자동 정지됩니다)
-            </p>
-
-            {!isRecording ? (
-              <button
-                onClick={startRecording}
-                className="bg-red-500 hover:bg-red-600 text-white font-bold py-4 px-8 rounded-full text-xl transition-transform transform hover:scale-105"
-              >
-                🔴 녹화 시작
-              </button>
+            {countdown !== null ? (
+              <p className="text-gray-300 mb-6">
+                준비하세요! 카운트다운이 끝나면 제자리 높이뛰기를 해주세요.
+              </p>
+            ) : isRecording ? (
+              <p className="text-gray-300 mb-6">
+                녹화 중입니다. 최대한 높이 뛰어주세요!
+                <br />
+                (자동으로 정지됩니다)
+              </p>
             ) : (
+              <p className="text-gray-300 mb-6">
+                카메라를 준비하고 있습니다...
+              </p>
+            )}
+
+            {/* 녹화 중지 버튼 (필요시) */}
+            {isRecording && (
               <button
                 onClick={stopRecording}
                 className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg"
