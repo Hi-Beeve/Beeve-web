@@ -12,7 +12,7 @@ export default function Home() {
         </div>
         
         {/* 운동 측정 메뉴 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-lg">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-4xl">
           <Link
             href="/pushup-counter"
             className="bg-gray-800 hover:bg-gray-700 p-6 rounded-lg text-center transition-colors border border-gray-700"
@@ -32,6 +32,17 @@ export default function Home() {
             <h3 className="text-xl font-bold mb-2">싯업 측정!!</h3>
             <p className="text-gray-400 text-sm">
               1분 내 최대 싯업 개수 측정
+            </p>
+          </Link>
+
+          <Link
+            href="/description?type=step"
+            className="bg-gray-800 hover:bg-gray-700 p-6 rounded-lg text-center transition-colors border border-gray-700"
+          >
+            <div className="text-4xl mb-3">🏃‍♂️</div>
+            <h3 className="text-xl font-bold mb-2">스텝검사</h3>
+            <p className="text-gray-400 text-sm">
+              3분 스텝박스 심폐지구력 측정
             </p>
           </Link>
         </div>
