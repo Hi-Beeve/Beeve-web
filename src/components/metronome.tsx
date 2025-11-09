@@ -16,25 +16,41 @@ export function Metronome({ bpm, isPlaying, onBeatCount }: MetronomeProps) {
 
   // Web Audio API를 사용한 비프음 생성
   const playBeep = (frequency: number = 800, duration: number = 100) => {
-    if (!audioContextRef.current) {
-      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+    try {
+      if (!audioContextRef.current) {
+        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      }
+
+      const context = audioContextRef.current;
+      
+      // AudioContext가 suspended 상태면 resume
+      if (context.state === 'suspended') {
+        context.resume();
+      }
+
+      const oscillator = context.createOscillator();
+      const gainNode = context.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(context.destination);
+
+      oscillator.frequency.setValueAtTime(frequency, context.currentTime);
+      oscillator.type = 'sine';
+
+      gainNode.gain.setValueAtTime(0.3, context.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, context.currentTime + duration / 1000);
+
+      oscillator.start(context.currentTime);
+      oscillator.stop(context.currentTime + duration / 1000);
+      
+      // 오실레이터 정리
+      oscillator.onended = () => {
+        oscillator.disconnect();
+        gainNode.disconnect();
+      };
+    } catch (error) {
+      console.warn('Audio playback failed:', error);
     }
-
-    const context = audioContextRef.current;
-    const oscillator = context.createOscillator();
-    const gainNode = context.createGain();
-
-    oscillator.connect(gainNode);
-    gainNode.connect(context.destination);
-
-    oscillator.frequency.setValueAtTime(frequency, context.currentTime);
-    oscillator.type = 'sine';
-
-    gainNode.gain.setValueAtTime(0.3, context.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, context.currentTime + duration / 1000);
-
-    oscillator.start(context.currentTime);
-    oscillator.stop(context.currentTime + duration / 1000);
   };
 
   // 메트로놈 시작/정지
@@ -45,13 +61,12 @@ export function Metronome({ bpm, isPlaying, onBeatCount }: MetronomeProps) {
       intervalRef.current = setInterval(() => {
         setBeatCount(prev => {
           const newCount = prev + 1;
+          const beat = ((newCount - 1) % 4) + 1;
+          setCurrentBeat(beat);
           
-          // 4박자 패턴 (1박자는 높은 음, 나머지는 낮은 음)
-          const beatInMeasure = (newCount - 1) % 4;
-          const frequency = beatInMeasure === 0 ? 1000 : 800;
-          
-          playBeep(frequency, 100);
-          setCurrentBeat(beatInMeasure + 1);
+          // 첫 박자는 높은 음, 나머지는 낮은 음
+          const frequency = beat === 1 ? 1000 : 800;
+          playBeep(frequency);
           
           if (onBeatCount) {
             onBeatCount(newCount);
@@ -61,15 +76,25 @@ export function Metronome({ bpm, isPlaying, onBeatCount }: MetronomeProps) {
         });
       }, interval);
     } else {
+      // 재생 중지 시 정리
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
       }
+      
+      // AudioContext suspend (완전히 닫지는 않음)
+      if (audioContextRef.current && audioContextRef.current.state === 'running') {
+        audioContextRef.current.suspend().catch(console.warn);
+      }
+      
+      setBeatCount(0);
+      setCurrentBeat(0);
     }
 
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
+        intervalRef.current = null;
       }
     };
   }, [isPlaying, bpm, onBeatCount]);
@@ -77,8 +102,20 @@ export function Metronome({ bpm, isPlaying, onBeatCount }: MetronomeProps) {
   // 컴포넌트 언마운트 시 정리
   useEffect(() => {
     return () => {
+      // 인터벌 정리
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      
+      // AudioContext 정리
       if (audioContextRef.current) {
-        audioContextRef.current.close();
+        try {
+          audioContextRef.current.close().catch(console.warn);
+        } catch (error) {
+          console.warn('AudioContext close failed:', error);
+        }
+        audioContextRef.current = null;
       }
     };
   }, []);

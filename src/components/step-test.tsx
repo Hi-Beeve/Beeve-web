@@ -32,7 +32,6 @@ export function StepTest({ onBack }: StepTestProps) {
 
   // 타이머 시작 함수
   const startTimer = (duration: number, onComplete: () => void) => {
-    console.log(`Starting timer for ${duration} seconds`);
     setTimeRemaining(duration);
     
     if (intervalRef.current) {
@@ -41,9 +40,7 @@ export function StepTest({ onBack }: StepTestProps) {
     
     intervalRef.current = setInterval(() => {
       setTimeRemaining((prev) => {
-        console.log(`Time remaining: ${prev}`);
         if (prev <= 1) {
-          console.log('Timer completed, calling onComplete');
           clearInterval(intervalRef.current!);
           onComplete();
           return 0;
@@ -60,12 +57,10 @@ export function StepTest({ onBack }: StepTestProps) {
 
   const handleUserInfoComplete = () => {
     setPhase('exercise');
-    startTimer(10, handleExerciseComplete); // 3분 운동
+    startTimer(180, handleExerciseComplete); // 3분 운동
   };
 
   const handleExerciseComplete = () => {
-    console.log('Exercise completed, starting 1-minute rest...');
-    
     // 이전 타이머 완전히 정리
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
@@ -81,7 +76,6 @@ export function StepTest({ onBack }: StepTestProps) {
   };
 
   const handlePostRestComplete = () => {
-    console.log('1-minute rest completed, starting heart rate measurement...');
     setPhase('recovery-heart-rate');
   };
 
