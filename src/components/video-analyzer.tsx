@@ -1,0 +1,328 @@
+'use client';
+
+import { useState, useRef, useEffect } from 'react';
+
+interface VideoAnalyzerProps {
+  videoBlob: Blob;
+  onAnalysisComplete: (startTime: number, peakTime: number, airTime: number) => void;
+  onCancel: () => void;
+}
+
+export function VideoAnalyzer({ videoBlob, onAnalysisComplete, onCancel }: VideoAnalyzerProps) {
+  const [videoUrl, setVideoUrl] = useState<string>('');
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [startTime, setStartTime] = useState<number | null>(null);
+  const [peakTime, setPeakTime] = useState<number | null>(null);
+  
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const animationFrameRef = useRef<number | null>(null);
+
+  // 비디오 URL 생성
+  useEffect(() => {
+    const url = URL.createObjectURL(videoBlob);
+    setVideoUrl(url);
+    
+    return () => {
+      URL.revokeObjectURL(url);
+    };
+  }, [videoBlob]);
+
+  // 비디오 메타데이터 로드
+  const handleLoadedMetadata = () => {
+    if (videoRef.current) {
+      const videoDuration = videoRef.current.duration;
+      console.log('Video duration loaded:', videoDuration);
+      
+      if (!isNaN(videoDuration) && videoDuration > 0) {
+        setDuration(videoDuration);
+        setCurrentTime(0);
+      } else {
+        console.warn('Invalid video duration:', videoDuration);
+        // 재시도
+        setTimeout(() => {
+          if (videoRef.current && !isNaN(videoRef.current.duration)) {
+            setDuration(videoRef.current.duration);
+            setCurrentTime(0);
+          }
+        }, 100);
+      }
+    }
+  };
+
+  // 비디오 로드 완료
+  const handleCanPlay = () => {
+    if (videoRef.current && duration === 0) {
+      const videoDuration = videoRef.current.duration;
+      if (!isNaN(videoDuration) && videoDuration > 0) {
+        setDuration(videoDuration);
+        setCurrentTime(videoRef.current.currentTime);
+      }
+    }
+  };
+
+  // 재생/일시정지 토글
+  const togglePlayPause = () => {
+    if (!videoRef.current) return;
+    
+    if (isPlaying) {
+      videoRef.current.pause();
+      setIsPlaying(false);
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    } else {
+      videoRef.current.play();
+      setIsPlaying(true);
+      updateCurrentTime();
+    }
+  };
+
+  // 현재 시간 업데이트
+  const updateCurrentTime = () => {
+    if (videoRef.current && isPlaying) {
+      setCurrentTime(videoRef.current.currentTime);
+      animationFrameRef.current = requestAnimationFrame(updateCurrentTime);
+    }
+  };
+
+  // 슬라이더로 시간 이동
+  const handleTimeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newTime = parseFloat(event.target.value);
+    if (videoRef.current) {
+      videoRef.current.currentTime = newTime;
+      setCurrentTime(newTime);
+    }
+  };
+
+  // 프레임 단위 이동 (1/30초 - 더 안정적)
+  const moveFrame = (direction: 'forward' | 'backward') => {
+    if (!videoRef.current || duration === 0) return;
+    
+    const frameTime = 1 / 30; // 30fps 기준 (더 안정적)
+    const currentVideoTime = videoRef.current.currentTime;
+    
+    const newTime = direction === 'forward' 
+      ? Math.min(currentVideoTime + frameTime, duration)
+      : Math.max(currentVideoTime - frameTime, 0);
+    
+    console.log(`Moving ${direction}: ${currentVideoTime.toFixed(3)} → ${newTime.toFixed(3)}`);
+    
+    videoRef.current.currentTime = newTime;
+    setCurrentTime(newTime);
+  };
+
+  // 시작 시점 선택
+  const selectStartTime = () => {
+    setStartTime(currentTime);
+  };
+
+  // 최고점 시점 선택
+  const selectPeakTime = () => {
+    setPeakTime(currentTime);
+  };
+
+  // 분석 완료
+  const completeAnalysis = () => {
+    if (startTime !== null && peakTime !== null) {
+      const airTime = Math.abs(peakTime - startTime);
+      onAnalysisComplete(startTime, peakTime, airTime);
+    }
+  };
+
+  // 시간 포맷 (밀리초 단위)
+  const formatTime = (time: number) => {
+    if (isNaN(time) || time < 0) {
+      return '0.00초';
+    }
+    return time.toFixed(2) + '초';
+  };
+
+  // 컴포넌트 언마운트 시 정리
+  useEffect(() => {
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
+  }, []);
+
+  return (
+    <div className="w-full max-w-4xl mx-auto">
+      <h3 className="text-2xl font-bold mb-6 text-center">영상 분석</h3>
+      
+      {/* 비디오 플레이어 */}
+      <div className="relative mb-6">
+        {videoUrl ? (
+          <video
+            ref={videoRef}
+            src={videoUrl}
+            className="w-full max-w-2xl mx-auto rounded-lg bg-black"
+            onLoadedMetadata={handleLoadedMetadata}
+            onCanPlay={handleCanPlay}
+            onTimeUpdate={() => {
+              if (videoRef.current && !isNaN(videoRef.current.currentTime)) {
+                setCurrentTime(videoRef.current.currentTime);
+              }
+            }}
+            onEnded={() => setIsPlaying(false)}
+            playsInline
+            webkit-playsinline="true"
+            controls={false}
+            preload="metadata"
+            muted
+          />
+        ) : (
+          <div className="w-full max-w-2xl mx-auto rounded-lg bg-black h-64 flex items-center justify-center">
+            <div className="text-white text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-2"></div>
+              <div>비디오 준비 중...</div>
+            </div>
+          </div>
+        )}
+        
+        {/* 로딩 오버레이 */}
+        {duration === 0 && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-75 rounded-lg">
+            <div className="text-white text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-2"></div>
+              <div>영상 로딩 중...</div>
+            </div>
+          </div>
+        )}
+        
+        {/* 시점 표시 오버레이 */}
+        <div className="absolute top-4 left-4 space-y-2">
+          {startTime !== null && (
+            <div className="bg-green-500 text-white px-3 py-1 rounded text-sm">
+              시작: {formatTime(startTime)}
+            </div>
+          )}
+          {peakTime !== null && (
+            <div className="bg-blue-500 text-white px-3 py-1 rounded text-sm">
+              최고점: {formatTime(peakTime)}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* 컨트롤 패널 */}
+      <div className="bg-gray-800 p-6 rounded-lg space-y-4">
+        {/* 재생 컨트롤 */}
+        <div className="flex items-center justify-center space-x-4">
+          <button
+            onClick={() => moveFrame('backward')}
+            disabled={duration === 0}
+            className="bg-gray-600 hover:bg-gray-700 text-white p-2 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+            title="이전 프레임"
+          >
+            ⏮️
+          </button>
+          
+          <button
+            onClick={togglePlayPause}
+            disabled={duration === 0}
+            className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isPlaying ? '⏸️ 일시정지' : '▶️ 재생'}
+          </button>
+          
+          <button
+            onClick={() => moveFrame('forward')}
+            disabled={duration === 0}
+            className="bg-gray-600 hover:bg-gray-700 text-white p-2 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+            title="다음 프레임"
+          >
+            ⏭️
+          </button>
+        </div>
+
+        {/* 시간 슬라이더 */}
+        <div className="space-y-2">
+          <div className="flex justify-between text-sm text-gray-400">
+            <span>0.00초</span>
+            <span className="font-mono">{formatTime(currentTime)}</span>
+            <span>{formatTime(duration)}</span>
+          </div>
+          <input
+            type="range"
+            min="0"
+            max={duration || 1}
+            step="0.01"
+            value={currentTime}
+            onChange={handleTimeChange}
+            disabled={duration === 0}
+            className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer disabled:opacity-50"
+          />
+        </div>
+
+        {/* 시점 선택 버튼 */}
+        <div className="grid grid-cols-2 gap-4">
+          <button
+            onClick={selectStartTime}
+            className={`py-3 px-4 rounded-lg font-bold transition ${
+              startTime !== null 
+                ? 'bg-green-600 hover:bg-green-700 text-white' 
+                : 'bg-green-500 hover:bg-green-600 text-white'
+            }`}
+          >
+            🚀 시작 시점 선택
+            {startTime !== null && (
+              <div className="text-sm mt-1">{formatTime(startTime)}</div>
+            )}
+          </button>
+          
+          <button
+            onClick={selectPeakTime}
+            className={`py-3 px-4 rounded-lg font-bold transition ${
+              peakTime !== null 
+                ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+                : 'bg-blue-500 hover:bg-blue-600 text-white'
+            }`}
+          >
+            ⬆️ 최고점 선택
+            {peakTime !== null && (
+              <div className="text-sm mt-1">{formatTime(peakTime)}</div>
+            )}
+          </button>
+        </div>
+
+        {/* 결과 및 완료 */}
+        {startTime !== null && peakTime !== null && (
+          <div className="bg-gray-700 p-4 rounded-lg text-center">
+            <div className="text-lg font-bold text-yellow-400 mb-2">
+              체공시간: {formatTime(Math.abs(peakTime - startTime))}
+            </div>
+            <div className="flex space-x-4 justify-center">
+              <button
+                onClick={completeAnalysis}
+                className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-lg"
+              >
+                ✅ 분석 완료
+              </button>
+              <button
+                onClick={onCancel}
+                className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-lg"
+              >
+                🔄 다시 촬영
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* 취소 버튼 (시점 선택 전) */}
+        {(startTime === null || peakTime === null) && (
+          <div className="text-center">
+            <button
+              onClick={onCancel}
+              className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-lg"
+            >
+              🔄 다시 촬영
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

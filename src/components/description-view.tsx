@@ -31,6 +31,8 @@ export default function DescriptionView() {
         router.push(`/pushup-counter?type=${subtype}`);
       } else if (exerciseKey === 'step') {
         router.push('/step-test');
+      } else if (exerciseKey === 'standing-jump') {
+        router.push('/standing-jump');
       } else {
         router.push(`/${exerciseKey}-counter`);
       }
