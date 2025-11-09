@@ -3,11 +3,9 @@
 import { PushupType } from '@/types/pushup';
 import { PUSHUP_CONFIGS } from '@/config/pushup-types';
 
-interface PushupTypeSelectorProps {
-  onSelect: (type: PushupType) => void;
-}
+interface PushupTypeSelectorProps {}
 
-export function PushupTypeSelector({ onSelect }: PushupTypeSelectorProps) {
+export function PushupTypeSelector({}: PushupTypeSelectorProps) {
   const types: PushupType[] = ['wall', 'knee', 'standard'];
 
   
@@ -17,10 +15,10 @@ export function PushupTypeSelector({ onSelect }: PushupTypeSelectorProps) {
         {types.map((type) => {
           const config = PUSHUP_CONFIGS[type];
           return (
-            <button
+            <a
               key={type}
-              onClick={() => onSelect(type)}
-              className="bg-gray-800 hover:bg-gray-700 rounded-xl p-8 transition-all transform hover:scale-105 hover:shadow-xl border-2 border-gray-700 hover:border-blue-500"
+              href={`/description?type=pushup&subtype=${type}`}
+              className="bg-gray-800 hover:bg-gray-700 rounded-xl p-8 transition-all transform hover:scale-105 hover:shadow-xl border-2 border-gray-700 hover:border-blue-500 block"
             >
               <div className="text-6xl mb-4">{config.icon}</div>
               <h2 className="text-2xl font-bold mb-2">{config.nameKo}</h2>
@@ -40,7 +38,7 @@ export function PushupTypeSelector({ onSelect }: PushupTypeSelectorProps) {
                   </div>
                 </div>
               </div>
-            </button>
+            </a>
           );
         })}
       </div>
