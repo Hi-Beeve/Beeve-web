@@ -43,7 +43,7 @@ export function StandingJump({ onBack }: StandingJumpProps) {
   const countdownTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // 카메라 시작
-  const startCamera = async () => {
+  const startCamera = async (): Promise<boolean> => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
@@ -58,10 +58,25 @@ export function StandingJump({ onBack }: StandingJumpProps) {
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        
+        // 비디오가 재생 가능할 때까지 대기
+        return new Promise((resolve) => {
+          const checkVideo = () => {
+            if (videoRef.current && videoRef.current.readyState >= 2) {
+              console.log('카메라 준비 완료');
+              resolve(true);
+            } else {
+              setTimeout(checkVideo, 100);
+            }
+          };
+          checkVideo();
+        });
       }
+      return true;
     } catch (error) {
       console.error('카메라 접근 실패:', error);
       alert('카메라 접근이 필요합니다. 브라우저 설정을 확인해주세요.');
+      return false;
     }
   };
 
@@ -98,8 +113,12 @@ export function StandingJump({ onBack }: StandingJumpProps) {
 
   // 카운트다운과 함께 녹화 시작
   const startCountdownAndRecording = () => {
-    if (!streamRef.current) return;
+    if (!streamRef.current) {
+      console.error('스트림이 준비되지 않았습니다');
+      return;
+    }
 
+    console.log('카운트다운 시작');
     // 3초 카운트다운 시작
     setCountdown(3);
     playBeep(600, 200); // 낮은 음
@@ -197,12 +216,8 @@ export function StandingJump({ onBack }: StandingJumpProps) {
     }
   };
 
-  // 컴포넌트 마운트 시 카메라 시작
+  // 컴포넌트 정리
   useEffect(() => {
-    if (phase === 'recording') {
-      startCamera();
-    }
-    
     return () => {
       stopCamera();
       if (recordingTimerRef.current) {
@@ -212,7 +227,7 @@ export function StandingJump({ onBack }: StandingJumpProps) {
         clearInterval(countdownTimerRef.current);
       }
     };
-  }, [phase]);
+  }, []);
 
   // 시간 포맷 함수
   const formatTime = (seconds: number) => {
@@ -256,12 +271,18 @@ export function StandingJump({ onBack }: StandingJumpProps) {
               </ul>
             </div>
             <button
-              onClick={() => {
+              onClick={async () => {
                 setPhase('recording');
-                // 카메라 시작 후 바로 카운트다운 시작
-                setTimeout(() => {
+                
+                // 카메라 초기화 완료를 기다린 후 카운트다운 시작
+                const cameraReady = await startCamera();
+                if (cameraReady) {
+                  console.log('카메라 준비 완료, 카운트다운 시작');
                   startCountdownAndRecording();
-                }, 500); // 카메라 초기화 대기
+                } else {
+                  console.error('카메라 초기화 실패');
+                  setPhase('intro'); // 실패 시 다시 intro로
+                }
               }}
               className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 px-8 rounded-full text-xl transition-transform transform hover:scale-105"
             >
@@ -320,9 +341,15 @@ export function StandingJump({ onBack }: StandingJumpProps) {
                 <br />
                 (자동으로 정지됩니다)
               </p>
+            ) : showJumpMessage ? (
+              <p className="text-gray-300 mb-6">
+                지금 뛰세요! 최대한 높이!
+              </p>
             ) : (
               <p className="text-gray-300 mb-6">
                 카메라를 준비하고 있습니다...
+                <br />
+                <span className="text-sm text-gray-400">잠시만 기다려주세요</span>
               </p>
             )}
 

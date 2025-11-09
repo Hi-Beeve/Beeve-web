@@ -154,24 +154,33 @@ export function VideoAnalyzer({ videoBlob, onAnalysisComplete, onCancel }: Video
       
       {/* 비디오 플레이어 */}
       <div className="relative mb-6">
-        <video
-          ref={videoRef}
-          src={videoUrl}
-          className="w-full max-w-2xl mx-auto rounded-lg bg-black"
-          onLoadedMetadata={handleLoadedMetadata}
-          onCanPlay={handleCanPlay}
-          onTimeUpdate={() => {
-            if (videoRef.current && !isNaN(videoRef.current.currentTime)) {
-              setCurrentTime(videoRef.current.currentTime);
-            }
-          }}
-          onEnded={() => setIsPlaying(false)}
-          playsInline
-          webkit-playsinline="true"
-          controls={false}
-          preload="metadata"
-          muted
-        />
+        {videoUrl ? (
+          <video
+            ref={videoRef}
+            src={videoUrl}
+            className="w-full max-w-2xl mx-auto rounded-lg bg-black"
+            onLoadedMetadata={handleLoadedMetadata}
+            onCanPlay={handleCanPlay}
+            onTimeUpdate={() => {
+              if (videoRef.current && !isNaN(videoRef.current.currentTime)) {
+                setCurrentTime(videoRef.current.currentTime);
+              }
+            }}
+            onEnded={() => setIsPlaying(false)}
+            playsInline
+            webkit-playsinline="true"
+            controls={false}
+            preload="metadata"
+            muted
+          />
+        ) : (
+          <div className="w-full max-w-2xl mx-auto rounded-lg bg-black h-64 flex items-center justify-center">
+            <div className="text-white text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-2"></div>
+              <div>비디오 준비 중...</div>
+            </div>
+          </div>
+        )}
         
         {/* 로딩 오버레이 */}
         {duration === 0 && (
