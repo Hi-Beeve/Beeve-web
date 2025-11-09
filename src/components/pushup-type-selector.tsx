@@ -3,9 +3,7 @@
 import { PushupType } from '@/types/pushup';
 import { PUSHUP_CONFIGS } from '@/config/pushup-types';
 
-interface PushupTypeSelectorProps {}
-
-export function PushupTypeSelector({}: PushupTypeSelectorProps) {
+export function PushupTypeSelector() {
   const types: PushupType[] = ['wall', 'knee', 'standard'];
 
   
