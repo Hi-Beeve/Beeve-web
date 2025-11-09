@@ -26,9 +26,14 @@ export default function DescriptionView() {
 
   const handleStart = () => {
     if (exerciseKey) {
-      const targetPage = exerciseKey.startsWith('pushup') ? '/pushup-counter' : `/${exerciseKey}-counter`;
-      const query = exerciseKey.startsWith('pushup') ? `?type=${exerciseKey.split('-')[1]}` : '';
-      router.push(`${targetPage}${query}`);
+      if (exerciseKey.startsWith('pushup')) {
+        const subtype = exerciseKey.split('-')[1];
+        router.push(`/pushup-counter?type=${subtype}`);
+      } else if (exerciseKey === 'step') {
+        router.push('/step-test');
+      } else {
+        router.push(`/${exerciseKey}-counter`);
+      }
     }
   };
 
