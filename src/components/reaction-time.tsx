@@ -235,46 +235,21 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
       totalDelta
     });
     
-    // 개선된 감지 알고리즘 (발 벌리기 동작 최적화)
+    // 단순화된 Y축 중심 감지 알고리즘
     let movementDetected = false;
     
-    // 방법 1: 상하 움직임 중심 감지 (무릎 굽히기 → 일어서기의 핵심 움직임)
-    const verticalThreshold = 0.25; // Y축 (상하) 움직임 임계값 (가장 민감)
+    // 주요 감지: Y축(상하) 움직임만 사용 (발 벌리기의 핵심)
+    const verticalThreshold = 0.3; // Y축 임계값을 조금 높여서 확실한 움직임만 감지
     if (deltaY > verticalThreshold) {
-      console.log('🔥 상하 움직임 감지 (Y축):', deltaY);
+      console.log('🔥 Y축 움직임 감지! 발 벌리기 인식:', deltaY);
       movementDetected = true;
     }
     
-    // 방법 2: 좌우 움직임 보조 감지 (상체 흔들림)
-    const lateralThreshold = 0.35; // X축 (좌우) 움직임 임계값 (덜 민감)
-    if (deltaX > lateralThreshold) {
-      console.log('좌우 움직임 감지 (X축):', deltaX);
-      movementDetected = true;
-    }
-    
-    // 방법 3: 전체 변화량 (종합적 판단)
-    const totalThreshold = 0.4; // 0.5에서 0.4로 더 민감하게
+    // 보조 감지: 매우 큰 전체 변화량 (확실한 움직임만)
+    const totalThreshold = 0.8; // 높은 임계값으로 확실한 움직임만
     if (totalDelta > totalThreshold) {
-      console.log('전체 움직임 감지:', totalDelta);
+      console.log('큰 전체 움직임 감지:', totalDelta);
       movementDetected = true;
-    }
-    
-    // 방법 4: 개별축 세밀 감지 (미세한 움직임 포착)
-    const fineThreshold = 0.15; // 더 민감한 임계값
-    if (deltaY > fineThreshold || deltaX > 0.25 || deltaZ > 0.2) {
-      console.log('세밀 축 움직임 감지:', { deltaX, deltaY, deltaZ });
-      movementDetected = true;
-    }
-    
-    // 방법 4: 변화율 기반 감지 (베이스라인 대비 퍼센트)
-    const percentageThreshold = 0.05; // 5% 변화
-    const baselineTotal = Math.sqrt(baselineAcceleration.x ** 2 + baselineAcceleration.y ** 2 + baselineAcceleration.z ** 2);
-    if (baselineTotal > 0) {
-      const changePercentage = totalDelta / baselineTotal;
-      if (changePercentage > percentageThreshold) {
-        console.log('변화율 기반 감지:', changePercentage * 100, '%');
-        movementDetected = true;
-      }
     }
     
     if (movementDetected) {
@@ -604,70 +579,60 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
               
               {/* 실시간 감지 정보 */}
               <div className="bg-gray-700 p-3 rounded text-xs text-gray-400 mt-4">
-                <div className="mb-2 font-bold text-yellow-300">실시간 감지 상태 (OR 조건):</div>
+                <div className="mb-3 font-bold text-yellow-300">🎯 발 벌리기 감지 상태:</div>
                 {baselineAcceleration && currentAccelerationData && (
                   <>
-                    <div className="grid grid-cols-1 gap-1">
-                      <div className="flex justify-between">
-                        <span>🔥 Y축(상하): {Math.abs(currentAccelerationData.y - baselineAcceleration.y).toFixed(3)}</span>
-                        {Math.abs(currentAccelerationData.y - baselineAcceleration.y) > 0.25 ? 
-                          <span className="text-green-400 font-bold">✓ 감지!</span> : 
-                          <span className="text-gray-500">&gt; 0.25</span>}
+                    <div className="space-y-2">
+                      {/* 주요 감지: Y축 */}
+                      <div className="bg-gray-600 p-2 rounded">
+                        <div className="flex justify-between items-center">
+                          <span className="font-bold">🔥 Y축(상하) 움직임:</span>
+                          <span className="text-white font-mono">
+                            {Math.abs(currentAccelerationData.y - baselineAcceleration.y).toFixed(3)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center mt-1">
+                          <span>임계값: &gt; 0.3</span>
+                          {Math.abs(currentAccelerationData.y - baselineAcceleration.y) > 0.3 ? 
+                            <span className="text-green-400 font-bold text-lg">✓ 발 벌리기 감지!</span> : 
+                            <span className="text-gray-400">대기 중...</span>}
+                        </div>
                       </div>
                       
-                      <div className="flex justify-between">
-                        <span>2️⃣ X축(좌우): {Math.abs(currentAccelerationData.x - baselineAcceleration.x).toFixed(3)}</span>
-                        {Math.abs(currentAccelerationData.x - baselineAcceleration.x) > 0.35 ? 
-                          <span className="text-green-400 font-bold">✓ 감지!</span> : 
-                          <span className="text-gray-500">&gt; 0.35</span>}
-                      </div>
-                      
-                      <div className="flex justify-between">
-                        <span>3️⃣ 전체변화: {Math.sqrt(
-                          Math.pow(currentAccelerationData.x - baselineAcceleration.x, 2) +
-                          Math.pow(currentAccelerationData.y - baselineAcceleration.y, 2) +
-                          Math.pow(currentAccelerationData.z - baselineAcceleration.z, 2)
-                        ).toFixed(3)}</span>
-                        {Math.sqrt(
-                          Math.pow(currentAccelerationData.x - baselineAcceleration.x, 2) +
-                          Math.pow(currentAccelerationData.y - baselineAcceleration.y, 2) +
-                          Math.pow(currentAccelerationData.z - baselineAcceleration.z, 2)
-                        ) > 0.4 ? 
-                          <span className="text-green-400 font-bold">✓ 감지!</span> : 
-                          <span className="text-gray-500">&gt; 0.4</span>}
-                      </div>
-                      
-                      <div className="flex justify-between">
-                        <span>4️⃣ 세밀감지: Y&gt;0.15 X&gt;0.25 Z&gt;0.2</span>
-                        {(Math.abs(currentAccelerationData.y - baselineAcceleration.y) > 0.15 || 
-                          Math.abs(currentAccelerationData.x - baselineAcceleration.x) > 0.25 ||
-                          Math.abs(currentAccelerationData.z - baselineAcceleration.z) > 0.2) ? 
-                          <span className="text-green-400 font-bold">✓ 감지!</span> : 
-                          <span className="text-gray-500">대기중</span>}
-                      </div>
-                      
-                      <div className="flex justify-between">
-                        <span>5️⃣ 변화율: {baselineAcceleration && Math.sqrt(baselineAcceleration.x ** 2 + baselineAcceleration.y ** 2 + baselineAcceleration.z ** 2) > 0 ? 
-                          ((Math.sqrt(
+                      {/* 보조 감지: 전체 변화량 */}
+                      <div className="bg-gray-600 p-2 rounded">
+                        <div className="flex justify-between items-center">
+                          <span>📊 전체 변화량:</span>
+                          <span className="text-white font-mono">
+                            {Math.sqrt(
+                              Math.pow(currentAccelerationData.x - baselineAcceleration.x, 2) +
+                              Math.pow(currentAccelerationData.y - baselineAcceleration.y, 2) +
+                              Math.pow(currentAccelerationData.z - baselineAcceleration.z, 2)
+                            ).toFixed(3)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center mt-1">
+                          <span>임계값: &gt; 0.8</span>
+                          {Math.sqrt(
                             Math.pow(currentAccelerationData.x - baselineAcceleration.x, 2) +
                             Math.pow(currentAccelerationData.y - baselineAcceleration.y, 2) +
                             Math.pow(currentAccelerationData.z - baselineAcceleration.z, 2)
-                          ) / Math.sqrt(baselineAcceleration.x ** 2 + baselineAcceleration.y ** 2 + baselineAcceleration.z ** 2)) * 100).toFixed(1) + '%' : 
-                          '계산불가'}</span>
-                        {baselineAcceleration && Math.sqrt(baselineAcceleration.x ** 2 + baselineAcceleration.y ** 2 + baselineAcceleration.z ** 2) > 0 && 
-                         (Math.sqrt(
-                           Math.pow(currentAccelerationData.x - baselineAcceleration.x, 2) +
-                           Math.pow(currentAccelerationData.y - baselineAcceleration.y, 2) +
-                           Math.pow(currentAccelerationData.z - baselineAcceleration.z, 2)
-                         ) / Math.sqrt(baselineAcceleration.x ** 2 + baselineAcceleration.y ** 2 + baselineAcceleration.z ** 2)) > 0.05 ? 
-                          <span className="text-green-400 font-bold">✓ 감지!</span> : 
-                          <span className="text-gray-500">&gt; 5%</span>}
+                          ) > 0.8 ? 
+                            <span className="text-green-400 font-bold">✓ 큰 움직임!</span> : 
+                            <span className="text-gray-400">대기 중...</span>}
+                        </div>
+                      </div>
+                      
+                      {/* 참고 정보 */}
+                      <div className="text-xs text-gray-500 mt-2">
+                        <div>X축(좌우): {Math.abs(currentAccelerationData.x - baselineAcceleration.x).toFixed(3)}</div>
+                        <div>Z축(앞뒤): {Math.abs(currentAccelerationData.z - baselineAcceleration.z).toFixed(3)}</div>
                       </div>
                     </div>
                   </>
                 )}
-                <div className="mt-2 text-yellow-300">
-                  💡 하나라도 ✓ 감지되면 반응으로 인식됩니다
+                <div className="mt-3 text-yellow-300 text-center">
+                  💡 Y축 움직임이 0.3 이상이면 자동 감지됩니다
                 </div>
               </div>
             </div>
