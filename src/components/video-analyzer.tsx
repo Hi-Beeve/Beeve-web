@@ -32,8 +32,33 @@ export function VideoAnalyzer({ videoBlob, onAnalysisComplete, onCancel }: Video
   // 비디오 메타데이터 로드
   const handleLoadedMetadata = () => {
     if (videoRef.current) {
-      setDuration(videoRef.current.duration);
-      setCurrentTime(0);
+      const videoDuration = videoRef.current.duration;
+      console.log('Video duration loaded:', videoDuration);
+      
+      if (!isNaN(videoDuration) && videoDuration > 0) {
+        setDuration(videoDuration);
+        setCurrentTime(0);
+      } else {
+        console.warn('Invalid video duration:', videoDuration);
+        // 재시도
+        setTimeout(() => {
+          if (videoRef.current && !isNaN(videoRef.current.duration)) {
+            setDuration(videoRef.current.duration);
+            setCurrentTime(0);
+          }
+        }, 100);
+      }
+    }
+  };
+
+  // 비디오 로드 완료
+  const handleCanPlay = () => {
+    if (videoRef.current && duration === 0) {
+      const videoDuration = videoRef.current.duration;
+      if (!isNaN(videoDuration) && videoDuration > 0) {
+        setDuration(videoDuration);
+        setCurrentTime(videoRef.current.currentTime);
+      }
     }
   };
 
@@ -71,14 +96,18 @@ export function VideoAnalyzer({ videoBlob, onAnalysisComplete, onCancel }: Video
     }
   };
 
-  // 프레임 단위 이동 (1/60초)
+  // 프레임 단위 이동 (1/30초 - 더 안정적)
   const moveFrame = (direction: 'forward' | 'backward') => {
-    if (!videoRef.current) return;
+    if (!videoRef.current || duration === 0) return;
     
-    const frameTime = 1 / 60; // 60fps 기준
+    const frameTime = 1 / 30; // 30fps 기준 (더 안정적)
+    const currentVideoTime = videoRef.current.currentTime;
+    
     const newTime = direction === 'forward' 
-      ? Math.min(videoRef.current.currentTime + frameTime, duration)
-      : Math.max(videoRef.current.currentTime - frameTime, 0);
+      ? Math.min(currentVideoTime + frameTime, duration)
+      : Math.max(currentVideoTime - frameTime, 0);
+    
+    console.log(`Moving ${direction}: ${currentVideoTime.toFixed(3)} → ${newTime.toFixed(3)}`);
     
     videoRef.current.currentTime = newTime;
     setCurrentTime(newTime);
@@ -104,6 +133,9 @@ export function VideoAnalyzer({ videoBlob, onAnalysisComplete, onCancel }: Video
 
   // 시간 포맷 (밀리초 단위)
   const formatTime = (time: number) => {
+    if (isNaN(time) || time < 0) {
+      return '0.00초';
+    }
     return time.toFixed(2) + '초';
   };
 
@@ -127,8 +159,29 @@ export function VideoAnalyzer({ videoBlob, onAnalysisComplete, onCancel }: Video
           src={videoUrl}
           className="w-full max-w-2xl mx-auto rounded-lg bg-black"
           onLoadedMetadata={handleLoadedMetadata}
+          onCanPlay={handleCanPlay}
+          onTimeUpdate={() => {
+            if (videoRef.current && !isNaN(videoRef.current.currentTime)) {
+              setCurrentTime(videoRef.current.currentTime);
+            }
+          }}
           onEnded={() => setIsPlaying(false)}
+          playsInline
+          webkit-playsinline="true"
+          controls={false}
+          preload="metadata"
+          muted
         />
+        
+        {/* 로딩 오버레이 */}
+        {duration === 0 && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-75 rounded-lg">
+            <div className="text-white text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-2"></div>
+              <div>영상 로딩 중...</div>
+            </div>
+          </div>
+        )}
         
         {/* 시점 표시 오버레이 */}
         <div className="absolute top-4 left-4 space-y-2">
@@ -151,7 +204,8 @@ export function VideoAnalyzer({ videoBlob, onAnalysisComplete, onCancel }: Video
         <div className="flex items-center justify-center space-x-4">
           <button
             onClick={() => moveFrame('backward')}
-            className="bg-gray-600 hover:bg-gray-700 text-white p-2 rounded"
+            disabled={duration === 0}
+            className="bg-gray-600 hover:bg-gray-700 text-white p-2 rounded disabled:opacity-50 disabled:cursor-not-allowed"
             title="이전 프레임"
           >
             ⏮️
@@ -159,14 +213,16 @@ export function VideoAnalyzer({ videoBlob, onAnalysisComplete, onCancel }: Video
           
           <button
             onClick={togglePlayPause}
-            className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-bold"
+            disabled={duration === 0}
+            className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isPlaying ? '⏸️ 일시정지' : '▶️ 재생'}
           </button>
           
           <button
             onClick={() => moveFrame('forward')}
-            className="bg-gray-600 hover:bg-gray-700 text-white p-2 rounded"
+            disabled={duration === 0}
+            className="bg-gray-600 hover:bg-gray-700 text-white p-2 rounded disabled:opacity-50 disabled:cursor-not-allowed"
             title="다음 프레임"
           >
             ⏭️
@@ -183,11 +239,12 @@ export function VideoAnalyzer({ videoBlob, onAnalysisComplete, onCancel }: Video
           <input
             type="range"
             min="0"
-            max={duration}
+            max={duration || 1}
             step="0.01"
             value={currentTime}
             onChange={handleTimeChange}
-            className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+            disabled={duration === 0}
+            className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer disabled:opacity-50"
           />
         </div>
 
