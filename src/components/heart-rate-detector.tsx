@@ -76,8 +76,12 @@ export function HeartRateDetector({ title, instruction, onComplete, onCancel }: 
 
   // 심박수 측정 시작
   const startDetection = async () => {
-    if (!videoRef.current || !canvasRef.current) return;
+    if (!videoRef.current || !canvasRef.current) {
+      console.log('Video or canvas not ready');
+      return;
+    }
     
+    console.log('Starting heart rate detection...');
     setIsDetecting(true);
     setProgress(0);
     setCurrentBPM(0);
@@ -90,13 +94,19 @@ export function HeartRateDetector({ title, instruction, onComplete, onCancel }: 
 
     // 15초간 측정
     const measurementDuration = 15000; // 15초
+    let frameCount = 0;
+    
     const analysisLoop = () => {
-      if (!measurementRef.current || !isDetecting) return;
+      if (!measurementRef.current) {
+        console.log('Measurement ref is null, stopping...');
+        return;
+      }
       
       const elapsed = Date.now() - measurementRef.current.startTime;
       const progressPercent = (elapsed / measurementDuration) * 100;
       
       setProgress(Math.min(progressPercent, 100));
+      frameCount++;
       
       if (elapsed < measurementDuration) {
         // 혈류 변화 분석
@@ -104,65 +114,97 @@ export function HeartRateDetector({ title, instruction, onComplete, onCancel }: 
         if (intensity !== null) {
           measurementRef.current.samples.push(intensity);
           
+          // 디버깅 로그 (매 30프레임마다)
+          if (frameCount % 30 === 0) {
+            console.log(`Frame ${frameCount}, Intensity: ${intensity.toFixed(2)}, Samples: ${measurementRef.current.samples.length}`);
+          }
+          
           // 실시간 심박수 계산 (5초마다)
           if (measurementRef.current.samples.length > 150) { // ~5초 데이터
             const bpm = calculateHeartRate(measurementRef.current.samples.slice(-150));
-            setCurrentBPM(bpm);
+            if (bpm > 0) {
+              setCurrentBPM(bpm);
+            }
           }
+        } else {
+          console.log('Failed to analyze blood flow');
         }
         
         animationRef.current = requestAnimationFrame(analysisLoop);
       } else {
         // 측정 완료
+        console.log(`Measurement complete. Total samples: ${measurementRef.current.samples.length}`);
         const finalBPM = calculateFinalHeartRate();
+        console.log(`Final BPM: ${finalBPM}`);
         setIsDetecting(false);
         onComplete(finalBPM);
       }
     };
     
+    // 첫 프레임 시작
     animationRef.current = requestAnimationFrame(analysisLoop);
   };
 
   // 혈류 변화 분석 (카메라 프레임에서 빨간색 채널 평균 계산)
   const analyzeBloodFlow = (): number | null => {
-    if (!videoRef.current || !canvasRef.current) return null;
+    if (!videoRef.current || !canvasRef.current) {
+      console.log('Video or canvas ref is null');
+      return null;
+    }
     
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
-    if (!ctx) return null;
+    if (!ctx) {
+      console.log('Canvas context is null');
+      return null;
+    }
     
     const video = videoRef.current;
     
     // 비디오가 준비되지 않았으면 스킵
-    if (video.readyState !== video.HAVE_ENOUGH_DATA) return null;
-    
-    // 캔버스 크기 설정
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    
-    // 비디오 프레임을 캔버스에 그리기
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    
-    // 중앙 영역의 픽셀 데이터 가져오기 (손가락이 위치할 영역)
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
-    const sampleSize = 50; // 50x50 픽셀 영역
-    
-    const imageData = ctx.getImageData(
-      centerX - sampleSize / 2,
-      centerY - sampleSize / 2,
-      sampleSize,
-      sampleSize
-    );
-    
-    // 빨간색 채널 평균 계산 (혈류 변화 감지)
-    let redSum = 0;
-    for (let i = 0; i < imageData.data.length; i += 4) {
-      redSum += imageData.data[i]; // R 채널
+    if (video.readyState !== video.HAVE_ENOUGH_DATA) {
+      console.log(`Video not ready. ReadyState: ${video.readyState}`);
+      return null;
     }
     
-    const avgRed = redSum / (imageData.data.length / 4);
-    return avgRed;
+    try {
+      // 캔버스 크기 설정
+      if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
+        canvas.width = video.videoWidth || 640;
+        canvas.height = video.videoHeight || 480;
+      }
+      
+      // 비디오 프레임을 캔버스에 그리기
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      
+      // 중앙 영역의 픽셀 데이터 가져오기 (손가락이 위치할 영역)
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
+      const sampleSize = Math.min(50, canvas.width / 4, canvas.height / 4); // 적응적 샘플 크기
+      
+      const imageData = ctx.getImageData(
+        Math.max(0, centerX - sampleSize / 2),
+        Math.max(0, centerY - sampleSize / 2),
+        sampleSize,
+        sampleSize
+      );
+      
+      // 빨간색 채널 평균 계산 (혈류 변화 감지)
+      let redSum = 0;
+      let pixelCount = 0;
+      
+      for (let i = 0; i < imageData.data.length; i += 4) {
+        redSum += imageData.data[i]; // R 채널
+        pixelCount++;
+      }
+      
+      const avgRed = pixelCount > 0 ? redSum / pixelCount : 0;
+      return avgRed;
+      
+    } catch (error) {
+      console.error('Error analyzing blood flow:', error);
+      return null;
+    }
   };
 
   // 심박수 계산 (피크 감지 알고리즘)
@@ -248,8 +290,18 @@ export function HeartRateDetector({ title, instruction, onComplete, onCancel }: 
 
   // 측정 중단
   const handleCancel = () => {
+    console.log('Cancelling heart rate detection...');
     setIsDetecting(false);
-    stopCamera();
+    setProgress(0);
+    setCurrentBPM(0);
+    
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
+      animationRef.current = null;
+    }
+    
+    measurementRef.current = null;
+    
     if (onCancel) {
       onCancel();
     }

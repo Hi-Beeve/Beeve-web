@@ -7,8 +7,8 @@ import { Metronome } from './metronome';
 // 스텝검사 단계 정의
 type StepTestPhase = 
   | 'intro'           // 시작 전 안내
-  | 'pre-rest'        // 1분 사전 휴식
   | 'pre-heart-rate'  // 안정시 심박수 측정
+  | 'pre-exercise-rest' // 30초 운동 전 휴식
   | 'exercise'        // 3분 스텝박스 운동
   | 'post-rest'       // 1분 휴식
   | 'post-heart-rate' // 운동 후 심박수 측정
@@ -48,18 +48,20 @@ export function StepTest({ onBack }: StepTestProps) {
   };
 
   // 단계별 핸들러
-  const handleStartPreRest = () => {
-    setPhase('pre-rest');
-    startTimer(60, () => setPhase('pre-heart-rate')); // 1분 휴식
+  const handleStartMeasurement = () => {
+    setPhase('pre-heart-rate');
   };
 
   const handlePreHeartRateComplete = (heartRate: number) => {
     setPreHeartRate(heartRate);
-    setPhase('exercise');
-    startTimer(180, () => {
-      setPhase('post-rest');
-      startTimer(60, handlePostRestComplete); // 1분 휴식 후 자동으로 심박수 측정
-    }); // 3분 운동
+    setPhase('pre-exercise-rest');
+    startTimer(30, () => {
+      setPhase('exercise');
+      startTimer(180, () => {
+        setPhase('post-rest');
+        startTimer(60, handlePostRestComplete); // 1분 휴식 후 자동으로 심박수 측정
+      }); // 3분 운동
+    }); // 30초 휴식
   };
 
   const handlePostRestComplete = () => {
@@ -116,7 +118,7 @@ export function StepTest({ onBack }: StepTestProps) {
               운동 전후 심박수를 측정하여 결과를 계산합니다.
             </p>
             <button
-              onClick={handleStartPreRest}
+              onClick={handleStartMeasurement}
               className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 px-8 rounded-full text-xl transition-transform transform hover:scale-105"
             >
               측정 시작
@@ -124,11 +126,13 @@ export function StepTest({ onBack }: StepTestProps) {
           </div>
         )}
 
-        {phase === 'pre-rest' && (
+        {phase === 'pre-exercise-rest' && (
           <div className="text-center">
-            <h2 className="text-3xl font-bold mb-6">사전 휴식</h2>
+            <h2 className="text-3xl font-bold mb-6">운동 준비</h2>
             <p className="text-gray-300 mb-8">
-              심박수가 안정될 때까지 편안히 앉아서 휴식을 취하세요.
+              스텝박스 운동을 준비하세요.
+              <br />
+              잠시 후 메트로놈 박자에 맞춰 운동을 시작합니다.
             </p>
             <div className="text-6xl font-mono mb-4">{formatTime(timeRemaining)}</div>
             <div className="text-gray-400">남은 시간</div>
