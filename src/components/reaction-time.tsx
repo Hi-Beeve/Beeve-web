@@ -65,12 +65,30 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
 
   // 가속도계 초기화
   const initializeAccelerometer = () => {
+    console.log('가속도계 초기화 시작...');
+    
     if (!hasAccelerometer) {
       // DeviceMotionEvent 지원 확인
       if (window.DeviceMotionEvent) {
+        console.log('DeviceMotionEvent 지원됨');
         setHasAccelerometer(true);
+        
+        // 테스트 이벤트 리스너로 실제 작동 확인
+        const testListener = (event: DeviceMotionEvent) => {
+          console.log('테스트 가속도계 이벤트:', event);
+          window.removeEventListener('devicemotion', testListener);
+        };
+        
+        window.addEventListener('devicemotion', testListener, true);
+        
+        // 3초 후 테스트 리스너 제거 (혹시 이벤트가 안 오는 경우)
+        setTimeout(() => {
+          window.removeEventListener('devicemotion', testListener);
+        }, 3000);
+        
         return true;
       } else {
+        console.error('DeviceMotionEvent 지원되지 않음');
         alert('이 기기는 가속도계를 지원하지 않습니다.');
         return false;
       }
@@ -82,14 +100,48 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
   const startAccelerometer = () => {
     if (!hasAccelerometer) return;
 
+    console.log('가속도계 시작 시도...');
+
     const handleMotion = (event: DeviceMotionEvent) => {
-      if (!event.accelerationIncludingGravity) return;
+      console.log('가속도계 이벤트 수신:', event);
       
-      const { x, y, z } = event.accelerationIncludingGravity;
-      if (x === null || y === null || z === null) return;
+      // accelerationIncludingGravity 우선 시도
+      let acceleration = event.accelerationIncludingGravity;
+      
+      // accelerationIncludingGravity가 없으면 acceleration 시도
+      if (!acceleration || (acceleration.x === null && acceleration.y === null && acceleration.z === null)) {
+        acceleration = event.acceleration;
+        console.log('accelerationIncludingGravity 없음, acceleration 사용:', acceleration);
+      }
+      
+      // 둘 다 없으면 rotationRate 시도 (최후의 수단)
+      if (!acceleration || (acceleration.x === null && acceleration.y === null && acceleration.z === null)) {
+        const rotation = event.rotationRate;
+        if (rotation && (rotation.alpha !== null || rotation.beta !== null || rotation.gamma !== null)) {
+          console.log('acceleration 없음, rotationRate 사용:', rotation);
+          // rotationRate를 가속도처럼 사용 (임시)
+          acceleration = {
+            x: rotation.alpha || 0,
+            y: rotation.beta || 0,
+            z: rotation.gamma || 0
+          };
+        }
+      }
+      
+      if (!acceleration) {
+        console.warn('가속도 데이터 없음');
+        return;
+      }
+      
+      const { x, y, z } = acceleration;
+      if (x === null || y === null || z === null) {
+        console.warn('가속도 값이 null:', { x, y, z });
+        return;
+      }
 
       // 현재 가속도 값
       const currentAcceleration = { x, y, z };
+      console.log('가속도 값:', currentAcceleration);
       
       // 안정성 체크 중일 때
       if (phase === 'stability-check') {
@@ -102,8 +154,9 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
       }
     };
 
-    window.addEventListener('devicemotion', handleMotion);
+    window.addEventListener('devicemotion', handleMotion, true);
     accelerometerRef.current = handleMotion;
+    console.log('가속도계 이벤트 리스너 등록 완료');
   };
 
   // 가속도계 정지
@@ -116,16 +169,39 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
 
   // 안정성 체크
   const checkStability = (currentAcceleration: {x: number, y: number, z: number}) => {
-    // 간단한 안정성 점수 계산 (실제로는 더 복잡한 알고리즘 필요)
+    console.log('안정성 체크:', currentAcceleration);
+    
+    // 전체 가속도 크기 계산
     const totalAcceleration = Math.sqrt(
       currentAcceleration.x ** 2 + 
       currentAcceleration.y ** 2 + 
       currentAcceleration.z ** 2
     );
     
-    // 안정성 점수 업데이트 (0-100)
-    const stability = Math.max(0, 100 - Math.abs(totalAcceleration - 9.8) * 10);
-    setStabilityScore(Math.round(stability));
+    console.log('전체 가속도:', totalAcceleration);
+    
+    // 안정성 점수 계산 (더 관대한 기준)
+    // 일반적으로 중력가속도는 9.8m/s²이지만, 기기마다 다를 수 있음
+    let stability;
+    
+    if (totalAcceleration === 0) {
+      // 가속도가 0이면 센서 문제
+      stability = 0;
+    } else if (totalAcceleration < 5) {
+      // 너무 작으면 센서 문제일 가능성
+      stability = Math.max(20, totalAcceleration * 10);
+    } else if (totalAcceleration > 15) {
+      // 너무 크면 불안정
+      stability = Math.max(0, 100 - (totalAcceleration - 15) * 5);
+    } else {
+      // 5-15 범위에서는 상대적으로 안정적
+      const deviation = Math.abs(totalAcceleration - 9.8);
+      stability = Math.max(30, 100 - deviation * 15);
+    }
+    
+    const finalScore = Math.round(Math.min(100, Math.max(0, stability)));
+    console.log('안정성 점수:', finalScore);
+    setStabilityScore(finalScore);
   };
 
   // 움직임 감지
@@ -342,28 +418,55 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
                 ></div>
               </div>
               
-              <p className="text-sm text-gray-300">
+              <p className="text-sm text-gray-300 mb-4">
                 {stabilityScore >= 80 ? '✅ 고정 상태가 좋습니다!' :
                  stabilityScore >= 60 ? '⚠️ 조금 더 단단히 고정해주세요' :
+                 stabilityScore === 0 ? '❌ 가속도계 데이터를 받지 못하고 있습니다' :
                  '❌ 휴대폰을 더 안정적으로 고정해주세요'}
               </p>
+              
+              {/* 디버그 정보 */}
+              <div className="bg-gray-700 p-3 rounded text-xs text-gray-400">
+                <div>가속도계 지원: {hasAccelerometer ? '✅' : '❌'}</div>
+                <div>권한 상태: {accelerometerPermission}</div>
+                <div className="mt-2 text-yellow-300">
+                  💡 팁: 휴대폰을 허리에 단단히 고정하고 움직이지 마세요
+                </div>
+              </div>
             </div>
 
-            {stabilityScore >= 80 && (
+            {stabilityScore >= 60 && (
               <button
                 onClick={() => setPhase('ready')}
-                className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg"
+                className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg mb-4"
               >
                 측정 준비 완료
               </button>
             )}
             
-            <button
-              onClick={() => setPhase('setup-guide')}
-              className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg mt-4"
-            >
-              다시 고정하기
-            </button>
+            <div className="space-y-2">
+              <button
+                onClick={() => setPhase('setup-guide')}
+                className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg"
+              >
+                다시 고정하기
+              </button>
+              
+              {stabilityScore === 0 && (
+                <button
+                  onClick={() => {
+                    // 가속도계 재시작
+                    stopAccelerometer();
+                    setTimeout(() => {
+                      startAccelerometer();
+                    }, 1000);
+                  }}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg ml-2"
+                >
+                  센서 재시작
+                </button>
+              )}
+            </div>
           </div>
         )}
 
