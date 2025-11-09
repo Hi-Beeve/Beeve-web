@@ -25,11 +25,11 @@ export default function Home() {
           </Link>
 
           <Link
-            href="/situp-counter"
+            href="/description?type=situp"
             className="bg-gray-800 hover:bg-gray-700 p-6 rounded-lg text-center transition-colors border border-gray-700"
           >
             <div className="text-4xl mb-3">🏃</div>
-            <h3 className="text-xl font-bold mb-2">싯업 측정</h3>
+            <h3 className="text-xl font-bold mb-2">싯업 측정!!</h3>
             <p className="text-gray-400 text-sm">
               1분 내 최대 싯업 개수 측정
             </p>
