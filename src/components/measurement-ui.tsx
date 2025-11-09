@@ -6,9 +6,6 @@ import { TimerStatus } from './measurement-timer';
 interface MeasurementUIProps {
   // 카메라 관련
   videoRef: React.RefObject<HTMLVideoElement | null>;
-  canvasRef: React.RefObject<HTMLCanvasElement | null>;
-  showSkeleton: boolean;
-  setShowSkeleton: (show: boolean) => void;
   
   // 타이머 관련
   timerStatus: TimerStatus;
@@ -44,9 +41,6 @@ interface MeasurementUIProps {
 
 export function MeasurementUI({
   videoRef,
-  canvasRef,
-  showSkeleton,
-  setShowSkeleton,
   timerStatus,
   preparingTime,
   remainingTime,
@@ -93,26 +87,12 @@ export function MeasurementUI({
               x5-video-player-type="h5"
               x5-video-player-fullscreen="false"
             />
-            <canvas
-              ref={canvasRef}
-              className="absolute top-0 left-0 w-full h-full"
-              style={{ transform: 'scaleX(-1)', display: showSkeleton ? 'block' : 'none' }}
-            />
             {!videoRef.current?.srcObject && (
               <div className="absolute inset-0 flex items-center justify-center text-gray-400">
                 카메라 화면
               </div>
             )}
             
-            {/* 화면 모드 토글 버튼 */}
-            {videoRef.current?.srcObject && (
-              <button
-                onClick={() => setShowSkeleton(!showSkeleton)}
-                className="absolute top-4 right-4 bg-gray-900 bg-opacity-80 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-opacity-100 transition"
-              >
-                {showSkeleton ? '📹 원본' : '🦴 스켈레톤'}
-              </button>
-            )}
             
             {/* 준비 중 카운트다운 오버레이 */}
             {timerStatus === 'preparing' && (
