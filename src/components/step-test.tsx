@@ -7,11 +7,10 @@ import { Metronome } from './metronome';
 // 스텝검사 단계 정의
 type StepTestPhase = 
   | 'intro'           // 시작 전 안내
-  | 'pre-heart-rate'  // 안정시 심박수 측정
-  | 'pre-exercise-rest' // 30초 운동 전 휴식
+  | 'user-info'       // 연령, 신장, 체중 입력
   | 'exercise'        // 3분 스텝박스 운동
   | 'post-rest'       // 1분 휴식
-  | 'post-heart-rate' // 운동 후 심박수 측정
+  | 'recovery-heart-rate' // 1분 회복기 심박수 측정
   | 'result';         // 결과 화면
 
 interface StepTestProps {
@@ -20,9 +19,13 @@ interface StepTestProps {
 
 export function StepTest({ onBack }: StepTestProps) {
   const [phase, setPhase] = useState<StepTestPhase>('intro');
-  const [preHeartRate, setPreHeartRate] = useState<number | null>(null);
-  const [postHeartRate, setPostHeartRate] = useState<number | null>(null);
+  const [recoveryHeartRate, setRecoveryHeartRate] = useState<number | null>(null);
   const [timeRemaining, setTimeRemaining] = useState(0);
+  
+  // 사용자 정보
+  const [age, setAge] = useState<number>(25);
+  const [height, setHeight] = useState<number>(170);
+  const [weight, setWeight] = useState<number>(70);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -48,17 +51,11 @@ export function StepTest({ onBack }: StepTestProps) {
   };
 
   // 단계별 핸들러
-  const handleStartMeasurement = () => {
-    setPhase('pre-heart-rate');
+  const handleStartUserInfo = () => {
+    setPhase('user-info');
   };
 
-  const handlePreHeartRateComplete = (heartRate: number) => {
-    setPreHeartRate(heartRate);
-    setPhase('pre-exercise-rest');
-    startTimer(30, handlePreExerciseRestComplete); // 30초 휴식
-  };
-
-  const handlePreExerciseRestComplete = () => {
+  const handleUserInfoComplete = () => {
     setPhase('exercise');
     startTimer(180, handleExerciseComplete); // 3분 운동
   };
@@ -69,11 +66,11 @@ export function StepTest({ onBack }: StepTestProps) {
   };
 
   const handlePostRestComplete = () => {
-    setPhase('post-heart-rate');
+    setPhase('recovery-heart-rate');
   };
 
-  const handlePostHeartRateComplete = (heartRate: number) => {
-    setPostHeartRate(heartRate);
+  const handleRecoveryHeartRateComplete = (heartRate: number) => {
+    setRecoveryHeartRate(heartRate);
     setPhase('result');
   };
 
@@ -91,6 +88,27 @@ export function StepTest({ onBack }: StepTestProps) {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // 국민체력100 최대산소섭취량 계산 공식
+  const calculateVO2Max = (): number => {
+    if (!recoveryHeartRate) return 0;
+    
+    // 예상최대산소섭취량 = 70.597 - 0.246(연령) + 0.077(신장) - 0.222(체중) - 0.147(1분간회복기심박수)
+    const vo2max = 70.597 - (0.246 * age) + (0.077 * height) - (0.222 * weight) - (0.147 * recoveryHeartRate);
+    
+    return Math.round(vo2max * 10) / 10; // 소수점 첫째자리까지
+  };
+
+  // 등급 판정 (대략적인 기준)
+  const getGradeText = (): string => {
+    const vo2max = calculateVO2Max();
+    
+    if (vo2max >= 55) return '1등급 (매우 우수)';
+    if (vo2max >= 50) return '2등급 (우수)';
+    if (vo2max >= 45) return '3등급 (양호)';
+    if (vo2max >= 40) return '4등급 (보통)';
+    return '5등급 (개선 필요)';
   };
 
   return (
@@ -115,14 +133,16 @@ export function StepTest({ onBack }: StepTestProps) {
       <div className="flex-1 flex flex-col items-center justify-center p-8">
         {phase === 'intro' && (
           <div className="text-center max-w-md">
-            <h2 className="text-3xl font-bold mb-6">스텝검사 시작</h2>
+            <h2 className="text-3xl font-bold mb-6">스텝검사</h2>
             <p className="text-gray-300 mb-8 leading-relaxed">
-              3분간 스텝박스 운동을 통해 심폐지구력을 측정합니다.
+              국민체력100 기준 스텝검사입니다.
               <br />
-              운동 전후 심박수를 측정하여 결과를 계산합니다.
+              3분 운동 후 1분 회복기 심박수를 측정하여
+              <br />
+              최대산소섭취량을 계산합니다.
             </p>
             <button
-              onClick={handleStartMeasurement}
+              onClick={handleStartUserInfo}
               className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 px-8 rounded-full text-xl transition-transform transform hover:scale-105"
             >
               측정 시작
@@ -130,25 +150,58 @@ export function StepTest({ onBack }: StepTestProps) {
           </div>
         )}
 
-        {phase === 'pre-exercise-rest' && (
-          <div className="text-center">
-            <h2 className="text-3xl font-bold mb-6">운동 준비</h2>
+        {phase === 'user-info' && (
+          <div className="text-center max-w-md">
+            <h2 className="text-3xl font-bold mb-6">기본 정보 입력</h2>
             <p className="text-gray-300 mb-8">
-              스텝박스 운동을 준비하세요.
-              <br />
-              잠시 후 메트로놈 박자에 맞춰 운동을 시작합니다.
+              최대산소섭취량 계산을 위해 기본 정보를 입력해주세요.
             </p>
-            <div className="text-6xl font-mono mb-4">{formatTime(timeRemaining)}</div>
-            <div className="text-gray-400">남은 시간</div>
+            
+            <div className="space-y-4 mb-8">
+              <div>
+                <label className="block text-gray-300 mb-2">연령 (세)</label>
+                <input
+                  type="number"
+                  value={age}
+                  onChange={(e) => setAge(Number(e.target.value))}
+                  className="w-full p-3 bg-gray-800 text-white rounded-lg border border-gray-600 focus:border-blue-500"
+                  min="10"
+                  max="100"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-gray-300 mb-2">신장 (cm)</label>
+                <input
+                  type="number"
+                  value={height}
+                  onChange={(e) => setHeight(Number(e.target.value))}
+                  className="w-full p-3 bg-gray-800 text-white rounded-lg border border-gray-600 focus:border-blue-500"
+                  min="100"
+                  max="250"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-gray-300 mb-2">체중 (kg)</label>
+                <input
+                  type="number"
+                  value={weight}
+                  onChange={(e) => setWeight(Number(e.target.value))}
+                  className="w-full p-3 bg-gray-800 text-white rounded-lg border border-gray-600 focus:border-blue-500"
+                  min="30"
+                  max="200"
+                />
+              </div>
+            </div>
+            
+            <button
+              onClick={handleUserInfoComplete}
+              className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg"
+            >
+              운동 시작
+            </button>
           </div>
-        )}
-
-        {phase === 'pre-heart-rate' && (
-          <HeartRateDetector
-            title="안정시 심박수 측정"
-            instruction="손가락을 카메라와 플래시에 완전히 덮어주세요"
-            onComplete={handlePreHeartRateComplete}
-          />
         )}
 
         {phase === 'exercise' && (
@@ -184,29 +237,58 @@ export function StepTest({ onBack }: StepTestProps) {
           </div>
         )}
 
-        {phase === 'post-heart-rate' && (
+        {phase === 'recovery-heart-rate' && (
           <HeartRateDetector
-            title="운동 후 심박수 측정"
+            title="1분 회복기 심박수 측정"
             instruction="손가락을 카메라와 플래시에 완전히 덮어주세요"
-            onComplete={handlePostHeartRateComplete}
+            onComplete={handleRecoveryHeartRateComplete}
           />
         )}
 
         {phase === 'result' && (
           <div className="text-center max-w-md">
             <h2 className="text-3xl font-bold mb-8">측정 완료</h2>
-            <div className="bg-gray-800 p-6 rounded-lg mb-8">
-              <div className="grid grid-cols-2 gap-4 text-center">
+            
+            {/* 사용자 정보 */}
+            <div className="bg-gray-800 p-4 rounded-lg mb-4">
+              <div className="text-gray-400 text-sm mb-2">입력 정보</div>
+              <div className="grid grid-cols-3 gap-4 text-center">
                 <div>
-                  <div className="text-gray-400 text-sm">안정시 심박수</div>
-                  <div className="text-2xl font-bold text-blue-400">{preHeartRate} bpm</div>
+                  <div className="text-gray-400 text-xs">연령</div>
+                  <div className="text-lg font-bold">{age}세</div>
                 </div>
                 <div>
-                  <div className="text-gray-400 text-sm">운동 후 심박수</div>
-                  <div className="text-2xl font-bold text-red-400">{postHeartRate} bpm</div>
+                  <div className="text-gray-400 text-xs">신장</div>
+                  <div className="text-lg font-bold">{height}cm</div>
+                </div>
+                <div>
+                  <div className="text-gray-400 text-xs">체중</div>
+                  <div className="text-lg font-bold">{weight}kg</div>
                 </div>
               </div>
             </div>
+            
+            {/* 심박수 결과 */}
+            <div className="bg-gray-800 p-6 rounded-lg mb-6">
+              <div className="text-center">
+                <div className="text-gray-400 text-sm">1분 회복기 심박수</div>
+                <div className="text-3xl font-bold text-red-400 mb-4">{recoveryHeartRate} bpm</div>
+                
+                {/* 최대산소섭취량 계산 */}
+                {recoveryHeartRate && (
+                  <div className="border-t border-gray-600 pt-4">
+                    <div className="text-gray-400 text-sm">예상 최대산소섭취량</div>
+                    <div className="text-2xl font-bold text-green-400">
+                      {calculateVO2Max()} ml/kg/min
+                    </div>
+                    <div className="text-sm text-gray-400 mt-2">
+                      국민체력100 기준: {getGradeText()}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+            
             <button
               onClick={onBack}
               className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg"
