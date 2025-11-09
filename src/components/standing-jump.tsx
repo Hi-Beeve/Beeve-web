@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { VideoAnalyzer } from './video-analyzer';
 
 // 제자리 높이뛰기 단계 정의
 type StandingJumpPhase = 
@@ -45,7 +46,8 @@ export function StandingJump({ onBack }: StandingJumpProps) {
         video: {
           facingMode: 'user', // 전면 카메라 (사용자가 자신을 보면서 점프)
           width: { ideal: 1280 },
-          height: { ideal: 720 }
+          height: { ideal: 720 },
+          frameRate: { ideal: 60, min: 30 } // 고프레임레이트로 정확도 향상
         },
         audio: false
       });
@@ -108,12 +110,12 @@ export function StandingJump({ onBack }: StandingJumpProps) {
     setRecordingTime(0);
     mediaRecorder.start();
     
-    // 10초 후 자동 정지
+    // 3초 후 자동 정지
     recordingTimerRef.current = setInterval(() => {
       setRecordingTime(prev => {
-        if (prev >= 9) {
+        if (prev >= 2) {
           stopRecording();
-          return 10;
+          return 3;
         }
         return prev + 1;
       });
@@ -220,7 +222,7 @@ export function StandingJump({ onBack }: StandingJumpProps) {
             <p className="text-gray-300 mb-6">
               준비가 되면 녹화를 시작하고 제자리 높이뛰기를 해주세요.
               <br />
-              (10초 후 자동 정지됩니다)
+              (3초 후 자동 정지됩니다)
             </p>
 
             {!isRecording ? (
@@ -241,52 +243,130 @@ export function StandingJump({ onBack }: StandingJumpProps) {
           </div>
         )}
 
-        {phase === 'analysis' && (
-          <div className="text-center max-w-2xl w-full">
-            <h2 className="text-3xl font-bold mb-6">{currentAttempt}회차 분석</h2>
-            <p className="text-gray-300 mb-6">
+        {phase === 'analysis' && records[currentAttempt - 1] && (
+          <div className="w-full max-w-4xl">
+            <h2 className="text-3xl font-bold mb-6 text-center">{currentAttempt}회차 분석</h2>
+            <p className="text-gray-300 mb-6 text-center">
               영상에서 (1) 발이 떨어지는 시점과 (2) 가장 높은 시점을 선택해주세요.
             </p>
             
-            {/* 여기에 영상 분석 UI가 들어갈 예정 */}
-            <div className="bg-gray-800 p-8 rounded-lg">
-              <p className="text-gray-400">영상 분석 UI 구현 예정</p>
-              
-              {/* 임시 버튼 */}
-              <button
-                onClick={() => {
-                  // 임시로 다음 단계로 이동
-                  if (currentAttempt < 3) {
+            <VideoAnalyzer
+              videoBlob={records[currentAttempt - 1].videoBlob}
+              onAnalysisComplete={(startTime, peakTime, airTime) => {
+                // 분석 결과 저장
+                setRecords(prev => {
+                  const updated = [...prev];
+                  updated[currentAttempt - 1] = {
+                    ...updated[currentAttempt - 1],
+                    startTime,
+                    peakTime,
+                    airTime
+                  };
+                  return updated;
+                });
+                
+                setPhase('result');
+              }}
+              onCancel={() => {
+                // 다시 촬영
+                setPhase('recording');
+              }}
+            />
+          </div>
+        )}
+
+        {phase === 'result' && records[currentAttempt - 1] && (
+          <div className="text-center max-w-md">
+            <h2 className="text-3xl font-bold mb-6">{currentAttempt}회차 결과</h2>
+            
+            <div className="bg-gray-800 p-6 rounded-lg mb-8">
+              <div className="text-4xl font-bold text-green-400 mb-4">
+                {records[currentAttempt - 1].airTime?.toFixed(2)}초
+              </div>
+              <div className="text-gray-400 text-sm space-y-1">
+                <div>시작: {records[currentAttempt - 1].startTime?.toFixed(2)}초</div>
+                <div>최고점: {records[currentAttempt - 1].peakTime?.toFixed(2)}초</div>
+              </div>
+            </div>
+
+            {currentAttempt < 3 ? (
+              <div className="space-y-4">
+                <button
+                  onClick={() => {
                     setCurrentAttempt(prev => prev + 1);
                     setPhase('intro');
-                  } else {
-                    setPhase('final-result');
-                  }
-                }}
-                className="mt-4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg"
+                  }}
+                  className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg mr-4"
+                >
+                  다음 측정 ({currentAttempt + 1}회차)
+                </button>
+                <button
+                  onClick={() => setPhase('final-result')}
+                  className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg"
+                >
+                  측정 완료
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setPhase('final-result')}
+                className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg"
               >
-                임시: 다음 단계
+                최종 결과 보기
               </button>
-            </div>
+            )}
           </div>
         )}
 
         {phase === 'final-result' && (
           <div className="text-center max-w-md">
             <h2 className="text-3xl font-bold mb-8">측정 완료</h2>
+            
             <div className="bg-gray-800 p-6 rounded-lg mb-8">
-              <div className="text-gray-400 text-sm mb-4">3회 측정 결과</div>
-              {/* 결과 표시 예정 */}
-              <div className="text-2xl font-bold text-green-400">
-                최고 기록: 0.00초
+              <div className="text-gray-400 text-sm mb-4">측정 결과</div>
+              
+              {/* 개별 결과 */}
+              <div className="space-y-2 mb-6">
+                {records.map((record, index) => (
+                  record.airTime !== null && (
+                    <div key={index} className="flex justify-between items-center">
+                      <span className="text-gray-300">{index + 1}회차:</span>
+                      <span className="font-mono text-lg">
+                        {record.airTime.toFixed(2)}초
+                      </span>
+                    </div>
+                  )
+                ))}
+              </div>
+              
+              {/* 최고 기록 */}
+              <div className="border-t border-gray-600 pt-4">
+                <div className="text-gray-400 text-sm">최고 기록</div>
+                <div className="text-3xl font-bold text-green-400">
+                  {Math.max(...records.filter(r => r.airTime !== null).map(r => r.airTime!)).toFixed(2)}초
+                </div>
               </div>
             </div>
-            <button
-              onClick={onBack}
-              className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg"
-            >
-              완료
-            </button>
+            
+            <div className="space-y-4">
+              <button
+                onClick={() => {
+                  // 다시 측정
+                  setCurrentAttempt(1);
+                  setRecords([]);
+                  setPhase('intro');
+                }}
+                className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg mr-4"
+              >
+                다시 측정
+              </button>
+              <button
+                onClick={onBack}
+                className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg"
+              >
+                완료
+              </button>
+            </div>
           </div>
         )}
       </div>
