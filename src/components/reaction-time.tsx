@@ -229,6 +229,12 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
 
   // 움직임 감지 (개선된 알고리즘)
   const detectMovement = (currentAcceleration: {x: number, y: number, z: number}) => {
+    console.log('🔥🔥🔥 detectMovement 함수 호출됨!', {
+      current: currentAcceleration,
+      baseline: baselineAcceleration,
+      signalTime
+    });
+    
     if (!baselineAcceleration || !signalTime) {
       console.warn('베이스라인 또는 신호시간 없음:', { baselineAcceleration, signalTime });
       return;
@@ -302,7 +308,7 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
     const newRecord: ReactionRecord = {
       attempt: currentAttempt,
       reactionTime: reactionTime,
-      valid: reactionTime > 100 && reactionTime < 2000 // 100ms ~ 2초 사이만 유효
+      valid: reactionTime > 100 && reactionTime < 10000 // 100ms ~ 10초로 확장 (테스트용)
     };
 
     console.log('📊 새 기록 생성:', newRecord);
