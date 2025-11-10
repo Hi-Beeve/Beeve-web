@@ -159,8 +159,19 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
       
       // 측정 중일 때
       if (phase === 'measuring') {
+        console.log('🎯🎯🎯 측정 중 - detectMovement 호출 시도');
         if (baselineAcceleration && signalTime) {
+          console.log('✅✅✅ 조건 만족 - detectMovement 호출!');
           detectMovement(currentAcceleration);
+        } else {
+          console.log('❌❌❌ 조건 불만족:', { baselineAcceleration: !!baselineAcceleration, signalTime: !!signalTime });
+        }
+      } else {
+        // phase가 measuring이 아닌 경우에만 로그 (너무 많은 로그 방지)
+        if (phase === 'stability-check') {
+          // 안정성 체크 중이므로 로그 안함
+        } else {
+          console.log('📍 현재 Phase:', phase, '(measuring 아님)');
         }
       }
     };
@@ -190,7 +201,7 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
       currentAcceleration.z ** 2
     );
     
-    console.log('전체 가속도:', totalAcceleration);
+    // console.log('전체 가속도:', totalAcceleration);
     
     // 안정성 점수 계산 (더 관대한 기준)
     // 일반적으로 중력가속도는 9.8m/s²이지만, 기기마다 다를 수 있음
