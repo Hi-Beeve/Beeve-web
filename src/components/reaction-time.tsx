@@ -76,7 +76,7 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
         
         // 테스트 이벤트 리스너로 실제 작동 확인
         const testListener = (event: DeviceMotionEvent) => {
-          console.log('테스트 가속도계 이벤트:', event);
+          // console.log('테스트 가속도계 이벤트:', event);
           window.removeEventListener('devicemotion', testListener);
         };
         
@@ -104,7 +104,7 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
     console.log('가속도계 시작 시도...');
 
     const handleMotion = (event: DeviceMotionEvent) => {
-      console.log('가속도계 이벤트 수신:', event);
+      // console.log('가속도계 이벤트 수신:', event);
       
       // accelerationIncludingGravity 우선 시도
       let acceleration = event.accelerationIncludingGravity;
@@ -142,7 +142,7 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
 
       // 현재 가속도 값
       const currentAcceleration = { x, y, z };
-      console.log('가속도 값:', currentAcceleration);
+      // console.log('가속도 값:', currentAcceleration);
       
       // 현재 가속도 데이터 저장
       setCurrentAccelerationData(currentAcceleration);
@@ -158,8 +158,10 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
       }
       
       // 측정 중일 때
-      if (phase === 'measuring' && baselineAcceleration && signalTime) {
-        detectMovement(currentAcceleration);
+      if (phase === 'measuring') {
+        if (baselineAcceleration && signalTime) {
+          detectMovement(currentAcceleration);
+        }
       }
     };
 
@@ -179,7 +181,7 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
 
   // 안정성 체크
   const checkStability = (currentAcceleration: {x: number, y: number, z: number}) => {
-    console.log('안정성 체크:', currentAcceleration);
+    // console.log('안정성 체크:', currentAcceleration);
     
     // 전체 가속도 크기 계산
     const totalAcceleration = Math.sqrt(
@@ -210,7 +212,7 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
     }
     
     const finalScore = Math.round(Math.min(100, Math.max(0, stability)));
-    console.log('안정성 점수:', finalScore);
+    // console.log('안정성 점수:', finalScore);
     setStabilityScore(finalScore);
   };
 
@@ -229,27 +231,22 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
     // 전체 변화량
     const totalDelta = Math.sqrt(deltaX ** 2 + deltaY ** 2 + deltaZ ** 2);
     
-    console.log('움직임 감지:', {
-      current: currentAcceleration,
-      baseline: baselineAcceleration,
-      deltas: { deltaX, deltaY, deltaZ },
-      totalDelta
-    });
-    
     // Y축 중심 즉시 감지 알고리즘
     const verticalThreshold = 0.3; // Y축 임계값
     const totalThreshold = 0.8; // 전체 변화량 임계값
     
-    console.log('🔍 감지 체크:', {
-      deltaY: deltaY.toFixed(3),
-      totalDelta: totalDelta.toFixed(3),
-      verticalThreshold,
-      totalThreshold,
-      phase
-    });
-    
-    // Y축 감지 (UI와 동일한 조건)
+    // Y축 감지 (UI와 동일한 조건) - "✓ 발 벌리기 감지!" 조건과 동일
     if (deltaY > verticalThreshold) {
+      console.log('🚨🚨🚨 === 발 벌리기 감지! 시점 디버깅 === 🚨🚨🚨');
+      console.log('📊 감지 상세 정보:', {
+        current: currentAcceleration,
+        baseline: baselineAcceleration,
+        deltaY: deltaY.toFixed(3),
+        verticalThreshold,
+        phase,
+        hasSignalTime: !!signalTime,
+        signalTime
+      });
       console.log('🔥🔥🔥 Y축 움직임 감지! 즉시 반응 처리:', deltaY);
       const reactionTime = performance.now() - signalTime;
       console.log('⚡ 즉시 반응시간 계산:', reactionTime, 'ms');
@@ -259,15 +256,22 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
     
     // 보조 감지: 큰 전체 변화량
     if (totalDelta > totalThreshold) {
+      console.log('🚨🚨🚨 === 큰 움직임 감지! 시점 디버깅 === 🚨🚨🚨');
+      console.log('📊 감지 상세 정보:', {
+        current: currentAcceleration,
+        baseline: baselineAcceleration,
+        totalDelta: totalDelta.toFixed(3),
+        totalThreshold,
+        phase,
+        hasSignalTime: !!signalTime,
+        signalTime
+      });
       console.log('📊 큰 전체 움직임 감지! 즉시 반응 처리:', totalDelta);
       const reactionTime = performance.now() - signalTime;
       console.log('⚡ 즉시 반응시간 계산:', reactionTime, 'ms');
       recordReaction(reactionTime);
       return; // 즉시 종료
     }
-    
-    // 감지되지 않음
-    console.log('⏳ 움직임 감지 대기 중...');
   };
 
   // 반응 기록
@@ -657,6 +661,17 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
                           ) > 0.8 ? 
                             <span className="text-green-400 font-bold">✓ 큰 움직임!</span> : 
                             <span className="text-gray-400">대기 중...</span>}
+                        </div>
+                      </div>
+                      
+                      {/* 디버깅 정보 */}
+                      <div className="bg-red-900 p-2 rounded mt-2">
+                        <div className="text-red-300 font-bold text-xs mb-1">🔍 디버깅 상태:</div>
+                        <div className="text-xs space-y-1">
+                          <div>Phase: <span className="text-white">{phase}</span></div>
+                          <div>BaselineAcceleration: <span className="text-white">{baselineAcceleration ? '✅ 있음' : '❌ 없음'}</span></div>
+                          <div>SignalTime: <span className="text-white">{signalTime ? '✅ 있음' : '❌ 없음'}</span></div>
+                          <div>가속도계: <span className="text-white">{accelerometerRef.current ? '🟢 작동중' : '🔴 정지됨'}</span></div>
                         </div>
                       </div>
                       
