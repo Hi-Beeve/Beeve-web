@@ -236,34 +236,47 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
       totalDelta
     });
     
-    // 단순화된 Y축 중심 감지 알고리즘
-    let movementDetected = false;
+    // Y축 중심 즉시 감지 알고리즘
+    const verticalThreshold = 0.3; // Y축 임계값
+    const totalThreshold = 0.8; // 전체 변화량 임계값
     
-    // 주요 감지: Y축(상하) 움직임만 사용 (발 벌리기의 핵심)
-    const verticalThreshold = 0.3; // Y축 임계값을 조금 높여서 확실한 움직임만 감지
+    console.log('🔍 감지 체크:', {
+      deltaY: deltaY.toFixed(3),
+      totalDelta: totalDelta.toFixed(3),
+      verticalThreshold,
+      totalThreshold,
+      phase
+    });
+    
+    // Y축 감지 (UI와 동일한 조건)
     if (deltaY > verticalThreshold) {
-      console.log('🔥 Y축 움직임 감지! 발 벌리기 인식:', deltaY);
-      movementDetected = true;
-    }
-    
-    // 보조 감지: 매우 큰 전체 변화량 (확실한 움직임만)
-    const totalThreshold = 0.8; // 높은 임계값으로 확실한 움직임만
-    if (totalDelta > totalThreshold) {
-      console.log('큰 전체 움직임 감지:', totalDelta);
-      movementDetected = true;
-    }
-    
-    if (movementDetected) {
-      // 반응 감지!
+      console.log('🔥🔥🔥 Y축 움직임 감지! 즉시 반응 처리:', deltaY);
       const reactionTime = performance.now() - signalTime;
-      console.log('🎯 반응 감지! 시간:', reactionTime, 'ms');
+      console.log('⚡ 즉시 반응시간 계산:', reactionTime, 'ms');
       recordReaction(reactionTime);
+      return; // 즉시 종료
     }
+    
+    // 보조 감지: 큰 전체 변화량
+    if (totalDelta > totalThreshold) {
+      console.log('📊 큰 전체 움직임 감지! 즉시 반응 처리:', totalDelta);
+      const reactionTime = performance.now() - signalTime;
+      console.log('⚡ 즉시 반응시간 계산:', reactionTime, 'ms');
+      recordReaction(reactionTime);
+      return; // 즉시 종료
+    }
+    
+    // 감지되지 않음
+    console.log('⏳ 움직임 감지 대기 중...');
   };
 
   // 반응 기록
   const recordReaction = (reactionTime: number) => {
-    console.log('📝 recordReaction 호출됨:', { reactionTime, currentAttempt, phase });
+    console.log('📝📝📝 recordReaction 호출됨:', { reactionTime, currentAttempt, phase });
+    
+    // 즉시 가속도계 정지 (중복 감지 방지)
+    console.log('🛑 즉시 가속도계 정지');
+    stopAccelerometer();
     
     // 이미 결과 단계이면 중복 처리 방지
     if (phase === 'result' || phase === 'final-result') {
@@ -295,10 +308,6 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
       signalTimerRef.current = null;
       console.log('⏰ 타이머 정리 완료');
     }
-    
-    // 가속도계 정지 (중복 감지 방지)
-    stopAccelerometer();
-    console.log('🛑 가속도계 정지');
   };
 
   // 랜덤 신호음 시작
