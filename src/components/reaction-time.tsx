@@ -66,17 +66,22 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
 
   // 안정성 점수 모니터링 - 90% 달성 시 한 번만 자동 시작
   useEffect(() => {
-    // autoStartTriggered가 true이면 아예 실행하지 않음
-    if (autoStartTriggered) {
-      return;
-    }
-    
-    console.log('🔍 useEffect 체크:', { 
+    console.log('🔍🔍🔍 useEffect 항상 실행됨:', { 
       phase, 
       stabilityScore, 
       autoStartTriggered,
-      condition: phase === 'stability-check' && stabilityScore >= 90 && !autoStartTriggered 
+      currentAttempt,
+      condition90: stabilityScore >= 90,
+      conditionPhase: phase === 'stability-check',
+      conditionTriggered: !autoStartTriggered,
+      finalCondition: phase === 'stability-check' && stabilityScore >= 90 && !autoStartTriggered
     });
+    
+    // autoStartTriggered가 true이면 아예 실행하지 않음
+    if (autoStartTriggered) {
+      console.log('⏹️ autoStartTriggered=true이므로 종료');
+      return;
+    }
     
     if (phase === 'stability-check' && stabilityScore >= 90) {
       console.log('🎯 안정성 90% 달성 - 자동 측정 시작 준비 (한 번만 실행)');
@@ -99,8 +104,16 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
         // 음성 엔진 로딩 대기
         const speakWithRetry = () => {
           const voices = speechSynthesis.getVoices();
-          console.log('🎤 사용 가능한 음성:', voices.length, '개');
-          console.log('🎤 한국어 음성:', voices.filter(v => v.lang.includes('ko')));
+          console.log('🎤🎤🎤 음성 엔진 상태:', {
+            총음성수: voices.length,
+            한국어음성수: voices.filter(v => v.lang.includes('ko')).length,
+            speechSynthesis상태: {
+              speaking: speechSynthesis.speaking,
+              pending: speechSynthesis.pending,
+              paused: speechSynthesis.paused
+            }
+          });
+          console.log('🎤 한국어 음성 목록:', voices.filter(v => v.lang.includes('ko')).map(v => ({name: v.name, lang: v.lang})));
           
           const prepareUtterance = new SpeechSynthesisUtterance(prepareMessage);
           prepareUtterance.lang = 'ko-KR';
@@ -117,17 +130,40 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
             console.warn('⚠️ 한국어 음성 없음, 기본 음성 사용');
           }
           
-          prepareUtterance.onstart = () => console.log('🎵 준비 음성 시작');
-          prepareUtterance.onend = () => console.log('🎵 준비 음성 완료');
-          prepareUtterance.onerror = (e) => console.error('❌ 준비 음성 오류:', e);
+          prepareUtterance.onstart = () => {
+            console.log('🎵🎵🎵 준비 음성 시작됨!');
+          };
+          prepareUtterance.onend = () => {
+            console.log('🎵🎵🎵 준비 음성 완료됨!');
+          };
+          prepareUtterance.onerror = (e) => {
+            console.error('❌❌❌ 준비 음성 오류:', e);
+          };
+          prepareUtterance.onboundary = (e) => {
+            console.log('🎵 음성 경계:', e);
+          };
           
           // 음성 재생 시도
           try {
+            console.log('🔊 이전 음성 정리 중...');
             speechSynthesis.cancel(); // 이전 음성 정리
+            
+            console.log('🔊🔊🔊 음성 재생 명령 실행 시도...');
             speechSynthesis.speak(prepareUtterance);
-            console.log('🔊 음성 재생 명령 실행됨');
+            
+            console.log('🔊 음성 재생 명령 실행 완료');
+            
+            // 재생 상태 확인
+            setTimeout(() => {
+              console.log('🔊 1초 후 음성 상태:', {
+                speaking: speechSynthesis.speaking,
+                pending: speechSynthesis.pending,
+                paused: speechSynthesis.paused
+              });
+            }, 1000);
+            
           } catch (error) {
-            console.error('❌ 음성 재생 실패:', error);
+            console.error('❌❌❌ 음성 재생 실패:', error);
           }
         };
         
@@ -146,8 +182,9 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
       }
       
       // 3초 후 자동 시작
+      console.log('⏰ 3초 타이머 시작...');
       const autoStartTimer = setTimeout(() => {
-        console.log('🚀 자동 측정 시작!');
+        console.log('🚀🚀🚀 3초 타이머 완료 - 자동 측정 시작!');
         
         // currentAttempt 확인 및 설정
         const nextAttempt = Math.max(1, currentAttempt); // 최소 1회차
