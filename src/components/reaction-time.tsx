@@ -68,31 +68,26 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
     console.log('🔄 CurrentAttempt 변경됨:', currentAttempt);
   }, [currentAttempt]);
 
-  // 자동 시작 상태 추가
-  const [autoStartTriggered, setAutoStartTriggered] = useState(false);
+  // 자동 시작 상태 추가 (useRef로 무한 루프 방지)
+  const autoStartTriggeredRef = useRef(false);
 
   // 안정성 점수 모니터링 - 90% 달성 시 한 번만 자동 시작
   useEffect(() => {
-    console.log('🔍🔍🔍 useEffect 항상 실행됨:', { 
-      phase, 
-      stabilityScore, 
-      autoStartTriggered,
-      currentAttempt,
-      condition90: stabilityScore >= 90,
-      conditionPhase: phase === 'stability-check',
-      conditionTriggered: !autoStartTriggered,
-      finalCondition: phase === 'stability-check' && stabilityScore >= 90 && !autoStartTriggered
-    });
-    
-    // autoStartTriggered가 true이면 아예 실행하지 않음
-    if (autoStartTriggered) {
-      console.log('⏹️ autoStartTriggered=true이므로 종료');
+    // 이미 실행됐으면 종료
+    if (autoStartTriggeredRef.current) {
       return;
     }
     
+    // 조건 확인
     if (phase === 'stability-check' && stabilityScore >= 90) {
-      console.log('🎯 안정성 90% 달성 - 자동 측정 시작 준비 (한 번만 실행)');
-      setAutoStartTriggered(true); // 중복 실행 방지
+      console.log('🎯🎯🎯 자동 시작 조건 만족! 한 번만 실행됨:', { 
+        phase, 
+        stabilityScore, 
+        autoStartTriggered: autoStartTriggeredRef.current
+      });
+      
+      // 즉시 플래그 설정 (무한 루프 방지)
+      autoStartTriggeredRef.current = true;
       
       // 즉시 currentAttempt를 1로 설정 (중요!)
       if (currentAttemptRef.current === 0) {
@@ -289,7 +284,7 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
   // phase 변경 시 autoStartTriggered 리셋
   useEffect(() => {
     if (phase !== 'stability-check') {
-      setAutoStartTriggered(false);
+      autoStartTriggeredRef.current = false;
     }
   }, [phase]);
 
@@ -802,7 +797,7 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
                  '❌ 휴대폰을 더 안정적으로 고정해주세요'}
               </p>
               
-              {stabilityScore >= 90 && !autoStartTriggered && (
+              {stabilityScore >= 90 && !autoStartTriggeredRef.current && (
                 <div className="bg-green-900 border border-green-500 p-3 rounded-lg mb-4">
                   <div className="text-green-300 font-bold text-sm">🚀 자동 시작 준비됨!</div>
                   <div className="text-green-400 text-xs mt-1">
@@ -811,7 +806,7 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
                 </div>
               )}
               
-              {autoStartTriggered && (
+              {autoStartTriggeredRef.current && (
                 <div className="bg-blue-900 border border-blue-500 p-3 rounded-lg mb-4">
                   <div className="text-blue-300 font-bold text-sm">⏳ 자동 시작 중...</div>
                   <div className="text-blue-400 text-xs mt-1">
