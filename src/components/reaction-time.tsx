@@ -74,6 +74,10 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
   // Audio Context for beep sounds
   const audioContextRef = useRef<AudioContext | null>(null);
   
+  // 자동 시작 타이머 관리
+  const autoStartTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const beepTimersRef = useRef<NodeJS.Timeout[]>([]);
+  
   // 신호음 재생 함수
   const playBeep = (frequency: number = 800, duration: number = 200) => {
     try {
@@ -120,21 +124,54 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
     }
   };
   
-  // 카운트다운 신호음 (삐삐삐)
+  // 카운트다운 신호음 (삐삐삐) + 타이머 관리
   const playCountdownBeeps = () => {
     console.log('🎵 카운트다운 신호음 시작');
     
+    // 기존 타이머들 정리
+    clearAllBeepTimers();
+    
     // 3초 카운트다운: 1초마다 삐 소리
-    setTimeout(() => playBeep(600, 150), 0);    // 3초 전: 낮은 톤
-    setTimeout(() => playBeep(700, 150), 1000); // 2초 전: 중간 톤  
-    setTimeout(() => playBeep(800, 150), 2000); // 1초 전: 높은 톤
-    setTimeout(() => playBeep(1000, 300), 3000); // 시작: 더 높고 긴 톤
+    const timer1 = setTimeout(() => playBeep(600, 150), 0);    // 3초 전: 낮은 톤
+    const timer2 = setTimeout(() => playBeep(700, 150), 1000); // 2초 전: 중간 톤  
+    const timer3 = setTimeout(() => playBeep(800, 150), 2000); // 1초 전: 높은 톤
+    const timer4 = setTimeout(() => playBeep(1000, 300), 3000); // 시작: 더 높고 긴 톤
+    
+    // 타이머들 저장 (취소 가능하도록)
+    beepTimersRef.current = [timer1, timer2, timer3, timer4];
+  };
+  
+  // 모든 신호음 타이머 정리
+  const clearAllBeepTimers = () => {
+    beepTimersRef.current.forEach(timer => clearTimeout(timer));
+    beepTimersRef.current = [];
+    console.log('🎵 모든 신호음 타이머 정리됨');
+  };
+  
+  // 자동 시작 취소
+  const cancelAutoStart = () => {
+    console.log('❌ 자동 시작 취소 - 안정성 부족');
+    
+    // 모든 타이머 정리
+    if (autoStartTimerRef.current) {
+      clearTimeout(autoStartTimerRef.current);
+      autoStartTimerRef.current = null;
+    }
+    clearAllBeepTimers();
+    
+    // 플래그 리셋
+    autoStartTriggeredRef.current = false;
   };
 
   // 안정성 점수 모니터링 - 90% 달성 시 한 번만 자동 시작
   useEffect(() => {
-    // 이미 실행됐으면 종료
+    // 이미 실행됐으면 안정성 체크만 수행
     if (autoStartTriggeredRef.current) {
+      // 자동 시작 중인데 안정성이 떨어지면 취소
+      if (phase === 'stability-check' && stabilityScore < 80) {
+        console.log('⚠️ 자동 시작 중 안정성 부족 감지:', stabilityScore);
+        cancelAutoStart();
+      }
       return;
     }
     
@@ -162,7 +199,8 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
       // 즉시 카운트다운 신호음 재생
       playCountdownBeeps();
       
-      const autoStartTimer = setTimeout(() => {
+      // 타이머를 ref로 관리
+      autoStartTimerRef.current = setTimeout(() => {
         console.log('🚀🚀🚀 카운트다운 완료 - 자동 측정 시작!');
         
         // currentAttempt 확인 및 설정 (ref 사용)
@@ -175,11 +213,22 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
         
         // 신호음과 함께 측정 시작
         console.log('🎯 신호음 완료 - 측정 시작');
-        startRandomSignal();
+        
+        // 측정 시작 (직접 구현)
+        console.log('🎯 측정 시작 - phase를 waiting으로 변경');
+        setPhase('waiting');
+        setIsListening(true);
+        console.log('✅ Phase 변경 완료: stability-check → waiting');
         
       }, 3000); // 90% 달성 후 3초 대기
       
-      return () => clearTimeout(autoStartTimer);
+      return () => {
+        if (autoStartTimerRef.current) {
+          clearTimeout(autoStartTimerRef.current);
+          autoStartTimerRef.current = null;
+        }
+        clearAllBeepTimers();
+      };
     }
   }, [phase, stabilityScore]); // currentAttempt 제거 (무한 루프 방지)
 
@@ -709,7 +758,8 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
               </div>
               
               <p className="text-sm text-gray-300 mb-4">
-                {stabilityScore >= 90 ? '🎯 90% 달성! 3초 후 자동으로 측정을 시작합니다!' :
+                {autoStartTriggeredRef.current && stabilityScore < 80 ? '❌ 자동 시작 취소됨! 안정성을 다시 90% 이상 유지하세요' :
+                 stabilityScore >= 90 ? '🎯 90% 달성! 3초 후 자동으로 측정을 시작합니다!' :
                  stabilityScore >= 80 ? '✅ 고정 상태가 좋습니다! 90%까지 조금 더!' :
                  stabilityScore >= 60 ? '⚠️ 조금 더 단단히 고정해주세요' :
                  stabilityScore === 0 ? '❌ 가속도계 데이터를 받지 못하고 있습니다' :
