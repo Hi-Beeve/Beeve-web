@@ -82,6 +82,12 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
       console.log('🎯 안정성 90% 달성 - 자동 측정 시작 준비 (한 번만 실행)');
       setAutoStartTriggered(true); // 중복 실행 방지
       
+      // 즉시 currentAttempt를 1로 설정 (중요!)
+      if (currentAttempt === 0) {
+        console.log('📊 currentAttempt를 1로 설정');
+        setCurrentAttempt(1);
+      }
+      
       // 즉시 준비 안내 음성
       const prepareMessage = '3초동안 안정적인 자세를 유지하세요. 자동으로 측정을 시작합니다!';
       console.log('🔊 준비 안내 시작:', prepareMessage);
@@ -143,9 +149,12 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
       const autoStartTimer = setTimeout(() => {
         console.log('🚀 자동 측정 시작!');
         
-        // 먼저 회차 설정
-        const nextAttempt = currentAttempt === 0 ? 1 : currentAttempt;
-        setCurrentAttempt(nextAttempt);
+        // currentAttempt 확인 및 설정
+        const nextAttempt = Math.max(1, currentAttempt); // 최소 1회차
+        console.log('📊 회차 설정:', { currentAttempt, nextAttempt });
+        if (currentAttempt !== nextAttempt) {
+          setCurrentAttempt(nextAttempt);
+        }
         
         // 측정 시작 음성 안내
         const startMessage = `지금부터 ${nextAttempt}회차 측정을 시작하겠습니다`;
@@ -229,7 +238,7 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
       
       return () => clearTimeout(autoStartTimer);
     }
-  }, [phase, stabilityScore]); // autoStartTriggered 제거 (early return으로 처리)
+  }, [phase, stabilityScore, currentAttempt]); // currentAttempt 추가
 
   // phase 변경 시 autoStartTriggered 리셋
   useEffect(() => {
