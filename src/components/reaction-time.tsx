@@ -45,6 +45,7 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
   const phaseRef = useRef(phase); // phase 동기화를 위한 ref
   const baselineAccelerationRef = useRef<{x: number, y: number, z: number} | null>(null);
   const signalTimeRef = useRef<number | null>(null);
+  const currentAttemptRef = useRef(currentAttempt); // currentAttempt 동기화를 위한 ref
   const stabilityTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // phase 변경 시 phaseRef 업데이트
@@ -60,6 +61,12 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
       }
     }
   }, [phase, hasAccelerometer]);
+
+  // currentAttempt 변경 시 currentAttemptRef 업데이트
+  useEffect(() => {
+    currentAttemptRef.current = currentAttempt;
+    console.log('🔄 CurrentAttempt 변경됨:', currentAttempt);
+  }, [currentAttempt]);
 
   // 자동 시작 상태 추가
   const [autoStartTriggered, setAutoStartTriggered] = useState(false);
@@ -88,9 +95,10 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
       setAutoStartTriggered(true); // 중복 실행 방지
       
       // 즉시 currentAttempt를 1로 설정 (중요!)
-      if (currentAttempt === 0) {
+      if (currentAttemptRef.current === 0) {
         console.log('📊 currentAttempt를 1로 설정');
         setCurrentAttempt(1);
+        currentAttemptRef.current = 1; // ref도 즉시 업데이트
       }
       
       // 즉시 준비 안내 음성
@@ -186,11 +194,12 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
       const autoStartTimer = setTimeout(() => {
         console.log('🚀🚀🚀 3초 타이머 완료 - 자동 측정 시작!');
         
-        // currentAttempt 확인 및 설정
-        const nextAttempt = Math.max(1, currentAttempt); // 최소 1회차
-        console.log('📊 회차 설정:', { currentAttempt, nextAttempt });
-        if (currentAttempt !== nextAttempt) {
+        // currentAttempt 확인 및 설정 (ref 사용)
+        const nextAttempt = Math.max(1, currentAttemptRef.current); // 최소 1회차
+        console.log('📊 회차 설정:', { currentAttemptRef: currentAttemptRef.current, nextAttempt });
+        if (currentAttemptRef.current !== nextAttempt) {
           setCurrentAttempt(nextAttempt);
+          currentAttemptRef.current = nextAttempt; // ref도 업데이트
         }
         
         // 측정 시작 음성 안내
@@ -275,7 +284,7 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
       
       return () => clearTimeout(autoStartTimer);
     }
-  }, [phase, stabilityScore, currentAttempt]); // currentAttempt 추가
+  }, [phase, stabilityScore]); // currentAttempt 제거 (무한 루프 방지)
 
   // phase 변경 시 autoStartTriggered 리셋
   useEffect(() => {
