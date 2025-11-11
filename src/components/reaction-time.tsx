@@ -61,10 +61,14 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
     }
   }, [phase, hasAccelerometer]);
 
-  // 안정성 점수 모니터링 - 90% 이상이면 자동 시작
+  // 자동 시작 상태 추가
+  const [autoStartTriggered, setAutoStartTriggered] = useState(false);
+
+  // 안정성 점수 모니터링 - 90% 달성 시 한 번만 자동 시작
   useEffect(() => {
-    if (phase === 'stability-check' && stabilityScore >= 90) {
-      console.log('🎯 안정성 90% 달성 - 자동 측정 시작 준비');
+    if (phase === 'stability-check' && stabilityScore >= 90 && !autoStartTriggered) {
+      console.log('🎯 안정성 90% 달성 - 자동 측정 시작 준비 (한 번만 실행)');
+      setAutoStartTriggered(true); // 중복 실행 방지
       
       // 3초 후 자동 시작 (사용자가 준비할 시간)
       const autoStartTimer = setTimeout(() => {
@@ -92,7 +96,14 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
       
       return () => clearTimeout(autoStartTimer);
     }
-  }, [phase, stabilityScore]);
+  }, [phase, stabilityScore, autoStartTriggered]);
+
+  // phase 변경 시 autoStartTriggered 리셋
+  useEffect(() => {
+    if (phase !== 'stability-check') {
+      setAutoStartTriggered(false);
+    }
+  }, [phase]);
 
   // 가속도계 권한 요청
   const requestAccelerometerPermission = async () => {
