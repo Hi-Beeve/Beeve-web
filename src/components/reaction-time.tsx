@@ -66,6 +66,11 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
 
   // 안정성 점수 모니터링 - 90% 달성 시 한 번만 자동 시작
   useEffect(() => {
+    // autoStartTriggered가 true이면 아예 실행하지 않음
+    if (autoStartTriggered) {
+      return;
+    }
+    
     console.log('🔍 useEffect 체크:', { 
       phase, 
       stabilityScore, 
@@ -73,7 +78,7 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
       condition: phase === 'stability-check' && stabilityScore >= 90 && !autoStartTriggered 
     });
     
-    if (phase === 'stability-check' && stabilityScore >= 90 && !autoStartTriggered) {
+    if (phase === 'stability-check' && stabilityScore >= 90) {
       console.log('🎯 안정성 90% 달성 - 자동 측정 시작 준비 (한 번만 실행)');
       setAutoStartTriggered(true); // 중복 실행 방지
       
@@ -224,7 +229,7 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
       
       return () => clearTimeout(autoStartTimer);
     }
-  }, [phase, stabilityScore, autoStartTriggered]);
+  }, [phase, stabilityScore]); // autoStartTriggered 제거 (early return으로 처리)
 
   // phase 변경 시 autoStartTriggered 리셋
   useEffect(() => {
