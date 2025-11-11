@@ -33,6 +33,8 @@ export default function DescriptionView() {
         router.push('/step-test');
       } else if (exerciseKey === 'standing-jump') {
         router.push('/standing-jump');
+      } else if (exerciseKey === 'reaction-time') {
+        router.push('/reaction-time');
       } else {
         router.push(`/${exerciseKey}-counter`);
       }
