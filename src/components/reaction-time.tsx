@@ -70,6 +70,66 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
 
   // 자동 시작 상태 추가 (useRef로 무한 루프 방지)
   const autoStartTriggeredRef = useRef(false);
+  
+  // Audio Context for beep sounds
+  const audioContextRef = useRef<AudioContext | null>(null);
+  
+  // 신호음 재생 함수
+  const playBeep = (frequency: number = 800, duration: number = 200) => {
+    try {
+      // Audio Context 초기화 (한 번만)
+      if (!audioContextRef.current) {
+        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+        console.log('🎵 Audio Context 생성됨');
+      }
+      
+      const audioContext = audioContextRef.current;
+      
+      // Audio Context가 suspended 상태면 resume
+      if (audioContext.state === 'suspended') {
+        audioContext.resume().then(() => {
+          console.log('🎵 Audio Context resumed');
+        });
+      }
+      
+      // Oscillator (신호음 생성기) 생성
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      // 연결: Oscillator -> Gain -> Destination
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      // 신호음 설정
+      oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+      oscillator.type = 'sine'; // 부드러운 사인파
+      
+      // 볼륨 설정 (페이드 인/아웃)
+      gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+      gainNode.gain.linearRampToValueAtTime(0.1, audioContext.currentTime + 0.01); // 페이드 인
+      gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + duration / 1000); // 페이드 아웃
+      
+      // 재생 시작 및 종료
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + duration / 1000);
+      
+      console.log(`🎵 신호음 재생: ${frequency}Hz, ${duration}ms`);
+      
+    } catch (error) {
+      console.error('❌ 신호음 재생 실패:', error);
+    }
+  };
+  
+  // 카운트다운 신호음 (삐삐삐)
+  const playCountdownBeeps = () => {
+    console.log('🎵 카운트다운 신호음 시작');
+    
+    // 3초 카운트다운: 1초마다 삐 소리
+    setTimeout(() => playBeep(600, 150), 0);    // 3초 전: 낮은 톤
+    setTimeout(() => playBeep(700, 150), 1000); // 2초 전: 중간 톤  
+    setTimeout(() => playBeep(800, 150), 2000); // 1초 전: 높은 톤
+    setTimeout(() => playBeep(1000, 300), 3000); // 시작: 더 높고 긴 톤
+  };
 
   // 안정성 점수 모니터링 - 90% 달성 시 한 번만 자동 시작
   useEffect(() => {
@@ -96,98 +156,14 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
         currentAttemptRef.current = 1; // ref도 즉시 업데이트
       }
       
-      // 즉시 준비 안내 음성
-      const prepareMessage = '3초동안 안정적인 자세를 유지하세요. 자동으로 측정을 시작합니다!';
-      console.log('🔊 준비 안내 시작:', prepareMessage);
+      // 신호음과 함께 자동 시작
+      console.log('⏰ 신호음 카운트다운 시작...');
       
-      // speechSynthesis 지원 여부 확인
-      if ('speechSynthesis' in window) {
-        console.log('✅ speechSynthesis 지원됨');
-        
-        // 음성 엔진 로딩 대기
-        const speakWithRetry = () => {
-          const voices = speechSynthesis.getVoices();
-          console.log('🎤🎤🎤 음성 엔진 상태:', {
-            총음성수: voices.length,
-            한국어음성수: voices.filter(v => v.lang.includes('ko')).length,
-            speechSynthesis상태: {
-              speaking: speechSynthesis.speaking,
-              pending: speechSynthesis.pending,
-              paused: speechSynthesis.paused
-            }
-          });
-          console.log('🎤 한국어 음성 목록:', voices.filter(v => v.lang.includes('ko')).map(v => ({name: v.name, lang: v.lang})));
-          
-          const prepareUtterance = new SpeechSynthesisUtterance(prepareMessage);
-          prepareUtterance.lang = 'ko-KR';
-          prepareUtterance.rate = 0.9;
-          prepareUtterance.pitch = 1.0;
-          prepareUtterance.volume = 1.0; // 최대 볼륨
-          
-          // 한국어 음성 찾기
-          const koVoice = voices.find(voice => voice.lang.includes('ko'));
-          if (koVoice) {
-            prepareUtterance.voice = koVoice;
-            console.log('🎤 한국어 음성 사용:', koVoice.name);
-          } else {
-            console.warn('⚠️ 한국어 음성 없음, 기본 음성 사용');
-          }
-          
-          prepareUtterance.onstart = () => {
-            console.log('🎵🎵🎵 준비 음성 시작됨!');
-          };
-          prepareUtterance.onend = () => {
-            console.log('🎵🎵🎵 준비 음성 완료됨!');
-          };
-          prepareUtterance.onerror = (e) => {
-            console.error('❌❌❌ 준비 음성 오류:', e);
-          };
-          prepareUtterance.onboundary = (e) => {
-            console.log('🎵 음성 경계:', e);
-          };
-          
-          // 음성 재생 시도
-          try {
-            console.log('🔊 이전 음성 정리 중...');
-            speechSynthesis.cancel(); // 이전 음성 정리
-            
-            console.log('🔊🔊🔊 음성 재생 명령 실행 시도...');
-            speechSynthesis.speak(prepareUtterance);
-            
-            console.log('🔊 음성 재생 명령 실행 완료');
-            
-            // 재생 상태 확인
-            setTimeout(() => {
-              console.log('🔊 1초 후 음성 상태:', {
-                speaking: speechSynthesis.speaking,
-                pending: speechSynthesis.pending,
-                paused: speechSynthesis.paused
-              });
-            }, 1000);
-            
-          } catch (error) {
-            console.error('❌❌❌ 음성 재생 실패:', error);
-          }
-        };
-        
-        // 음성 엔진이 로딩되지 않았으면 대기
-        if (speechSynthesis.getVoices().length === 0) {
-          console.log('⏳ 음성 엔진 로딩 대기...');
-          speechSynthesis.onvoiceschanged = () => {
-            console.log('✅ 음성 엔진 로딩 완료');
-            speakWithRetry();
-          };
-        } else {
-          speakWithRetry();
-        }
-      } else {
-        console.warn('❌ speechSynthesis 지원되지 않음');
-      }
+      // 즉시 카운트다운 신호음 재생
+      playCountdownBeeps();
       
-      // 3초 후 자동 시작
-      console.log('⏰ 3초 타이머 시작...');
       const autoStartTimer = setTimeout(() => {
-        console.log('🚀🚀🚀 3초 타이머 완료 - 자동 측정 시작!');
+        console.log('🚀🚀🚀 카운트다운 완료 - 자동 측정 시작!');
         
         // currentAttempt 확인 및 설정 (ref 사용)
         const nextAttempt = Math.max(1, currentAttemptRef.current); // 최소 1회차
@@ -197,83 +173,9 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
           currentAttemptRef.current = nextAttempt; // ref도 업데이트
         }
         
-        // 측정 시작 음성 안내
-        const startMessage = `지금부터 ${nextAttempt}회차 측정을 시작하겠습니다`;
-        console.log('🔊 시작 안내 시작:', startMessage);
-        
-        if ('speechSynthesis' in window) {
-          // 중복 시작 방지를 위한 플래그
-          let measurementStarted = false;
-          
-          const speakStartMessage = () => {
-            const voices = speechSynthesis.getVoices();
-            const startUtterance = new SpeechSynthesisUtterance(startMessage);
-            startUtterance.lang = 'ko-KR';
-            startUtterance.rate = 0.9;
-            startUtterance.pitch = 1.0;
-            startUtterance.volume = 1.0;
-            
-            // 한국어 음성 찾기
-            const koVoice = voices.find(voice => voice.lang.includes('ko'));
-            if (koVoice) {
-              startUtterance.voice = koVoice;
-              console.log('🎤 시작 음성 사용:', koVoice.name);
-            }
-            
-            startUtterance.onstart = () => console.log('🎵 시작 음성 시작');
-            startUtterance.onend = () => {
-              console.log('🎵 시작 음성 완료');
-              if (!measurementStarted) {
-                measurementStarted = true;
-                console.log('🎯 음성 완료 - 측정 시작');
-                startRandomSignal();
-              }
-            };
-            startUtterance.onerror = (e) => {
-              console.error('❌ 시작 음성 오류:', e);
-              if (!measurementStarted) {
-                measurementStarted = true;
-                console.log('🎯 음성 오류 - 측정 강제 시작');
-                startRandomSignal();
-              }
-            };
-            
-            try {
-              speechSynthesis.cancel(); // 이전 음성 정리
-              speechSynthesis.speak(startUtterance);
-              console.log('🔊 시작 음성 재생 명령 실행됨');
-            } catch (error) {
-              console.error('❌ 시작 음성 재생 실패:', error);
-              if (!measurementStarted) {
-                measurementStarted = true;
-                startRandomSignal();
-              }
-            }
-          };
-          
-          // 음성 엔진 준비 확인
-          if (speechSynthesis.getVoices().length === 0) {
-            console.log('⏳ 시작 음성 엔진 로딩 대기...');
-            speechSynthesis.onvoiceschanged = () => {
-              console.log('✅ 시작 음성 엔진 로딩 완료');
-              speakStartMessage();
-            };
-          } else {
-            speakStartMessage();
-          }
-          
-          // 음성이 지원되지 않는 경우 대비 (5초 후 강제 시작)
-          setTimeout(() => {
-            if (!measurementStarted) {
-              measurementStarted = true;
-              console.log('🎯 타임아웃 - 측정 강제 시작');
-              startRandomSignal();
-            }
-          }, 5000);
-        } else {
-          console.warn('❌ speechSynthesis 지원되지 않음 - 즉시 측정 시작');
-          startRandomSignal();
-        }
+        // 신호음과 함께 측정 시작
+        console.log('🎯 신호음 완료 - 측정 시작');
+        startRandomSignal();
         
       }, 3000); // 90% 달성 후 3초 대기
       
@@ -287,6 +189,23 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
       autoStartTriggeredRef.current = false;
     }
   }, [phase]);
+
+  // Audio Context 초기화 (사용자 인터랙션 시)
+  const initializeAudioContext = () => {
+    if (!audioContextRef.current) {
+      try {
+        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+        console.log('🎵 Audio Context 초기화됨 (사용자 인터랙션)');
+        
+        // suspended 상태면 resume
+        if (audioContextRef.current.state === 'suspended') {
+          audioContextRef.current.resume();
+        }
+      } catch (error) {
+        console.error('❌ Audio Context 초기화 실패:', error);
+      }
+    }
+  };
 
   // 가속도계 권한 요청
   const requestAccelerometerPermission = async () => {
@@ -808,9 +727,12 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
               
               {autoStartTriggeredRef.current && (
                 <div className="bg-blue-900 border border-blue-500 p-3 rounded-lg mb-4">
-                  <div className="text-blue-300 font-bold text-sm">⏳ 자동 시작 중...</div>
+                  <div className="text-blue-300 font-bold text-sm">🎵 카운트다운 시작!</div>
                   <div className="text-blue-400 text-xs mt-1">
-                    3초동안 안정적인 자세를 유지하세요!
+                    신호음과 함께 3초 후 자동 측정 시작
+                  </div>
+                  <div className="text-blue-300 text-xs mt-1">
+                    삐(3초) → 삐(2초) → 삐(1초) → 삐삐(시작!)
                   </div>
                 </div>
               )}
@@ -827,7 +749,10 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
 
             {stabilityScore >= 60 && (
               <button
-                onClick={() => setPhase('ready')}
+                onClick={() => {
+                  initializeAudioContext(); // Audio Context 초기화
+                  setPhase('ready');
+                }}
                 className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg mb-4"
               >
                 측정 준비 완료
