@@ -70,7 +70,16 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
       console.log('🎯 안정성 90% 달성 - 자동 측정 시작 준비 (한 번만 실행)');
       setAutoStartTriggered(true); // 중복 실행 방지
       
-      // 3초 후 자동 시작 (사용자가 준비할 시간)
+      // 즉시 준비 안내 음성
+      const prepareMessage = '3초동안 안정적인 자세를 유지하세요. 자동으로 측정을 시작합니다!';
+      const prepareUtterance = new SpeechSynthesisUtterance(prepareMessage);
+      prepareUtterance.lang = 'ko-KR';
+      prepareUtterance.rate = 0.9;
+      prepareUtterance.pitch = 1.0;
+      console.log('🔊 준비 안내:', prepareMessage);
+      speechSynthesis.speak(prepareUtterance);
+      
+      // 3초 후 자동 시작
       const autoStartTimer = setTimeout(() => {
         console.log('🚀 자동 측정 시작!');
         
@@ -78,19 +87,35 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
         const nextAttempt = currentAttempt === 0 ? 1 : currentAttempt;
         setCurrentAttempt(nextAttempt);
         
-        // 음성 안내 (회차 포함)
-        const message = `지금부터 ${nextAttempt}회차 측정을 시작하겠습니다`;
-        const utterance = new SpeechSynthesisUtterance(message);
-        utterance.lang = 'ko-KR';
-        utterance.rate = 0.9; // 조금 천천히
-        utterance.pitch = 1.0; // 기본 톤
-        console.log('🔊 음성 안내:', message);
-        speechSynthesis.speak(utterance);
+        // 측정 시작 음성 안내
+        const startMessage = `지금부터 ${nextAttempt}회차 측정을 시작하겠습니다`;
+        const startUtterance = new SpeechSynthesisUtterance(startMessage);
+        startUtterance.lang = 'ko-KR';
+        startUtterance.rate = 0.9;
+        startUtterance.pitch = 1.0;
+        console.log('🔊 시작 안내:', startMessage);
+        speechSynthesis.speak(startUtterance);
         
-        // 측정 시작
+        // 중복 시작 방지를 위한 플래그
+        let measurementStarted = false;
+        
+        // 음성 완료 후 측정 시작
+        startUtterance.onend = () => {
+          if (!measurementStarted) {
+            measurementStarted = true;
+            console.log('🎯 음성 완료 - 측정 시작');
+            startRandomSignal();
+          }
+        };
+        
+        // 음성이 지원되지 않는 경우 대비 (3초 후 강제 시작)
         setTimeout(() => {
-          startRandomSignal();
-        }, 2000); // 음성 후 2초 대기
+          if (!measurementStarted) {
+            measurementStarted = true;
+            console.log('🎯 타임아웃 - 측정 강제 시작');
+            startRandomSignal();
+          }
+        }, 3000);
         
       }, 3000); // 90% 달성 후 3초 대기
       
@@ -614,11 +639,20 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
                  '❌ 휴대폰을 더 안정적으로 고정해주세요'}
               </p>
               
-              {stabilityScore >= 90 && (
+              {stabilityScore >= 90 && !autoStartTriggered && (
                 <div className="bg-green-900 border border-green-500 p-3 rounded-lg mb-4">
                   <div className="text-green-300 font-bold text-sm">🚀 자동 시작 준비됨!</div>
                   <div className="text-green-400 text-xs mt-1">
                     안정성 90% 달성으로 곧 측정이 자동 시작됩니다.
+                  </div>
+                </div>
+              )}
+              
+              {autoStartTriggered && (
+                <div className="bg-blue-900 border border-blue-500 p-3 rounded-lg mb-4">
+                  <div className="text-blue-300 font-bold text-sm">⏳ 자동 시작 중...</div>
+                  <div className="text-blue-400 text-xs mt-1">
+                    3초동안 안정적인 자세를 유지하세요!
                   </div>
                 </div>
               )}
