@@ -42,7 +42,14 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
   // Refs
   const accelerometerRef = useRef<any>(null);
   const signalTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const phaseRef = useRef(phase); // phase 동기화를 위한 ref
   const stabilityTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // phase 변경 시 phaseRef 업데이트
+  useEffect(() => {
+    phaseRef.current = phase;
+    console.log('🔄 Phase 변경됨:', phase);
+  }, [phase]);
 
   // 가속도계 권한 요청
   const requestAccelerometerPermission = async () => {
@@ -104,7 +111,14 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
     console.log('가속도계 시작 시도...');
 
     const handleMotion = (event: DeviceMotionEvent) => {
-      // console.log('가속도계 이벤트 수신:', event);
+      // 측정 중일 때만 로그 (너무 많은 로그 방지)
+      if (phaseRef.current === 'measuring') {
+        console.log('🎯 handleMotion 호출됨 (measuring 중):', { 
+          phaseState: phase, 
+          phaseRef: phaseRef.current, 
+          event 
+        });
+      }
       
       // accelerationIncludingGravity 우선 시도
       let acceleration = event.accelerationIncludingGravity;
@@ -148,17 +162,17 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
       setCurrentAccelerationData(currentAcceleration);
       
       // 안정성 체크 중일 때
-      if (phase === 'stability-check') {
+      if (phaseRef.current === 'stability-check') {
         checkStability(currentAcceleration);
       }
       
       // 대기 중일 때 베이스라인 업데이트
-      if (phase === 'waiting') {
+      if (phaseRef.current === 'waiting') {
         setBaselineAcceleration(currentAcceleration);
       }
       
       // 측정 중일 때
-      if (phase === 'measuring') {
+      if (phaseRef.current === 'measuring') {
         console.log('🎯🎯🎯 측정 중 - detectMovement 호출 시도');
         if (baselineAcceleration && signalTime) {
           console.log('✅✅✅ 조건 만족 - detectMovement 호출!');
@@ -168,10 +182,10 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
         }
       } else {
         // phase가 measuring이 아닌 경우에만 로그 (너무 많은 로그 방지)
-        if (phase === 'stability-check') {
+        if (phaseRef.current === 'stability-check') {
           // 안정성 체크 중이므로 로그 안함
         } else {
-          console.log('📍 현재 Phase:', phase, '(measuring 아님)');
+          console.log('📍 현재 PhaseRef:', phaseRef.current, 'PhaseState:', phase, '(measuring 아님)');
         }
       }
     };
