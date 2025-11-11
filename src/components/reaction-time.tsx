@@ -78,6 +78,10 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
   const autoStartTimerRef = useRef<NodeJS.Timeout | null>(null);
   const beepTimersRef = useRef<NodeJS.Timeout[]>([]);
   
+  // 쿨다운 시스템 (취소 후 재시작 방지)
+  const lastCancelTimeRef = useRef<number>(0);
+  const COOLDOWN_DURATION = 2000; // 2초 쿨다운
+  
   // 신호음 재생 함수
   const playBeep = (frequency: number = 800, duration: number = 200) => {
     try {
@@ -159,8 +163,11 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
     }
     clearAllBeepTimers();
     
-    // 플래그 리셋
+    // 플래그 리셋 + 쿨다운 시작
     autoStartTriggeredRef.current = false;
+    lastCancelTimeRef.current = Date.now(); // 취소 시간 기록
+    
+    console.log('⏰ 쿨다운 시작 - 2초간 재시작 방지');
   };
 
   // 안정성 점수 모니터링 - 90% 달성 시 한 번만 자동 시작
@@ -177,10 +184,21 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
     
     // 조건 확인
     if (phase === 'stability-check' && stabilityScore >= 90) {
+      // 쿨다운 체크
+      const now = Date.now();
+      const timeSinceLastCancel = now - lastCancelTimeRef.current;
+      
+      if (timeSinceLastCancel < COOLDOWN_DURATION) {
+        const remainingCooldown = Math.ceil((COOLDOWN_DURATION - timeSinceLastCancel) / 1000);
+        console.log(`⏰ 쿨다운 중 - ${remainingCooldown}초 후 재시도 가능`);
+        return;
+      }
+      
       console.log('🎯🎯🎯 자동 시작 조건 만족! 한 번만 실행됨:', { 
         phase, 
         stabilityScore, 
-        autoStartTriggered: autoStartTriggeredRef.current
+        autoStartTriggered: autoStartTriggeredRef.current,
+        timeSinceLastCancel
       });
       
       // 즉시 플래그 설정 (무한 루프 방지)
@@ -758,22 +776,57 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
               </div>
               
               <p className="text-sm text-gray-300 mb-4">
-                {autoStartTriggeredRef.current && stabilityScore < 80 ? '❌ 자동 시작 취소됨! 안정성을 다시 90% 이상 유지하세요' :
-                 stabilityScore >= 90 ? '🎯 90% 달성! 3초 후 자동으로 측정을 시작합니다!' :
-                 stabilityScore >= 80 ? '✅ 고정 상태가 좋습니다! 90%까지 조금 더!' :
-                 stabilityScore >= 60 ? '⚠️ 조금 더 단단히 고정해주세요' :
-                 stabilityScore === 0 ? '❌ 가속도계 데이터를 받지 못하고 있습니다' :
-                 '❌ 휴대폰을 더 안정적으로 고정해주세요'}
+                {(() => {
+                  const now = Date.now();
+                  const timeSinceLastCancel = now - lastCancelTimeRef.current;
+                  const isInCooldown = timeSinceLastCancel < COOLDOWN_DURATION;
+                  const remainingCooldown = Math.ceil((COOLDOWN_DURATION - timeSinceLastCancel) / 1000);
+                  
+                  if (autoStartTriggeredRef.current && stabilityScore < 80) {
+                    return '❌ 자동 시작 취소됨! 안정성을 다시 90% 이상 유지하세요';
+                  } else if (isInCooldown && stabilityScore >= 90) {
+                    return `⏰ 쿨다운 중... ${remainingCooldown}초 후 자동 시작 가능`;
+                  } else if (stabilityScore >= 90) {
+                    return '🎯 90% 달성! 3초 후 자동으로 측정을 시작합니다!';
+                  } else if (stabilityScore >= 80) {
+                    return '✅ 고정 상태가 좋습니다! 90%까지 조금 더!';
+                  } else if (stabilityScore >= 60) {
+                    return '⚠️ 조금 더 단단히 고정해주세요';
+                  } else if (stabilityScore === 0) {
+                    return '❌ 가속도계 데이터를 받지 못하고 있습니다';
+                  } else {
+                    return '❌ 휴대폰을 더 안정적으로 고정해주세요';
+                  }
+                })()}
               </p>
               
-              {stabilityScore >= 90 && !autoStartTriggeredRef.current && (
-                <div className="bg-green-900 border border-green-500 p-3 rounded-lg mb-4">
-                  <div className="text-green-300 font-bold text-sm">🚀 자동 시작 준비됨!</div>
-                  <div className="text-green-400 text-xs mt-1">
-                    안정성 90% 달성으로 곧 측정이 자동 시작됩니다.
-                  </div>
-                </div>
-              )}
+              {(() => {
+                const now = Date.now();
+                const timeSinceLastCancel = now - lastCancelTimeRef.current;
+                const isInCooldown = timeSinceLastCancel < COOLDOWN_DURATION;
+                
+                if (stabilityScore >= 90 && !autoStartTriggeredRef.current && !isInCooldown) {
+                  return (
+                    <div className="bg-green-900 border border-green-500 p-3 rounded-lg mb-4">
+                      <div className="text-green-300 font-bold text-sm">🚀 자동 시작 준비됨!</div>
+                      <div className="text-green-400 text-xs mt-1">
+                        안정성 90% 달성으로 곧 측정이 자동 시작됩니다.
+                      </div>
+                    </div>
+                  );
+                } else if (stabilityScore >= 90 && isInCooldown) {
+                  const remainingCooldown = Math.ceil((COOLDOWN_DURATION - timeSinceLastCancel) / 1000);
+                  return (
+                    <div className="bg-orange-900 border border-orange-500 p-3 rounded-lg mb-4">
+                      <div className="text-orange-300 font-bold text-sm">⏰ 쿨다운 중</div>
+                      <div className="text-orange-400 text-xs mt-1">
+                        {remainingCooldown}초 후 자동 시작 가능합니다.
+                      </div>
+                    </div>
+                  );
+                }
+                return null;
+              })()}
               
               {autoStartTriggeredRef.current && (
                 <div className="bg-blue-900 border border-blue-500 p-3 rounded-lg mb-4">
