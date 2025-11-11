@@ -156,28 +156,39 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
   const playCountdownBeeps = () => {
     console.log('🎵🎵🎵 카운트다운 신호음 시작');
     
-    // 기존 타이머들 정리
-    clearAllBeepTimers();
+    // 기존 타이머들 정리 (중복 호출 방지)
+    if (beepTimersRef.current.length > 0) {
+      console.log('🎵 기존 타이머 정리 중...');
+      clearAllBeepTimers();
+    } else {
+      console.log('🎵 새로운 카운트다운 시작 (기존 타이머 없음)');
+    }
     
     // 3초 카운트다운: 1초마다 삐 소리 (async 함수 호출)
     const timer1 = setTimeout(async () => {
       console.log('🎵 1번째 삐 (3초 전)');
       await playBeep(600, 150);
+      console.log('✅ 1번째 삐 완료');
     }, 0);
     
     const timer2 = setTimeout(async () => {
       console.log('🎵 2번째 삐 (2초 전)');
       await playBeep(700, 150);
+      console.log('✅ 2번째 삐 완료');
     }, 1000);
     
     const timer3 = setTimeout(async () => {
       console.log('🎵 3번째 삐 (1초 전)');
       await playBeep(800, 150);
+      console.log('✅ 3번째 삐 완료');
     }, 2000);
     
     const timer4 = setTimeout(async () => {
       console.log('🎵 4번째 삐 (시작!)');
       await playBeep(1000, 300);
+      console.log('✅ 4번째 삐 완료 - 모든 카운트다운 완료');
+      // 모든 카운트다운 완료 시 타이머 배열 정리
+      beepTimersRef.current = [];
     }, 3000);
     
     // 타이머들 저장 (취소 가능하도록)
@@ -217,7 +228,11 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
       // 자동 시작 중인데 안정성이 떨어지면 취소
       if (phase === 'stability-check' && stabilityScore < 80) {
         console.log('⚠️ 자동 시작 중 안정성 부족 감지:', stabilityScore);
+        console.log('⚠️ 현재 활성 타이머 수:', beepTimersRef.current.length);
         cancelAutoStart();
+      } else {
+        // 안정성이 유지되고 있으면 로그만 출력 (타이머 건드리지 않음)
+        console.log('✅ 자동 시작 중 - 안정성 유지됨:', stabilityScore);
       }
       return;
     }
@@ -254,8 +269,13 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
       // 신호음과 함께 자동 시작
       console.log('⏰ 신호음 카운트다운 시작...');
       
-      // 즉시 카운트다운 신호음 재생
-      playCountdownBeeps();
+      // 카운트다운이 이미 진행 중이 아닐 때만 시작
+      if (beepTimersRef.current.length === 0) {
+        console.log('🎵 카운트다운 신호음 새로 시작');
+        playCountdownBeeps();
+      } else {
+        console.log('🎵 카운트다운이 이미 진행 중 - 중복 시작 방지');
+      }
       
       // 타이머를 ref로 관리
       autoStartTimerRef.current = setTimeout(() => {
