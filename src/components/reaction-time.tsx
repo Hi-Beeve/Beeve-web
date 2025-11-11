@@ -51,7 +51,48 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
   useEffect(() => {
     phaseRef.current = phase;
     console.log('🔄 Phase 변경됨:', phase);
-  }, [phase]);
+    
+    // stability-check 단계 진입 시 자동으로 센서 시작
+    if (phase === 'stability-check') {
+      console.log('🎯 안정성 체크 단계 - 자동 센서 시작');
+      if (hasAccelerometer) {
+        startAccelerometer();
+      }
+    }
+  }, [phase, hasAccelerometer]);
+
+  // 안정성 점수 모니터링 - 90% 이상이면 자동 시작
+  useEffect(() => {
+    if (phase === 'stability-check' && stabilityScore >= 90) {
+      console.log('🎯 안정성 90% 달성 - 자동 측정 시작 준비');
+      
+      // 3초 후 자동 시작 (사용자가 준비할 시간)
+      const autoStartTimer = setTimeout(() => {
+        console.log('🚀 자동 측정 시작!');
+        
+        // 먼저 회차 설정
+        const nextAttempt = currentAttempt === 0 ? 1 : currentAttempt;
+        setCurrentAttempt(nextAttempt);
+        
+        // 음성 안내 (회차 포함)
+        const message = `지금부터 ${nextAttempt}회차 측정을 시작하겠습니다`;
+        const utterance = new SpeechSynthesisUtterance(message);
+        utterance.lang = 'ko-KR';
+        utterance.rate = 0.9; // 조금 천천히
+        utterance.pitch = 1.0; // 기본 톤
+        console.log('🔊 음성 안내:', message);
+        speechSynthesis.speak(utterance);
+        
+        // 측정 시작
+        setTimeout(() => {
+          startRandomSignal();
+        }, 2000); // 음성 후 2초 대기
+        
+      }, 3000); // 90% 달성 후 3초 대기
+      
+      return () => clearTimeout(autoStartTimer);
+    }
+  }, [phase, stabilityScore]);
 
   // 가속도계 권한 요청
   const requestAccelerometerPermission = async () => {
@@ -326,17 +367,20 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
 
   // 반응 기록
   const recordReaction = (reactionTime: number) => {
-    console.log('📝📝📝 recordReaction 호출됨:', { reactionTime, currentAttempt, phase });
+    console.log('📝📝📝 recordReaction 호출됨:', { reactionTime, currentAttempt, phase: phaseRef.current });
+    
+    // 이미 결과 단계이면 중복 처리 방지 (phaseRef 사용)
+    if (phaseRef.current === 'result' || phaseRef.current === 'final-result') {
+      console.log('⚠️ 이미 결과 단계 - 중복 처리 방지');
+      return;
+    }
+    
+    // 즉시 phase 변경으로 중복 호출 방지
+    phaseRef.current = 'result';
     
     // 즉시 가속도계 정지 (중복 감지 방지)
     console.log('🛑 즉시 가속도계 정지');
     stopAccelerometer();
-    
-    // 이미 결과 단계이면 중복 처리 방지
-    if (phase === 'result' || phase === 'final-result') {
-      console.log('⚠️ 이미 결과 단계 - 중복 처리 방지');
-      return;
-    }
     
     const newRecord: ReactionRecord = {
       attempt: currentAttempt,
@@ -524,7 +568,7 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
               }}
               className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg"
             >
-              고정 완료, 다음 단계
+              다음 단계
             </button>
           </div>
         )}
@@ -552,11 +596,21 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
               </div>
               
               <p className="text-sm text-gray-300 mb-4">
-                {stabilityScore >= 80 ? '✅ 고정 상태가 좋습니다!' :
+                {stabilityScore >= 90 ? '🎯 90% 달성! 3초 후 자동으로 측정을 시작합니다!' :
+                 stabilityScore >= 80 ? '✅ 고정 상태가 좋습니다! 90%까지 조금 더!' :
                  stabilityScore >= 60 ? '⚠️ 조금 더 단단히 고정해주세요' :
                  stabilityScore === 0 ? '❌ 가속도계 데이터를 받지 못하고 있습니다' :
                  '❌ 휴대폰을 더 안정적으로 고정해주세요'}
               </p>
+              
+              {stabilityScore >= 90 && (
+                <div className="bg-green-900 border border-green-500 p-3 rounded-lg mb-4">
+                  <div className="text-green-300 font-bold text-sm">🚀 자동 시작 준비됨!</div>
+                  <div className="text-green-400 text-xs mt-1">
+                    안정성 90% 달성으로 곧 측정이 자동 시작됩니다.
+                  </div>
+                </div>
+              )}
               
               {/* 디버그 정보 */}
               <div className="bg-gray-700 p-3 rounded text-xs text-gray-400">
