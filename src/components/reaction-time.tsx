@@ -82,9 +82,11 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
   const lastCancelTimeRef = useRef<number>(0);
   const COOLDOWN_DURATION = 2000; // 2초 쿨다운
   
-  // 신호음 재생 함수
-  const playBeep = (frequency: number = 800, duration: number = 200) => {
+  // 신호음 재생 함수 (강화된 Audio Context 관리)
+  const playBeep = async (frequency: number = 800, duration: number = 200) => {
     try {
+      console.log(`🎵 신호음 재생 시도: ${frequency}Hz, ${duration}ms`);
+      
       // Audio Context 초기화 (한 번만)
       if (!audioContextRef.current) {
         audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -92,13 +94,27 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
       }
       
       const audioContext = audioContextRef.current;
+      console.log('🎵 Audio Context 상태:', audioContext.state);
       
-      // Audio Context가 suspended 상태면 resume
+      // Audio Context가 suspended 상태면 resume (await 사용)
       if (audioContext.state === 'suspended') {
-        audioContext.resume().then(() => {
-          console.log('🎵 Audio Context resumed');
-        });
+        console.log('🎵 Audio Context suspended - resume 시도');
+        try {
+          await audioContext.resume();
+          console.log('✅ Audio Context resume 성공:', audioContext.state);
+        } catch (resumeError) {
+          console.error('❌ Audio Context resume 실패:', resumeError);
+          return;
+        }
       }
+      
+      // 상태 재확인
+      if (audioContext.state !== 'running') {
+        console.error('❌ Audio Context가 running 상태가 아님:', audioContext.state);
+        return;
+      }
+      
+      console.log('✅ Audio Context 준비 완료 - Oscillator 생성');
       
       // Oscillator (신호음 생성기) 생성
       const oscillator = audioContext.createOscillator();
@@ -117,11 +133,19 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
       gainNode.gain.linearRampToValueAtTime(0.1, audioContext.currentTime + 0.01); // 페이드 인
       gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + duration / 1000); // 페이드 아웃
       
-      // 재생 시작 및 종료
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + duration / 1000);
+      // 이벤트 리스너 추가 (디버깅용)
+      oscillator.onended = () => {
+        console.log(`✅ 신호음 완료: ${frequency}Hz`);
+      };
       
-      console.log(`🎵 신호음 재생: ${frequency}Hz, ${duration}ms`);
+      // 재생 시작 및 종료
+      const startTime = audioContext.currentTime;
+      const stopTime = startTime + duration / 1000;
+      
+      oscillator.start(startTime);
+      oscillator.stop(stopTime);
+      
+      console.log(`🎵 신호음 재생 명령 완료: ${frequency}Hz, 시작시간: ${startTime}, 종료시간: ${stopTime}`);
       
     } catch (error) {
       console.error('❌ 신호음 재생 실패:', error);
@@ -130,19 +154,35 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
   
   // 카운트다운 신호음 (삐삐삐) + 타이머 관리
   const playCountdownBeeps = () => {
-    console.log('🎵 카운트다운 신호음 시작');
+    console.log('🎵🎵🎵 카운트다운 신호음 시작');
     
     // 기존 타이머들 정리
     clearAllBeepTimers();
     
-    // 3초 카운트다운: 1초마다 삐 소리
-    const timer1 = setTimeout(() => playBeep(600, 150), 0);    // 3초 전: 낮은 톤
-    const timer2 = setTimeout(() => playBeep(700, 150), 1000); // 2초 전: 중간 톤  
-    const timer3 = setTimeout(() => playBeep(800, 150), 2000); // 1초 전: 높은 톤
-    const timer4 = setTimeout(() => playBeep(1000, 300), 3000); // 시작: 더 높고 긴 톤
+    // 3초 카운트다운: 1초마다 삐 소리 (async 함수 호출)
+    const timer1 = setTimeout(async () => {
+      console.log('🎵 1번째 삐 (3초 전)');
+      await playBeep(600, 150);
+    }, 0);
+    
+    const timer2 = setTimeout(async () => {
+      console.log('🎵 2번째 삐 (2초 전)');
+      await playBeep(700, 150);
+    }, 1000);
+    
+    const timer3 = setTimeout(async () => {
+      console.log('🎵 3번째 삐 (1초 전)');
+      await playBeep(800, 150);
+    }, 2000);
+    
+    const timer4 = setTimeout(async () => {
+      console.log('🎵 4번째 삐 (시작!)');
+      await playBeep(1000, 300);
+    }, 3000);
     
     // 타이머들 저장 (취소 가능하도록)
     beepTimersRef.current = [timer1, timer2, timer3, timer4];
+    console.log('🎵 모든 카운트다운 타이머 설정 완료');
   };
   
   // 모든 신호음 타이머 정리
@@ -258,18 +298,39 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
   }, [phase]);
 
   // Audio Context 초기화 (사용자 인터랙션 시)
-  const initializeAudioContext = () => {
+  const initializeAudioContext = async () => {
     if (!audioContextRef.current) {
       try {
         audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
         console.log('🎵 Audio Context 초기화됨 (사용자 인터랙션)');
+        console.log('🎵 초기 상태:', audioContextRef.current.state);
         
         // suspended 상태면 resume
         if (audioContextRef.current.state === 'suspended') {
-          audioContextRef.current.resume();
+          console.log('🎵 초기화 시 suspended 상태 - resume 시도');
+          await audioContextRef.current.resume();
+          console.log('🎵 초기화 resume 완료:', audioContextRef.current.state);
         }
+        
+        // 테스트 신호음 재생 (Audio Context 활성화 확인)
+        console.log('🎵 테스트 신호음 재생으로 Audio Context 활성화 확인');
+        await playBeep(440, 100); // 짧은 테스트 신호음
+        
       } catch (error) {
         console.error('❌ Audio Context 초기화 실패:', error);
+      }
+    } else {
+      console.log('🎵 Audio Context 이미 존재함:', audioContextRef.current.state);
+      
+      // 기존 Audio Context가 suspended 상태면 resume
+      if (audioContextRef.current.state === 'suspended') {
+        console.log('🎵 기존 Audio Context suspended - resume 시도');
+        try {
+          await audioContextRef.current.resume();
+          console.log('🎵 기존 Audio Context resume 완료:', audioContextRef.current.state);
+        } catch (error) {
+          console.error('❌ 기존 Audio Context resume 실패:', error);
+        }
       }
     }
   };
@@ -852,8 +913,10 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
 
             {stabilityScore >= 60 && (
               <button
-                onClick={() => {
-                  initializeAudioContext(); // Audio Context 초기화
+                onClick={async () => {
+                  console.log('🎵 측정 준비 완료 버튼 클릭 - Audio Context 초기화 시작');
+                  await initializeAudioContext(); // Audio Context 초기화
+                  console.log('🎵 Audio Context 초기화 완료 - Phase 변경');
                   setPhase('ready');
                 }}
                 className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg mb-4"
