@@ -66,18 +66,73 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
 
   // 안정성 점수 모니터링 - 90% 달성 시 한 번만 자동 시작
   useEffect(() => {
+    console.log('🔍 useEffect 체크:', { 
+      phase, 
+      stabilityScore, 
+      autoStartTriggered,
+      condition: phase === 'stability-check' && stabilityScore >= 90 && !autoStartTriggered 
+    });
+    
     if (phase === 'stability-check' && stabilityScore >= 90 && !autoStartTriggered) {
       console.log('🎯 안정성 90% 달성 - 자동 측정 시작 준비 (한 번만 실행)');
       setAutoStartTriggered(true); // 중복 실행 방지
       
       // 즉시 준비 안내 음성
       const prepareMessage = '3초동안 안정적인 자세를 유지하세요. 자동으로 측정을 시작합니다!';
-      const prepareUtterance = new SpeechSynthesisUtterance(prepareMessage);
-      prepareUtterance.lang = 'ko-KR';
-      prepareUtterance.rate = 0.9;
-      prepareUtterance.pitch = 1.0;
-      console.log('🔊 준비 안내:', prepareMessage);
-      speechSynthesis.speak(prepareUtterance);
+      console.log('🔊 준비 안내 시작:', prepareMessage);
+      
+      // speechSynthesis 지원 여부 확인
+      if ('speechSynthesis' in window) {
+        console.log('✅ speechSynthesis 지원됨');
+        
+        // 음성 엔진 로딩 대기
+        const speakWithRetry = () => {
+          const voices = speechSynthesis.getVoices();
+          console.log('🎤 사용 가능한 음성:', voices.length, '개');
+          console.log('🎤 한국어 음성:', voices.filter(v => v.lang.includes('ko')));
+          
+          const prepareUtterance = new SpeechSynthesisUtterance(prepareMessage);
+          prepareUtterance.lang = 'ko-KR';
+          prepareUtterance.rate = 0.9;
+          prepareUtterance.pitch = 1.0;
+          prepareUtterance.volume = 1.0; // 최대 볼륨
+          
+          // 한국어 음성 찾기
+          const koVoice = voices.find(voice => voice.lang.includes('ko'));
+          if (koVoice) {
+            prepareUtterance.voice = koVoice;
+            console.log('🎤 한국어 음성 사용:', koVoice.name);
+          } else {
+            console.warn('⚠️ 한국어 음성 없음, 기본 음성 사용');
+          }
+          
+          prepareUtterance.onstart = () => console.log('🎵 준비 음성 시작');
+          prepareUtterance.onend = () => console.log('🎵 준비 음성 완료');
+          prepareUtterance.onerror = (e) => console.error('❌ 준비 음성 오류:', e);
+          
+          // 음성 재생 시도
+          try {
+            speechSynthesis.cancel(); // 이전 음성 정리
+            speechSynthesis.speak(prepareUtterance);
+            console.log('🔊 음성 재생 명령 실행됨');
+          } catch (error) {
+            console.error('❌ 음성 재생 실패:', error);
+          }
+        };
+        
+        // 음성 엔진이 로딩되지 않았으면 대기
+        if (speechSynthesis.getVoices().length === 0) {
+          console.log('⏳ 음성 엔진 로딩 대기...');
+          speechSynthesis.onvoiceschanged = () => {
+            console.log('✅ 음성 엔진 로딩 완료');
+            speakWithRetry();
+          };
+        } else {
+          speakWithRetry();
+        }
+      } else {
+        console.warn('❌ speechSynthesis 지원되지 않음');
+      }
       
       // 3초 후 자동 시작
       const autoStartTimer = setTimeout(() => {
@@ -89,33 +144,81 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
         
         // 측정 시작 음성 안내
         const startMessage = `지금부터 ${nextAttempt}회차 측정을 시작하겠습니다`;
-        const startUtterance = new SpeechSynthesisUtterance(startMessage);
-        startUtterance.lang = 'ko-KR';
-        startUtterance.rate = 0.9;
-        startUtterance.pitch = 1.0;
-        console.log('🔊 시작 안내:', startMessage);
-        speechSynthesis.speak(startUtterance);
+        console.log('🔊 시작 안내 시작:', startMessage);
         
-        // 중복 시작 방지를 위한 플래그
-        let measurementStarted = false;
-        
-        // 음성 완료 후 측정 시작
-        startUtterance.onend = () => {
-          if (!measurementStarted) {
-            measurementStarted = true;
-            console.log('🎯 음성 완료 - 측정 시작');
-            startRandomSignal();
+        if ('speechSynthesis' in window) {
+          // 중복 시작 방지를 위한 플래그
+          let measurementStarted = false;
+          
+          const speakStartMessage = () => {
+            const voices = speechSynthesis.getVoices();
+            const startUtterance = new SpeechSynthesisUtterance(startMessage);
+            startUtterance.lang = 'ko-KR';
+            startUtterance.rate = 0.9;
+            startUtterance.pitch = 1.0;
+            startUtterance.volume = 1.0;
+            
+            // 한국어 음성 찾기
+            const koVoice = voices.find(voice => voice.lang.includes('ko'));
+            if (koVoice) {
+              startUtterance.voice = koVoice;
+              console.log('🎤 시작 음성 사용:', koVoice.name);
+            }
+            
+            startUtterance.onstart = () => console.log('🎵 시작 음성 시작');
+            startUtterance.onend = () => {
+              console.log('🎵 시작 음성 완료');
+              if (!measurementStarted) {
+                measurementStarted = true;
+                console.log('🎯 음성 완료 - 측정 시작');
+                startRandomSignal();
+              }
+            };
+            startUtterance.onerror = (e) => {
+              console.error('❌ 시작 음성 오류:', e);
+              if (!measurementStarted) {
+                measurementStarted = true;
+                console.log('🎯 음성 오류 - 측정 강제 시작');
+                startRandomSignal();
+              }
+            };
+            
+            try {
+              speechSynthesis.cancel(); // 이전 음성 정리
+              speechSynthesis.speak(startUtterance);
+              console.log('🔊 시작 음성 재생 명령 실행됨');
+            } catch (error) {
+              console.error('❌ 시작 음성 재생 실패:', error);
+              if (!measurementStarted) {
+                measurementStarted = true;
+                startRandomSignal();
+              }
+            }
+          };
+          
+          // 음성 엔진 준비 확인
+          if (speechSynthesis.getVoices().length === 0) {
+            console.log('⏳ 시작 음성 엔진 로딩 대기...');
+            speechSynthesis.onvoiceschanged = () => {
+              console.log('✅ 시작 음성 엔진 로딩 완료');
+              speakStartMessage();
+            };
+          } else {
+            speakStartMessage();
           }
-        };
-        
-        // 음성이 지원되지 않는 경우 대비 (3초 후 강제 시작)
-        setTimeout(() => {
-          if (!measurementStarted) {
-            measurementStarted = true;
-            console.log('🎯 타임아웃 - 측정 강제 시작');
-            startRandomSignal();
-          }
-        }, 3000);
+          
+          // 음성이 지원되지 않는 경우 대비 (5초 후 강제 시작)
+          setTimeout(() => {
+            if (!measurementStarted) {
+              measurementStarted = true;
+              console.log('🎯 타임아웃 - 측정 강제 시작');
+              startRandomSignal();
+            }
+          }, 5000);
+        } else {
+          console.warn('❌ speechSynthesis 지원되지 않음 - 즉시 측정 시작');
+          startRandomSignal();
+        }
         
       }, 3000); // 90% 달성 후 3초 대기
       
