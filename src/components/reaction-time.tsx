@@ -43,6 +43,8 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
   const accelerometerRef = useRef<any>(null);
   const signalTimerRef = useRef<NodeJS.Timeout | null>(null);
   const phaseRef = useRef(phase); // phase 동기화를 위한 ref
+  const baselineAccelerationRef = useRef<{x: number, y: number, z: number} | null>(null);
+  const signalTimeRef = useRef<number | null>(null);
   const stabilityTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // phase 변경 시 phaseRef 업데이트
@@ -169,16 +171,27 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
       // 대기 중일 때 베이스라인 업데이트
       if (phaseRef.current === 'waiting') {
         setBaselineAcceleration(currentAcceleration);
+        baselineAccelerationRef.current = currentAcceleration; // Ref도 즉시 업데이트
       }
       
       // 측정 중일 때
       if (phaseRef.current === 'measuring') {
         console.log('🎯🎯🎯 측정 중 - detectMovement 호출 시도');
-        if (baselineAcceleration && signalTime) {
-          console.log('✅✅✅ 조건 만족 - detectMovement 호출!');
+        console.log('🔍 Ref 값 확인:', {
+          baselineRef: !!baselineAccelerationRef.current,
+          signalRef: !!signalTimeRef.current,
+          baselineState: !!baselineAcceleration,
+          signalState: !!signalTime
+        });
+        
+        if (baselineAccelerationRef.current && signalTimeRef.current) {
+          console.log('✅✅✅ 조건 만족 (Ref 사용) - detectMovement 호출!');
           detectMovement(currentAcceleration);
         } else {
-          console.log('❌❌❌ 조건 불만족:', { baselineAcceleration: !!baselineAcceleration, signalTime: !!signalTime });
+          console.log('❌❌❌ 조건 불만족 (Ref 사용):', { 
+            baselineRef: !!baselineAccelerationRef.current, 
+            signalRef: !!signalTimeRef.current 
+          });
         }
       } else {
         // phase가 measuring이 아닌 경우에만 로그 (너무 많은 로그 방지)
@@ -245,19 +258,25 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
   const detectMovement = (currentAcceleration: {x: number, y: number, z: number}) => {
     console.log('🔥🔥🔥 detectMovement 함수 호출됨!', {
       current: currentAcceleration,
-      baseline: baselineAcceleration,
-      signalTime
+      baseline: baselineAccelerationRef.current,
+      signalTime: signalTimeRef.current
     });
     
-    if (!baselineAcceleration || !signalTime) {
-      console.warn('베이스라인 또는 신호시간 없음:', { baselineAcceleration, signalTime });
+    if (!baselineAccelerationRef.current || !signalTimeRef.current) {
+      console.warn('베이스라인 또는 신호시간 없음:', { 
+        baseline: baselineAccelerationRef.current, 
+        signalTime: signalTimeRef.current 
+      });
       return;
     }
 
-    // 가속도 변화량 계산
-    const deltaX = Math.abs(currentAcceleration.x - baselineAcceleration.x);
-    const deltaY = Math.abs(currentAcceleration.y - baselineAcceleration.y);
-    const deltaZ = Math.abs(currentAcceleration.z - baselineAcceleration.z);
+    // 가속도 변화량 계산 (Ref 사용)
+    const baseline = baselineAccelerationRef.current;
+    const signal = signalTimeRef.current;
+    
+    const deltaX = Math.abs(currentAcceleration.x - baseline.x);
+    const deltaY = Math.abs(currentAcceleration.y - baseline.y);
+    const deltaZ = Math.abs(currentAcceleration.z - baseline.z);
     
     // 전체 변화량
     const totalDelta = Math.sqrt(deltaX ** 2 + deltaY ** 2 + deltaZ ** 2);
@@ -271,15 +290,15 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
       console.log('🚨🚨🚨 === 발 벌리기 감지! 시점 디버깅 === 🚨🚨🚨');
       console.log('📊 감지 상세 정보:', {
         current: currentAcceleration,
-        baseline: baselineAcceleration,
+        baseline: baseline,
         deltaY: deltaY.toFixed(3),
         verticalThreshold,
-        phase,
-        hasSignalTime: !!signalTime,
-        signalTime
+        phase: phaseRef.current,
+        hasSignalTime: !!signal,
+        signalTime: signal
       });
       console.log('🔥🔥🔥 Y축 움직임 감지! 즉시 반응 처리:', deltaY);
-      const reactionTime = performance.now() - signalTime;
+      const reactionTime = performance.now() - signal;
       console.log('⚡ 즉시 반응시간 계산:', reactionTime, 'ms');
       recordReaction(reactionTime);
       return; // 즉시 종료
@@ -290,15 +309,15 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
       console.log('🚨🚨🚨 === 큰 움직임 감지! 시점 디버깅 === 🚨🚨🚨');
       console.log('📊 감지 상세 정보:', {
         current: currentAcceleration,
-        baseline: baselineAcceleration,
+        baseline: baseline,
         totalDelta: totalDelta.toFixed(3),
         totalThreshold,
-        phase,
-        hasSignalTime: !!signalTime,
-        signalTime
+        phase: phaseRef.current,
+        hasSignalTime: !!signal,
+        signalTime: signal
       });
       console.log('📊 큰 전체 움직임 감지! 즉시 반응 처리:', totalDelta);
-      const reactionTime = performance.now() - signalTime;
+      const reactionTime = performance.now() - signal;
       console.log('⚡ 즉시 반응시간 계산:', reactionTime, 'ms');
       recordReaction(reactionTime);
       return; // 즉시 종료
@@ -365,7 +384,9 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
     signalTimerRef.current = setTimeout(() => {
       console.log('신호음 재생 및 측정 시작');
       playSignal();
-      setSignalTime(performance.now());
+      const currentTime = performance.now();
+      setSignalTime(currentTime);
+      signalTimeRef.current = currentTime; // Ref도 즉시 업데이트
       setPhase('measuring');
       
       // 측정 시작 시 가속도계 확실히 작동하는지 확인
