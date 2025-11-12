@@ -327,7 +327,7 @@ export function SitAndReachWall() {
           timerStatus={phase === MeasurementPhase.MEASURING ? 'measuring' : 'idle'}
           preparingTime={preparingTime}
           remainingTime={remainingTime}
-          count={0}
+          count={measurement ? Math.round(measurement.distanceInCm) : 0}
           isFullBodyDetected={true}
           feedback={feedback}
           state={phase}
@@ -444,7 +444,7 @@ export function SitAndReachWall() {
           }}
           onStopMeasurement={resetMeasurement}
           onReset={resetMeasurement}
-          countLabel="측정 단계"
+          countLabel="거리 (cm)"
           timeLabel="유지 시간"
         />
       )}
