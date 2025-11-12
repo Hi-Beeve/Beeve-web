@@ -42,6 +42,8 @@ export function SitAndReachWall() {
   const [measurement, setMeasurement] = useState<WallMeasurement | null>(null);
   const [pixelToRealRatio, setPixelToRealRatio] = useState<number>(0.1); // 기본값: 1픽셀 = 0.1cm
   const [wallPosition, setWallPosition] = useState<number>(100); // 화면에서 벽의 x 좌표
+  const [userFootSize, setUserFootSize] = useState<number>(25); // 사용자 발 크기 (cm)
+  const [isFootCalibrated, setIsFootCalibrated] = useState<boolean>(false);
   const [holdStartTime, setHoldStartTime] = useState<number | null>(null);
   const [currentHoldTime, setCurrentHoldTime] = useState<number>(0);
   const [feedback, setFeedback] = useState<string>('측정 시작 버튼을 눌러주세요');
@@ -218,6 +220,14 @@ export function SitAndReachWall() {
         if (results.landmarks && results.landmarks.length > 0) {
           const landmarks = results.landmarks[0];
 
+          // 발 사이즈 기반 자동 캘리브레이션 (POSITIONING 단계에서)
+          if (phase === MeasurementPhase.POSITIONING && !isFootCalibrated) {
+            const calibrated = calibrateWithFootSize(landmarks);
+            if (!calibrated) {
+              setFeedback('발 전체가 화면에 보이도록 자세를 조정해주세요');
+            }
+          }
+
           // Calculate measurement
           const currentMeasurement = calculateWallDistance(landmarks);
           if (currentMeasurement) {
@@ -306,6 +316,34 @@ export function SitAndReachWall() {
     setCurrentHoldTime(0);
   };
 
+  // 발 사이즈 기반 자동 캘리브레이션
+  const calibrateWithFootSize = (landmarks: any[]) => {
+    const leftHeel = landmarks[POSE_LANDMARKS.LEFT_HEEL];
+    const rightHeel = landmarks[POSE_LANDMARKS.RIGHT_HEEL];
+    const leftToe = landmarks[POSE_LANDMARKS.LEFT_INDEX]; // 발가락 대신 손가락 사용 (임시)
+    const rightToe = landmarks[POSE_LANDMARKS.RIGHT_INDEX];
+
+    if (!leftHeel || !rightHeel) return false;
+
+    // 발 길이 계산 (발뒤꿈치에서 발끝까지)
+    // 실제로는 발가락 랜드마크를 사용해야 하지만, 현재는 대략적으로 계산
+    const leftFootLength = Math.abs(leftHeel.y - leftToe.y) * 640; // 픽셀 단위
+    const rightFootLength = Math.abs(rightHeel.y - rightToe.y) * 640;
+    
+    // 더 잘 보이는 발 사용
+    const footPixelLength = Math.max(leftFootLength, rightFootLength);
+    
+    if (footPixelLength > 20) { // 최소 20픽셀 이상일 때만 캘리브레이션
+      const newPixelToRealRatio = footPixelLength / userFootSize;
+      setPixelToRealRatio(newPixelToRealRatio);
+      setIsFootCalibrated(true);
+      setFeedback(`발 크기 기반 캘리브레이션 완료! (${footPixelLength.toFixed(0)}픽셀 = ${userFootSize}cm)`);
+      return true;
+    }
+    
+    return false;
+  };
+
   useEffect(() => {
     return () => {
       stopCamera();
@@ -350,39 +388,81 @@ export function SitAndReachWall() {
                 </div>
               </div>
 
-              {/* Calibration controls */}
+              {/* Foot Size Input */}
               {phase === MeasurementPhase.CALIBRATION && (
                 <div className="bg-gray-800 p-4 rounded-lg mb-4">
-                  <div className="font-semibold text-white mb-2">🔧 캘리브레이션</div>
-                  <div className="space-y-3">
-                    <label className="block text-sm text-gray-300">
-                      벽 위치 (픽셀):
-                      <input
-                        type="range"
-                        min="50"
-                        max="590"
-                        value={wallPosition}
-                        onChange={(e) => setWallPosition(Number(e.target.value))}
-                        className="w-full mt-1"
-                      />
-                      <span className="text-white font-bold">{wallPosition}px</span>
-                    </label>
-                    <label className="block text-sm text-gray-300">
-                      스케일 (픽셀/cm):
+                  <div className="font-semibold text-white mb-2">👟 발 크기 설정</div>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm text-gray-300 mb-2">
+                        본인의 발 크기를 입력하세요 (cm):
+                      </label>
                       <input
                         type="number"
-                        step="0.01"
-                        value={1 / pixelToRealRatio}
-                        onChange={(e) => setPixelToRealRatio(1 / Number(e.target.value))}
-                        className="w-20 px-2 py-1 bg-gray-700 text-white rounded ml-2"
+                        min="20"
+                        max="35"
+                        step="0.5"
+                        value={userFootSize}
+                        onChange={(e) => setUserFootSize(Number(e.target.value))}
+                        className="w-24 px-3 py-2 bg-gray-700 text-white rounded text-center text-lg"
                       />
-                    </label>
+                      <span className="ml-2 text-gray-400">cm</span>
+                    </div>
+                    
+                    <div className="bg-blue-900 p-3 rounded text-xs">
+                      <div className="text-blue-200 font-bold mb-1">💡 발 크기 측정 방법:</div>
+                      <div className="text-blue-300">
+                        • 벽에 발뒤꿈치를 대고 서기<br/>
+                        • 가장 긴 발가락 끝까지 자로 측정<br/>
+                        • 보통 신발 사이즈보다 0.5-1cm 작음
+                      </div>
+                    </div>
+
+                    <div className="bg-gray-700 p-3 rounded text-xs">
+                      <div className="text-gray-300 mb-1">참고 사이즈:</div>
+                      <div className="grid grid-cols-2 gap-2 text-gray-400">
+                        <div>• 230mm → 23cm</div>
+                        <div>• 240mm → 24cm</div>
+                        <div>• 250mm → 25cm</div>
+                        <div>• 260mm → 26cm</div>
+                      </div>
+                    </div>
+
                     <button
-                      onClick={() => setPhase(MeasurementPhase.POSITIONING)}
+                      onClick={() => {
+                        setPhase(MeasurementPhase.POSITIONING);
+                        setIsFootCalibrated(false);
+                        setFeedback('발 전체가 화면에 보이도록 앉아주세요');
+                      }}
                       className="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
                     >
-                      캘리브레이션 완료
+                      다음 단계 (자동 캘리브레이션)
                     </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Calibration Status */}
+              {phase === MeasurementPhase.POSITIONING && (
+                <div className="bg-gray-800 p-4 rounded-lg mb-4">
+                  <div className="font-semibold text-white mb-2">🔧 자동 캘리브레이션</div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">발 크기 설정:</span>
+                      <span className="text-blue-400 font-bold">{userFootSize}cm</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">캘리브레이션 상태:</span>
+                      <span className={`font-bold ${isFootCalibrated ? 'text-green-400' : 'text-yellow-400'}`}>
+                        {isFootCalibrated ? '완료' : '진행 중...'}
+                      </span>
+                    </div>
+                    {isFootCalibrated && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">스케일:</span>
+                        <span className="text-green-400 font-bold">{(1/pixelToRealRatio).toFixed(1)} 픽셀/cm</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
