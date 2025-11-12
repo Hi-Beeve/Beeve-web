@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { PoseLandmarker, FilesetResolver, DrawingUtils } from '@mediapipe/tasks-vision';
+import { PoseLandmarker, FilesetResolver } from '@mediapipe/tasks-vision';
+import { MeasurementUI } from './measurement-ui';
 
 interface WallMeasurement {
   wallPosition: number;
@@ -34,7 +35,6 @@ const POSE_LANDMARKS = {
 
 export function SitAndReachWall() {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isActive, setIsActive] = useState(false);
@@ -44,6 +44,9 @@ export function SitAndReachWall() {
   const [wallPosition, setWallPosition] = useState<number>(100); // 화면에서 벽의 x 좌표
   const [holdStartTime, setHoldStartTime] = useState<number | null>(null);
   const [currentHoldTime, setCurrentHoldTime] = useState<number>(0);
+  const [feedback, setFeedback] = useState<string>('측정 시작 버튼을 눌러주세요');
+  const [preparingTime] = useState<number>(10);
+  const [remainingTime] = useState<number>(60);
   
   const poseLandmarkerRef = useRef<PoseLandmarker | null>(null);
   const animationFrameRef = useRef<number | null>(null);
@@ -192,90 +195,71 @@ export function SitAndReachWall() {
   };
 
   const detectPose = () => {
-    if (!videoRef.current || !canvasRef.current || !poseLandmarkerRef.current) {
+    if (!videoRef.current || !poseLandmarkerRef.current) {
       return;
     }
 
-    const canvas = canvasRef.current;
     const video = videoRef.current;
-    const canvasCtx = canvas.getContext('2d');
-
-    if (!canvasCtx) return;
-
     let isRunning = true;
+    let lastVideoTime = -1;
 
-    const detect = () => {
+    const detect = async () => {
       if (!isRunning || !video || !poseLandmarkerRef.current) return;
 
-      const startTimeMs = performance.now();
-      
+      if (video.currentTime === lastVideoTime) {
+        requestAnimationFrame(detect);
+        return;
+      }
+      lastVideoTime = video.currentTime;
+
       try {
-        const results = poseLandmarkerRef.current.detectForVideo(video, startTimeMs);
+        const results = poseLandmarkerRef.current.detectForVideo(video, performance.now());
 
-        // Clear canvas
-        canvasCtx.save();
-        canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
-
-        // Draw video frame
-        canvasCtx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-        // Draw wall line
-        canvasCtx.strokeStyle = '#ff0000';
-        canvasCtx.lineWidth = 3;
-        canvasCtx.beginPath();
-        canvasCtx.moveTo(wallPosition, 0);
-        canvasCtx.lineTo(wallPosition, canvas.height);
-        canvasCtx.stroke();
-
-        // Draw pose landmarks
         if (results.landmarks && results.landmarks.length > 0) {
-          const drawingUtils = new DrawingUtils(canvasCtx);
-          
-          for (const landmarks of results.landmarks) {
-            drawingUtils.drawLandmarks(landmarks, {
-              radius: (data) => DrawingUtils.lerp(data.from!.z, -0.15, 0.1, 5, 1),
-            });
-            drawingUtils.drawConnectors(landmarks, PoseLandmarker.POSE_CONNECTIONS);
+          const landmarks = results.landmarks[0];
 
-            // Calculate measurement
-            const currentMeasurement = calculateWallDistance(landmarks);
-            if (currentMeasurement) {
-              setMeasurement(currentMeasurement);
+          // Calculate measurement
+          const currentMeasurement = calculateWallDistance(landmarks);
+          if (currentMeasurement) {
+            setMeasurement(currentMeasurement);
 
-              // Handle measurement phases
-              if (phase === MeasurementPhase.MEASURING) {
-                if (currentMeasurement.isValidPosture) {
-                  if (!holdStartTime) {
-                    setHoldStartTime(Date.now());
-                  } else {
-                    const elapsed = (Date.now() - holdStartTime) / 1000;
-                    setCurrentHoldTime(elapsed);
-                    
-                    if (elapsed >= 3) {
-                      setPhase(MeasurementPhase.RESULT);
-                      setHoldStartTime(null);
-                    }
-                  }
+            // Handle measurement phases
+            if (phase === MeasurementPhase.MEASURING) {
+              if (currentMeasurement.isValidPosture) {
+                if (!holdStartTime) {
+                  setHoldStartTime(Date.now());
+                  setFeedback('좋습니다! 자세를 유지하세요...');
                 } else {
-                  setHoldStartTime(null);
-                  setCurrentHoldTime(0);
+                  const elapsed = (Date.now() - holdStartTime) / 1000;
+                  setCurrentHoldTime(elapsed);
+                  
+                  if (elapsed >= 3) {
+                    setPhase(MeasurementPhase.RESULT);
+                    setHoldStartTime(null);
+                    setFeedback('측정 완료!');
+                  } else {
+                    setFeedback(`자세 유지 중... ${(3 - elapsed).toFixed(1)}초 남음`);
+                  }
                 }
+              } else {
+                setHoldStartTime(null);
+                setCurrentHoldTime(0);
+                setFeedback('올바른 자세를 취해주세요');
               }
-
-              // Draw measurement info
-              canvasCtx.fillStyle = '#00ff00';
-              canvasCtx.font = '16px Arial';
-              canvasCtx.fillText(`Distance: ${currentMeasurement.distanceInCm.toFixed(1)}cm`, 10, 30);
-              canvasCtx.fillText(`Hold Time: ${currentHoldTime.toFixed(1)}s`, 10, 50);
-              canvasCtx.fillText(`Valid Posture: ${currentMeasurement.isValidPosture ? 'Yes' : 'No'}`, 10, 70);
+            } else if (phase === MeasurementPhase.POSITIONING) {
+              if (currentMeasurement.isValidPosture) {
+                setFeedback('좋은 자세입니다! 측정을 시작하세요');
+              } else {
+                setFeedback('자세를 조정해주세요');
+              }
             }
           }
+        } else {
+          setFeedback('몸 전체가 화면에 보이도록 해주세요');
         }
 
-        canvasCtx.restore();
-
         if (isRunning) {
-          animationFrameRef.current = requestAnimationFrame(detect);
+          requestAnimationFrame(detect);
         }
       } catch (err) {
         console.error('Error in detect loop:', err);
@@ -332,148 +316,138 @@ export function SitAndReachWall() {
   }, []);
 
   return (
-    <div className="flex flex-col items-center gap-4 p-6 border rounded-lg">
-      <h2 className="text-2xl font-bold">벽 기준 윗몸앞으로굽히기</h2>
-      <p className="text-sm text-muted-foreground">벽에 손끝을 대고 발뒤꿈치까지의 거리를 측정합니다</p>
-
-      {error && (
-        <div className="p-4 bg-red-100 text-red-700 rounded-lg w-full">
-          <p className="font-semibold">Error:</p>
-          <p>{error}</p>
+    <div className="flex flex-col h-screen bg-gray-900 text-white">
+      {isLoading ? (
+        <div className="flex items-center justify-center flex-1">
+          <div className="text-xl">MediaPipe 로딩 중...</div>
         </div>
-      )}
+      ) : (
+        <MeasurementUI
+          videoRef={videoRef}
+          timerStatus={phase === MeasurementPhase.MEASURING ? 'measuring' : 'idle'}
+          preparingTime={preparingTime}
+          remainingTime={remainingTime}
+          count={0}
+          isFullBodyDetected={true}
+          feedback={feedback}
+          state={phase}
+          additionalInfo={
+            <>
+              {/* Phase indicator */}
+              <div className="bg-gray-800 p-4 rounded-lg mb-4">
+                <div className="font-semibold text-white mb-2">📊 측정 단계</div>
+                <div className="flex gap-2 text-sm flex-wrap">
+                  {Object.values(MeasurementPhase).map((p) => (
+                    <span
+                      key={p}
+                      className={`px-2 py-1 rounded ${
+                        phase === p ? 'bg-blue-500 text-white' : 'bg-gray-600 text-gray-300'
+                      }`}
+                    >
+                      {p}
+                    </span>
+                  ))}
+                </div>
+              </div>
 
-      {/* Phase indicator */}
-      <div className="flex gap-2 text-sm">
-        {Object.values(MeasurementPhase).map((p) => (
-          <span
-            key={p}
-            className={`px-2 py-1 rounded ${
-              phase === p ? 'bg-blue-500 text-white' : 'bg-gray-200'
-            }`}
-          >
-            {p}
-          </span>
-        ))}
-      </div>
+              {/* Calibration controls */}
+              {phase === MeasurementPhase.CALIBRATION && (
+                <div className="bg-gray-800 p-4 rounded-lg mb-4">
+                  <div className="font-semibold text-white mb-2">🔧 캘리브레이션</div>
+                  <div className="space-y-3">
+                    <label className="block text-sm text-gray-300">
+                      벽 위치 (픽셀):
+                      <input
+                        type="range"
+                        min="50"
+                        max="590"
+                        value={wallPosition}
+                        onChange={(e) => setWallPosition(Number(e.target.value))}
+                        className="w-full mt-1"
+                      />
+                      <span className="text-white font-bold">{wallPosition}px</span>
+                    </label>
+                    <label className="block text-sm text-gray-300">
+                      스케일 (픽셀/cm):
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={1 / pixelToRealRatio}
+                        onChange={(e) => setPixelToRealRatio(1 / Number(e.target.value))}
+                        className="w-20 px-2 py-1 bg-gray-700 text-white rounded ml-2"
+                      />
+                    </label>
+                    <button
+                      onClick={() => setPhase(MeasurementPhase.POSITIONING)}
+                      className="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                    >
+                      캘리브레이션 완료
+                    </button>
+                  </div>
+                </div>
+              )}
 
-      {/* Calibration controls */}
-      {phase === MeasurementPhase.CALIBRATION && (
-        <div className="flex flex-col gap-2 p-4 bg-gray-100 rounded">
-          <label className="text-sm font-medium">
-            Wall Position (pixels):
-            <input
-              type="range"
-              min="50"
-              max="590"
-              value={wallPosition}
-              onChange={(e) => setWallPosition(Number(e.target.value))}
-              className="ml-2"
-            />
-            {wallPosition}
-          </label>
-          <label className="text-sm font-medium">
-            Scale (pixels per cm):
-            <input
-              type="number"
-              step="0.01"
-              value={1 / pixelToRealRatio}
-              onChange={(e) => setPixelToRealRatio(1 / Number(e.target.value))}
-              className="ml-2 w-20 px-2 py-1 border rounded"
-            />
-          </label>
-          <button
-            onClick={() => setPhase(MeasurementPhase.POSITIONING)}
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-          >
-            Calibration Complete
-          </button>
-        </div>
-      )}
+              {/* Measurement data */}
+              {measurement && (
+                <div className="bg-gray-800 p-4 rounded-lg mb-4">
+                  <div className="font-semibold text-white mb-2">📏 측정 데이터</div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">거리:</span>
+                      <span className="text-green-400 font-bold">{measurement.distanceInCm.toFixed(1)}cm</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">유지 시간:</span>
+                      <span className="text-yellow-400 font-bold">{currentHoldTime.toFixed(1)}s</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">올바른 자세:</span>
+                      <span className={`font-bold ${measurement.isValidPosture ? 'text-green-400' : 'text-red-400'}`}>
+                        {measurement.isValidPosture ? 'Yes' : 'No'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
 
-      <div className="relative flex flex-col gap-2">
-        <video
-          ref={videoRef}
-          className="border rounded-lg"
-          width={640}
-          height={480}
-          playsInline
-          autoPlay
-          muted
+              {/* Results */}
+              {measurement && phase === MeasurementPhase.RESULT && (
+                <div className="bg-green-800 p-4 rounded-lg mb-4">
+                  <h3 className="font-semibold text-green-200 mb-2">🎉 측정 완료!</h3>
+                  <div className="space-y-1 text-green-100">
+                    <p>벽에서 발뒤꿈치까지의 거리: <strong className="text-white">{measurement.distanceInCm.toFixed(1)}cm</strong></p>
+                    <p>유지 시간: <strong className="text-white">{measurement.holdDuration.toFixed(1)}초</strong></p>
+                  </div>
+                </div>
+              )}
+            </>
+          }
+          instructions={
+            <div className="bg-gray-800 p-4 rounded-lg">
+              <div className="font-semibold text-white mb-2">💡 사용 방법:</div>
+              <ul className="list-disc list-inside space-y-1 text-sm text-gray-400">
+                <li><strong className="text-white">벽을 향해</strong> 앉아서 다리를 펴세요</li>
+                <li><strong className="text-white">손끝이 벽에 닿도록</strong> 몸을 기울이세요</li>
+                <li><strong className="text-white">3초간</strong> 자세를 유지하세요</li>
+                <li>무릎이 구부러지지 않도록 주의하세요</li>
+                <li>양손이 함께 움직이도록 하세요</li>
+              </ul>
+            </div>
+          }
+          onStartCamera={startCamera}
+          onStartMeasurement={() => {
+            if (phase === MeasurementPhase.SETUP) {
+              setPhase(MeasurementPhase.CALIBRATION);
+            } else if (phase === MeasurementPhase.POSITIONING) {
+              startMeasurement();
+            }
+          }}
+          onStopMeasurement={resetMeasurement}
+          onReset={resetMeasurement}
+          countLabel="측정 단계"
+          timeLabel="유지 시간"
         />
-        <canvas
-          ref={canvasRef}
-          width={640}
-          height={480}
-          className="border rounded-lg bg-black absolute top-0 left-0"
-        />
-        {isLoading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-lg">
-            <p className="text-white">Loading MediaPipe...</p>
-          </div>
-        )}
-      </div>
-
-      {/* Controls */}
-      <div className="flex gap-2">
-        <button
-          onClick={toggleCamera}
-          disabled={isLoading}
-          className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
-            isActive
-              ? 'bg-red-500 hover:bg-red-600 text-white'
-              : 'bg-green-500 hover:bg-green-600 text-white'
-          } disabled:opacity-50 disabled:cursor-not-allowed`}
-        >
-          {isLoading ? 'Initializing...' : isActive ? 'Stop Camera' : 'Start Camera'}
-        </button>
-
-        {isActive && phase === MeasurementPhase.SETUP && (
-          <button
-            onClick={() => setPhase(MeasurementPhase.CALIBRATION)}
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-          >
-            Calibrate
-          </button>
-        )}
-
-        {phase === MeasurementPhase.POSITIONING && (
-          <button
-            onClick={startMeasurement}
-            className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
-          >
-            Start Measurement
-          </button>
-        )}
-
-        {phase === MeasurementPhase.RESULT && (
-          <button
-            onClick={resetMeasurement}
-            className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
-          >
-            Measure Again
-          </button>
-        )}
-      </div>
-
-      {/* Results */}
-      {measurement && phase === MeasurementPhase.RESULT && (
-        <div className="p-4 bg-green-100 rounded-lg w-full">
-          <h3 className="font-semibold text-green-800">측정 완료!</h3>
-          <p className="text-green-700">
-            벽에서 발뒤꿈치까지의 거리: <strong>{measurement.distanceInCm.toFixed(1)}cm</strong>
-          </p>
-          <p className="text-green-700">
-            유지 시간: <strong>{measurement.holdDuration.toFixed(1)}초</strong>
-          </p>
-        </div>
       )}
-
-      <div className="text-sm text-muted-foreground text-center">
-        <p>1. 벽을 향해 앉아서 다리를 펴세요</p>
-        <p>2. 손끝이 벽에 닿도록 몸을 기울이세요</p>
-        <p>3. 3초간 자세를 유지하세요</p>
-      </div>
     </div>
   );
 }
