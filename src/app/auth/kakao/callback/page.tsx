@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth, convertKakaoUserToUser } from '@/contexts/auth-context';
 import { getKakaoAccessToken, getKakaoUserInfo } from '@/lib/kakao-auth';
 
-export default function KakaoCallbackPage() {
+function KakaoCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { login } = useAuth();
@@ -147,5 +147,21 @@ export default function KakaoCallbackPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function KakaoCallbackPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
+        <div className="bg-gray-800 rounded-lg p-8 max-w-md w-full text-center">
+          <div className="w-16 h-16 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-white mb-2">로딩 중...</h2>
+          <p className="text-gray-400">페이지를 준비하고 있습니다.</p>
+        </div>
+      </div>
+    }>
+      <KakaoCallbackContent />
+    </Suspense>
   );
 }
