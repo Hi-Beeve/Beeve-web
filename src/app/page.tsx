@@ -1,13 +1,24 @@
 import Link from "next/link";
+import { UserProfile } from "@/components/user-profile";
 
 export default function Home() {
   return (
-    <div className="font-sans flex items-center justify-center min-h-screen p-8 bg-gray-900 text-white">
-      <main className="flex flex-col gap-8 items-center max-w-2xl">
+    <div className="font-sans min-h-screen bg-gray-900 text-white">
+      {/* 헤더 */}
+      <header className="flex justify-between items-center p-6 border-b border-gray-800">
+        <div>
+          <h1 className="text-2xl font-bold">Beeve Web</h1>
+          <p className="text-gray-400 text-sm">AI 기반 운동 측정 플랫폼</p>
+        </div>
+        <UserProfile />
+      </header>
+
+      {/* 메인 컨텐츠 */}
+      <main className="flex flex-col gap-8 items-center max-w-6xl mx-auto p-8">
         <div className="text-center">
-          <h1 className="text-4xl font-bold mb-2">Beeve Web</h1>
+          <h2 className="text-3xl font-bold mb-2">운동 측정을 시작해보세요</h2>
           <p className="text-gray-300">
-            AI 기반 운동 측정 플랫폼
+            MediaPipe AI를 활용한 정확한 운동 자세 분석
           </p>
         </div>
         
