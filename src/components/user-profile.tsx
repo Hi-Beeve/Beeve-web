@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useAuth } from '@/contexts/auth-context';
 import { kakaoLogout } from '@/lib/kakao-auth';
+import { googleLogout } from '@/lib/google-auth';
 
 interface UserProfileProps {
   className?: string;
@@ -36,22 +37,28 @@ export function UserProfile({ className = '' }: UserProfileProps) {
   const handleLogout = async () => {
     try {
       setIsLoggingOut(true);
+      setIsMenuOpen(false);
       
-      // 카카오 로그아웃 API 호출
-      if (user.provider === 'kakao' && user.accessToken) {
-        await kakaoLogout(user.accessToken);
+      // 소셜 로그아웃 API 호출 (선택사항)
+      if (user?.accessToken) {
+        try {
+          if (user.provider === 'kakao') {
+            await kakaoLogout(user.accessToken);
+          } else if (user.provider === 'google') {
+            await googleLogout(user.accessToken);
+          }
+        } catch (error) {
+          console.error(`${user.provider} 로그아웃 실패:`, error);
+          // 소셜 로그아웃 실패해도 로컬 로그아웃은 진행
+        }
       }
       
       // 로컬 로그아웃
       logout();
-      
     } catch (error) {
       console.error('로그아웃 실패:', error);
-      // 에러가 발생해도 로컬 로그아웃은 진행
-      logout();
     } finally {
       setIsLoggingOut(false);
-      setIsMenuOpen(false);
     }
   };
 

@@ -3,13 +3,14 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import Cookies from 'js-cookie';
 import { KakaoUser } from '@/lib/kakao-auth';
+import { GoogleUser } from '@/lib/google-auth';
 
 interface User {
   id: string;
   nickname: string;
   email?: string;
   profileImage?: string;
-  provider: 'kakao';
+  provider: 'kakao' | 'google';
   accessToken: string;
 }
 
@@ -107,6 +108,18 @@ export function convertKakaoUserToUser(kakaoUser: KakaoUser, accessToken: string
     email: kakaoUser.kakao_account?.email || undefined,
     profileImage: kakaoUser.kakao_account?.profile?.profile_image_url || kakaoUser.properties?.profile_image || undefined,
     provider: 'kakao',
+    accessToken,
+  };
+}
+
+// 구글 사용자 정보를 내부 User 형식으로 변환
+export function convertGoogleUserToUser(googleUser: GoogleUser, accessToken: string): User {
+  return {
+    id: googleUser.id,
+    nickname: googleUser.name || googleUser.given_name || '사용자',
+    email: googleUser.email || undefined,
+    profileImage: googleUser.picture || undefined,
+    provider: 'google',
     accessToken,
   };
 }
