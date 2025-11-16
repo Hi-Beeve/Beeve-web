@@ -14,10 +14,11 @@ const LABELS = [
   "근지구력"
 ];
 
-const BASE_DATA = [3, 3, 3, 3, 3, 3];
+import { HEX_COLORS } from "@/components/hex-colors";
 
 const options = {
   responsive: true,
+  animation: false,
   plugins: {
     legend: { display: false },
     tooltip: { enabled: false },
@@ -25,56 +26,85 @@ const options = {
   scales: {
     r: {
       angleLines: { display: false },
-      suggestedMin: 0,
-      suggestedMax: 3,
+      min: 0,
+      max: 2.2,
       ticks: {
         stepSize: 1,
         display: false,
       },
       pointLabels: {
         font: { size: 18, weight: "bold" },
-        color: "#888",
+        color: HEX_COLORS.label,
+      },
+      chartArea: {
+        width: '90%',
+        height: '90%'
       },
       grid: {
         color: [
-          "#f5f3fa", // outer
-          "#ede9f7", // mid
-          "#e4e0f2", // inner
+          'transparent',
+          'transparent',
+          'transparent',
         ],
-        circular: true,
+        borderColor: 'transparent',
+        circular: false,
+        drawOnChartArea: true,
+      },
+      angleLines: {
+        color: 'transparent',
       },
     },
   },
 };
 
-const data = {
-  labels: LABELS,
-  datasets: [
-    {
-      label: "base",
-      data: BASE_DATA,
-      backgroundColor: "rgba(150, 120, 200, 0.18)",
-      borderWidth: 0,
-      pointRadius: 0,
-      fill: true,
-    },
-    // 실제 데이터는 여기에 추가하세요
-    // {
-    //   label: "user",
-    //   data: [1,2,2,1,2,1],
-    //   backgroundColor: "rgba(120, 80, 180, 0.25)",
-    //   borderWidth: 0,
-    //   pointRadius: 0,
-    //   fill: true,
-    // },
-  ],
-};
+import { useState, useEffect } from "react";
+
+const VALUE_DATA = [1, 3, 0, 0, 0, 0]; // 예시값
 
 export default function HexagonChart() {
+  const [animatedValue, setAnimatedValue] = useState(Array(6).fill(0));
+
+  useEffect(() => {
+    let frame = 0;
+    const totalFrames = 30;
+    const start = Array(6).fill(0);
+    const end = VALUE_DATA;
+    function animate() {
+      frame++;
+      const progress = Math.min(frame / totalFrames, 1);
+      const next = start.map((v, i) => v + (end[i] - v) * progress);
+      setAnimatedValue(next);
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      }
+    }
+    animate();
+  }, []);
+
+  const data = {
+    labels: LABELS,
+    datasets: [
+      {
+        label: "value",
+        data: animatedValue,
+        backgroundColor: HEX_COLORS.valueFill,
+        borderColor: 'transparent',
+        borderWidth: 2,
+        borderJoinStyle: 'round',
+        borderCapStyle: 'round',
+        pointRadius: 0,
+        fill: true,
+      },
+    ],
+  };
+
   return (
-    <div style={{ width: 350, height: 350, background: "#faf9fb", borderRadius: 24, display: "flex", alignItems: "center", justifyContent: "center" }}>
-      {/* @ts-ignore */}
-      <Radar data={data} options={options} />
+    <div style={{ position: 'relative', width: 500, height: 500, background: HEX_COLORS.chartBg, borderRadius: 24, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <img src="/hex.svg" alt="hex-bg" style={{ position: 'absolute', width: '100%', height: '100%', left: 0, top: 0, zIndex: 1 }} />
+      <div style={{ position: 'absolute', width: '100%', height: '100%', left: 0, top: 0, zIndex: 2, pointerEvents: 'none' }}>
+        {/* @ts-ignore */}
+        <Radar data={data} options={options} />
+      </div>
     </div>
   );
 }
