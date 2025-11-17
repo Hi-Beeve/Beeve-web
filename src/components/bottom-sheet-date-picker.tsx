@@ -26,11 +26,11 @@ export default function BottomSheetDatePicker({
           <Picker
             height={180}
             itemHeight={36}
-            value={selectedDate || (dateList && dateList[0])}
-            onChange={onSelectDate}
+            value={{ date: selectedDate || dateList[0] }}
+            onChange={(val) => onSelectDate(val.date)}
           >
             <Picker.Column name="date">
-              {dateList?.map((option) => (
+              {dateList.map(option => (
                 <Picker.Item key={option} value={option}>
                   {option}
                 </Picker.Item>
