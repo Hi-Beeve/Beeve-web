@@ -6,9 +6,10 @@ import { HEX_COLORS } from "./hex-colors";
 interface HexChartSectionProps {
   hexDataArray: number[];
   date: string;
+  onDateClick?: () => void;
 }
 
-export default function HexChartSection({ hexDataArray, date }: HexChartSectionProps) {
+export default function HexChartSection({ hexDataArray, date, onDateClick }: HexChartSectionProps) {
   const formattedDate = new Date(date).toLocaleDateString('ko-KR', {
     month: '2-digit',
     day: '2-digit',
@@ -21,7 +22,7 @@ export default function HexChartSection({ hexDataArray, date }: HexChartSectionP
       <div style={{ margin: '0 auto' }}>
         <HexagonChart hexDataArray={hexDataArray} />
       </div>
-      <DateSection date={date}/>
+      <DateSection date={date} onClick={onDateClick}/>
     </section>
   );
 }
@@ -35,20 +36,18 @@ const HexTitle = () => {
   )
 }
 
-const DateSection = ({date}: {date: string}) => {
+const DateSection = ({date, onClick}: {date: string, onClick?: () => void}) => {
   const year = new Date(date).getFullYear();
   const month = new Date(date).getMonth() + 1;
   const day = new Date(date).getDate();
 
   return (
-    <div className="w-100 flex pl-5 items-end justify-center pt-5">
+    <div className="w-100 flex pl-5 items-end justify-center pt-5 cursor-pointer" onClick={onClick}>
       <div className={FONT_STYLES.heading2}>{month}.{day}.</div>
       <div className="flex items-end pb-1">
-
-      <div className={FONT_STYLES.body6 + " " + FONT_COLORS.grey}> {year}</div>
-      <img src="/mini-bottom-arrow.svg" alt="arrow-bottom" />
+        <div className={FONT_STYLES.body6 + " " + FONT_COLORS.grey}> {year}</div>
+        <img src="/mini-bottom-arrow.svg" alt="arrow-bottom" />
       </div>
     </div>
   )
-    
 }

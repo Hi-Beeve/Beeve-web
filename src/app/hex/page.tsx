@@ -3,9 +3,16 @@ import HexProfileHeader from "@/components/hex-profile-header";
 import HexChartSection from "@/components/hex-chart-section";
 import HexCardList from "@/components/hex-card-list";
 import { useHex } from "@/api/hex/useHex";
+import { useHexDateListQuery } from "@/api/hex/queries";
+import BottomSheetDatePicker from "@/components/bottom-sheet-date-picker";
+import { useState } from "react";
 
 export default function HexPage() {
-  const { data, isLoading, error } = useHex();
+  const [selectedDate, setSelectedDate] = useState<string | undefined>(undefined);
+  const [sheetOpen, setSheetOpen] = useState(false);
+
+  const { data, isLoading, error } = useHex({ date: selectedDate });
+  const { data: dateList } = useHexDateListQuery();
 
   if (isLoading) {
     return (
@@ -34,8 +41,22 @@ export default function HexPage() {
   return (
     <main style={{ minHeight: "100vh", background: "#faf9fb", display: "flex", flexDirection: "column", alignItems: "center" }}>
       <HexProfileHeader user={data.user} />
-      <HexChartSection hexDataArray={data.hexDataArray} date={data.date} />
+      <HexChartSection
+        hexDataArray={data.hexDataArray}
+        date={data.date}
+        onDateClick={() => setSheetOpen(true)}
+      />
       <HexCardList user={data.user} gradeInfo={data.gradeInfo} />
+      <BottomSheetDatePicker
+        open={sheetOpen}
+        dateList={dateList}
+        selectedDate={selectedDate}
+        onSelectDate={(date) => {
+          setSelectedDate(date);
+          setSheetOpen(false);
+        }}
+        onClose={() => setSheetOpen(false)}
+      />
     </main>
   );
 }
