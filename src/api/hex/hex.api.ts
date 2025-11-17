@@ -25,15 +25,15 @@ const mockHexData: HexWithDateResponse = {
   },
   hexData: {
     근력: 1,
-    심폐지구력: 2,
-    유연성: 3,
-    순발력: 1,
-    민첩성: 2,
+    심폐지구력: 1,
+    유연성: 2,
+    순발력: 2,
+    민첩성: 3,
     근지구력: 4,
   },
   gradeInfo: {
     grade: 'A',
     description: 'Excellent performance',
   },
-  date: '2023-10-01',
+  date: '2025-11-17',
 };

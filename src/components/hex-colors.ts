@@ -5,6 +5,7 @@ export const HEX_COLORS = {
   primary60: "#D3C6E6", // BDB2DD 60% (rgba(189,178,221,0.6) 근사)
   primaryDark: "#9B8EC2", // 그대로
   hexOutline: "rgba(155, 142, 194, 0.2)", // 9B8EC2 20%
+  hexLabel: "#767676",
 
   // 기존 값
   chartFill: "rgba(150, 120, 200, 0.18)", // 기존 바탕 연보라(미사용 예정)
