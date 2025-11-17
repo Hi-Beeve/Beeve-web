@@ -7,14 +7,14 @@ interface HexProfileHeaderProps {
 
 export default function HexProfileHeader({ user }: HexProfileHeaderProps) {
   return (
-    <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', background: '#fff' }}>
+    <header className="w-100 flex items-center justify-between py-4 px-5" >
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <img src={user.profileImage} alt="profile" style={{ width: 44, height: 44, borderRadius: '50%' }} />
         <span style={{ fontWeight: 700, fontSize: 20, color: '#888' }}>Hello! <span style={{ color: '#222' }}>{user.name}</span></span>
       </div>
       <div style={{ display: 'flex', gap: 12 }}>
-        <button style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer' }}>🔗</button>
-        <button style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer' }}>☰</button>
+        <img src="/share.svg" alt="share" />
+        <img src="/burger.svg" alt="burger" />
       </div>
     </header>
   );
