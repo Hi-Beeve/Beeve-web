@@ -24,12 +24,12 @@ const mockHexData: HexWithDateResponse = {
     age: 30,
   },
   hexData: {
-    근력: 80,
-    심폐지구력: 75,
-    유연성: 65,
-    순발력: 70,
-    민첩성: 60,
-    근지구력: 75,
+    근력: 1,
+    심폐지구력: 2,
+    유연성: 3,
+    순발력: 1,
+    민첩성: 2,
+    근지구력: 4,
   },
   gradeInfo: {
     grade: 'A',

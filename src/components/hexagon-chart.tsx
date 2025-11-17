@@ -18,14 +18,18 @@ import { HEX_COLORS } from "@/components/hex-colors";
 
 const options = {
   responsive: true,
+  maintainAspectRatio: false,
   animation: false,
+  layout: {
+    padding: 0,
+  },
   plugins: {
     legend: { display: false },
     tooltip: { enabled: false },
   },
   scales: {
     r: {
-      angleLines: { display: false },
+      angleLines: { display: false, color: 'transparent' },
       min: 0,
       max: 2.2,
       ticks: {
@@ -50,32 +54,22 @@ const options = {
         circular: false,
         drawOnChartArea: true,
       },
-      angleLines: {
-        color: 'transparent',
-      },
     },
   },
 };
 
 import { useState, useEffect } from "react";
 
-// 각 단계별 실제 값 범위 (예: 1단계=0~30, 2단계=30~60, 3단계=60~100)
-const STEP_RANGES = [0, 30, 60, 100]; // [min, 1단계끝, 2단계끝, max]
-
-// 실제 값을 1~3단계로 정규화 (0~1, 1~2, 2~3 사이에 매핑)
-function normalizeValue(val: number) {
-  if (val <= STEP_RANGES[1]) return (val - STEP_RANGES[0]) / (STEP_RANGES[1] - STEP_RANGES[0]) * 1;
-  if (val <= STEP_RANGES[2]) return 1 + (val - STEP_RANGES[1]) / (STEP_RANGES[2] - STEP_RANGES[1]);
-  if (val <= STEP_RANGES[3]) return 2 + (val - STEP_RANGES[2]) / (STEP_RANGES[3] - STEP_RANGES[2]);
-  return 3;
-}
-
 interface HexagonChartProps {
   hexDataArray: number[];
 }
 
+// 등급을 실제 값으로 변환: 1=80(가장 바깥), 2=63, 3=36, 4=0(중심)
+const GRADE_TO_VALUE = [0, 4, 3, 1.8, 0]; // index 0은 사용하지 않음
+
 export default function HexagonChart({ hexDataArray }: HexagonChartProps) {
-  const VALUE_DATA = hexDataArray.map(normalizeValue);
+  // 등급 배열을 실제 값 배열로 변환
+  const VALUE_DATA = hexDataArray.map(grade => GRADE_TO_VALUE[grade] ?? 0);
   const [animatedValue, setAnimatedValue] = useState(Array(6).fill(0));
 
   useEffect(() => {
@@ -93,7 +87,8 @@ export default function HexagonChart({ hexDataArray }: HexagonChartProps) {
       }
     }
     animate();
-  }, [VALUE_DATA]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(hexDataArray)]);
 
   const data = {
     labels: LABELS,
@@ -113,8 +108,8 @@ export default function HexagonChart({ hexDataArray }: HexagonChartProps) {
   };
 
   return (
-    <div style={{ position: 'relative', width: 500, height: 500, background: HEX_COLORS.chartBg, borderRadius: 24, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <img src="/hex.svg" alt="hex-bg" style={{ position: 'absolute', width: '100%', height: '100%', left: 0, top: 0, zIndex: 1 }} />
+    <div style={{ position: 'relative', width: 300, height: 300, background: HEX_COLORS.chartBg, borderRadius: 24, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <img src="/hex.svg" alt="hex-bg" style={{ position: 'absolute', width: '100%', height: '100%', left: '-10px', top: '2px', zIndex: 1 }} />
       <div style={{ position: 'absolute', width: '100%', height: '100%', left: 0, top: 0, zIndex: 2, pointerEvents: 'none' }}>
         {/* @ts-ignore */}
         <Radar data={data} options={options} />
