@@ -59,7 +59,19 @@ const options = {
 
 import { useState, useEffect } from "react";
 
-const VALUE_DATA = [1, 3, 0, 0, 0, 0]; // 예시값
+// 예시: 사용자가 입력하는 실제 값 (ex: 점수, raw value)
+const RAW_VALUE_DATA = [38, 88, 63, 37, 58, 35];
+// 각 단계별 실제 값 범위 (예: 1단계=0~30, 2단계=30~60, 3단계=60~100)
+const STEP_RANGES = [0, 30, 60, 100]; // [min, 1단계끝, 2단계끝, max]
+
+// 실제 값을 1~3단계로 정규화 (0~1, 1~2, 2~3 사이에 매핑)
+function normalizeValue(val: number) {
+  if (val <= STEP_RANGES[1]) return (val - STEP_RANGES[0]) / (STEP_RANGES[1] - STEP_RANGES[0]) * 1;
+  if (val <= STEP_RANGES[2]) return 1 + (val - STEP_RANGES[1]) / (STEP_RANGES[2] - STEP_RANGES[1]);
+  if (val <= STEP_RANGES[3]) return 2 + (val - STEP_RANGES[2]) / (STEP_RANGES[3] - STEP_RANGES[2]);
+  return 3;
+}
+const VALUE_DATA = RAW_VALUE_DATA.map(normalizeValue);
 
 export default function HexagonChart() {
   const [animatedValue, setAnimatedValue] = useState(Array(6).fill(0));
