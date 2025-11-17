@@ -59,8 +59,6 @@ const options = {
 
 import { useState, useEffect } from "react";
 
-// 예시: 사용자가 입력하는 실제 값 (ex: 점수, raw value)
-const RAW_VALUE_DATA = [38, 88, 63, 37, 58, 35];
 // 각 단계별 실제 값 범위 (예: 1단계=0~30, 2단계=30~60, 3단계=60~100)
 const STEP_RANGES = [0, 30, 60, 100]; // [min, 1단계끝, 2단계끝, max]
 
@@ -71,9 +69,13 @@ function normalizeValue(val: number) {
   if (val <= STEP_RANGES[3]) return 2 + (val - STEP_RANGES[2]) / (STEP_RANGES[3] - STEP_RANGES[2]);
   return 3;
 }
-const VALUE_DATA = RAW_VALUE_DATA.map(normalizeValue);
 
-export default function HexagonChart() {
+interface HexagonChartProps {
+  hexDataArray: number[];
+}
+
+export default function HexagonChart({ hexDataArray }: HexagonChartProps) {
+  const VALUE_DATA = hexDataArray.map(normalizeValue);
   const [animatedValue, setAnimatedValue] = useState(Array(6).fill(0));
 
   useEffect(() => {
@@ -91,7 +93,7 @@ export default function HexagonChart() {
       }
     }
     animate();
-  }, []);
+  }, [VALUE_DATA]);
 
   const data = {
     labels: LABELS,
