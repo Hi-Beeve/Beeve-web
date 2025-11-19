@@ -10,13 +10,14 @@ interface SheetProps {
   open: boolean;
   title?: string;
   description?: string;
+  className?: string;
   onClose: (open: boolean) => void;
 }
 
-export const BottomSheet = ({ children, open, title,description,onClose }: SheetProps) => {
+export const BottomSheet = ({ children, open, title,description,onClose,className }: SheetProps) => {
   return (
     <Sheet open={open} onOpenChange={(isOpen) => onClose(isOpen)}>
-      <SheetContent side="bottom">
+      <SheetContent side="bottom" className={className}>
        {children}
        <SheetTitle>{title || ""}</SheetTitle>
        <SheetDescription>{description || ""}</SheetDescription>
