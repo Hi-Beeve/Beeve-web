@@ -12,6 +12,7 @@ export const FONT_STYLES = {
   body11: "text-[13px] leading-[130%] tracking-[-0.2px] font-semibold",
   body12: "text-[13px] leading-[130%] tracking-[-0.2px] font-normal",
   body13: "text-[12px] leading-[130%] tracking-[-0.2px] font-semibold",
+  body14: "text-[11px] leading-[130%] tracking-[-0.2px] font-normal",
 
   heading1: "text-[38px] leading-[130%] tracking-[-0.2px] font-bold",
   heading2: "text-[34px] leading-[130%] tracking-[-0.2px] font-bold",
