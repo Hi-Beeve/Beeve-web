@@ -16,10 +16,10 @@ export default function HexChartSection({ hexDataArray, date, onDateClick }: Hex
   });
 
   return (
-    <section style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '32px 0' }}>
+    <section className="w-full flex flex-col items-center py-8" >
 
       <HexTitle />
-      <div style={{ margin: '0 auto' }}>
+      <div className="my-0">
         <HexagonChart hexDataArray={hexDataArray} />
       </div>
       <DateSection date={date} onClick={onDateClick}/>

@@ -110,9 +110,9 @@ export default function HexagonChart({ hexDataArray }: HexagonChartProps) {
   };
 
   return (
-    <div style={{ position: 'relative', width: 300, height: 300, background: HEX_COLORS.chartBg, borderRadius: 24, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <img src="/hex_label.svg" alt="hex-bg" style={{ position: 'absolute', width: '100%', height: '100%', left: '4px', top: '2px', zIndex: 1 }} />
-      <div style={{ position: 'absolute', width: '80%', height: '80%', left: '10%', top: '10%', zIndex: 2, pointerEvents: 'none' }}>
+    <div className="relative w-[300px] h-[300px] rounded-6 flex items-center justify-center">
+      <img src="/hex.svg" alt="hex-bg" className="absolute w-full h-full" style={{ left: '4px', top: '2px', zIndex: 1 }} />
+      <div className="absolute w-[80%] h-[80%]" style={{ left: '10%', top: '10%', zIndex: 2, pointerEvents: 'none' }}>
         {/* @ts-expect-error Chart.js Radar 타입 호환 문제 무시 */}
         <Radar data={data} options={options} />
       </div>

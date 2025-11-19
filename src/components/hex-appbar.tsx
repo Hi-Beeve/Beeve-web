@@ -12,7 +12,7 @@ import Link from 'next/link';
 export const AppBar = () => {
 
     return (
-        <div className="w-full h-18 bg-white absolute bottom-0 left-0 flex ">
+        <div className="w-full h-18 bg-white fixed bottom-0 left-0 flex ">
             <div className="flex px-3 w-[calc((100%-65px)/2)] justify-evenly gap-4">
                 <MenuIcon icon={home} name="홈" path="/hex" />
                 <MenuIcon icon={graph} name="변화" path="/hex/graph" />

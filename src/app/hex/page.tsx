@@ -6,6 +6,7 @@ import { useHex } from "@/api/hex/useHex";
 import { useHexDateListQuery } from "@/api/hex/queries";
 import BottomSheetDatePicker from "@/components/bottom-sheet-date-picker";
 import { useState } from "react";
+import { BottomSheet } from "@/components/common/BottomSheet";
 
 export default function HexPage() {
   const [selectedDate, setSelectedDate] = useState<string | undefined>(undefined);
@@ -16,7 +17,7 @@ export default function HexPage() {
 
   if (isLoading) {
     return (
-      <main style={{ minHeight: "100vh", background: "#faf9fb", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <main className="flex flex-col items-center">
         <div>Loading...</div>
       </main>
     );
@@ -24,7 +25,7 @@ export default function HexPage() {
 
   if (error) {
     return (
-      <main style={{ minHeight: "100vh", background: "#faf9fb", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <main className="flex flex-col items-center">
         <div>Error loading data</div>
       </main>
     );
@@ -32,22 +33,24 @@ export default function HexPage() {
 
   if (!data) {
     return (
-      <main style={{ minHeight: "100vh", background: "#faf9fb", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <main className="flex flex-col items-center">
         <div>No data available</div>
       </main>
     );
   }
 
   return (
-    <main style={{ minHeight: "100vh", background: "#faf9fb", display: "flex", flexDirection: "column", alignItems: "center" }}>
+    <main className="flex flex-col items-center pb-20 min-h-screen bg-gradient-to-b from-[#F5F5F5] to-[#D9D4E8]">
       <HexProfileHeader user={data.user} />
+      <div>
+
       <HexChartSection
         hexDataArray={data.hexDataArray}
         date={data.date}
         onDateClick={() => setSheetOpen(true)}
       />
       <HexCardList user={data.user} gradeInfo={data.gradeInfo} />
-      <BottomSheetDatePicker
+      {/* <BottomSheetDatePicker
         open={sheetOpen}
         dateList={dateList}
         selectedDate={selectedDate}
@@ -56,7 +59,19 @@ export default function HexPage() {
           setSheetOpen(false);
         }}
         onClose={() => setSheetOpen(false)}
-      />
+      /> */}
+      <BottomSheet open={sheetOpen} onClose={() => setSheetOpen(false)}>
+        <BottomSheetDatePicker 
+        dateList={dateList}
+        selectedDate={selectedDate}
+        onSelectDate={(date) => {
+          setSelectedDate(date);
+          setSheetOpen(false);
+        }}
+       
+        />
+      </BottomSheet>
+    </div>
     </main>
   );
 }
