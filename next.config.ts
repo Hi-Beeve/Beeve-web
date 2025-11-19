@@ -6,7 +6,7 @@ const nextConfig: NextConfig = {
   
   // 이미지 최적화 설정
   images: {
-    domains: ['localhost'],
+    domains: ['localhost','example.com'],
     unoptimized: false,
   },
   
