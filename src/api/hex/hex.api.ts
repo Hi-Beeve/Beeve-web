@@ -24,25 +24,55 @@ export const getHexDateListApi = async (): Promise<string[]> => {
 
 
 const mockHexData: HexWithDateResponse = {
-  user: {
-    id: '1',
-    name: 'John Doe',
-    profileImage: 'https://example.com/profile.jpg',
-    height: 180,
-    weight: 70,
-    age: 30,
-  },
-  hexData: {
-    근력: 1,
-    심폐지구력: 1,
-    유연성: 2,
-    순발력: 2,
-    민첩성: 3,
-    근지구력: 4,
-  },
-  gradeInfo: {
-    grade: 'A',
-    description: 'Excellent performance',
-  },
+  totalGrade: 1,
+  totalRank: 3,
+  measurePlace: "GYM",
+  height: 166.88,
+  weight: 56.88,
+  age: 34,
+  
+  fitness: [
+    {
+      fitnessType: "STRENGTH",
+      program: "WALL_PUSH_UP",
+      value: 12,
+      rawValue: 16,
+      grade: 1
+    },
+    {
+      fitnessType: "CARDIO",
+      program: "VO2MAX",
+      value: 12,
+      grade: 1
+    },
+    {
+      fitnessType: "ENDURANCE",
+      program: "CROSS_CRUNCH",
+      value: 12,
+      grade: 2
+    },
+    {
+      fitnessType: "FLEXIBILITY",
+      program: "SIT_AND_REACH",
+      value: 12,
+      grade: 3
+    },
+    {
+      fitnessType: "AGILITY",
+      program: "REACTION_TIME",
+      value: 12,
+      grade: 4
+    },
+    {
+      fitnessType: "QUICKNESS",
+      program: "FLIGHT_TIME",
+      value: 12,
+      grade: 1
+    }
+  ],
+
+    // name: 'John Doe',
+    // profileImage: 'https://example.com/profile.jpg',
   date: '2025-11-17',
+
 };

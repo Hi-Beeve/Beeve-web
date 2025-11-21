@@ -2,15 +2,15 @@ import React from "react";
 import HexagonChart from "@/components/hexagon-chart";
 import { FONT_COLORS, FONT_STYLES } from "@/styles/fontStyles";
 import { HEX_COLORS } from "./hex-colors";
+import { HexWithDateResponse } from "@/types/hex";
 
 interface HexChartSectionProps {
-  hexDataArray: number[];
-  date: string;
+  data: HexWithDateResponse;
   onDateClick?: () => void;
 }
 
-export default function HexChartSection({ hexDataArray, date, onDateClick }: HexChartSectionProps) {
-  const formattedDate = new Date(date).toLocaleDateString('ko-KR', {
+export default function HexChartSection({ data, onDateClick }: HexChartSectionProps) {
+  const formattedDate = new Date(data.date).toLocaleDateString('ko-KR', {
     month: '2-digit',
     day: '2-digit',
   });
@@ -20,9 +20,9 @@ export default function HexChartSection({ hexDataArray, date, onDateClick }: Hex
 
       <HexTitle />
       <div className="my-0">
-        <HexagonChart hexDataArray={hexDataArray} />
+        <HexagonChart hexDataArray={data.fitness.map((item) => item.grade)} />
       </div>
-      <DateSection date={date} onClick={onDateClick}/>
+      <DateSection date={formattedDate} onClick={onDateClick}/>
     </section>
   );
 }

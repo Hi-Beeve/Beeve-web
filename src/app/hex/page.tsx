@@ -16,40 +16,39 @@ export default function HexPage() {
   const { data: dateList } = useHexDateListQuery();
 
   if (isLoading) {
+    console.log("Loading...")
     return (
       <main className="flex flex-col items-center">
-        <div>Loading...</div>
       </main>
     );
   }
 
   if (error) {
+    console.error("Error loading data:", error);
     return (
       <main className="flex flex-col items-center">
-        <div>Error loading data</div>
       </main>
     );
   }
 
   if (!data) {
+    console.error("No data available");
     return (
       <main className="flex flex-col items-center">
-        <div>No data available</div>
       </main>
     );
   }
 
   return (
     <main className="flex flex-col items-center pb-20 min-h-screen w-full max-w-screen bg-gradient-to-b from-[#F5F5F5] to-[#D9D4E8]">
-      <HexProfileHeader user={data.user} />
+      <HexProfileHeader user={USER_DATA} />
       <div className="w-full px-4">
 
       <HexChartSection
-        hexDataArray={data.hexDataArray}
-        date={data.date}
+        data={data}
         onDateClick={() => setSheetOpen(true)}
       />
-      <HexCardList user={data.user} gradeInfo={data.gradeInfo} />
+      <HexCardList data={data} />
       <BottomSheet open={sheetOpen} onClose={() => setSheetOpen(false)}>
         <BottomSheetDatePicker 
         dateList={dateList}
@@ -65,3 +64,9 @@ export default function HexPage() {
     </main>
   );
 }
+
+const USER_DATA = {
+    name: 'YERIEL',
+    profileImage: 'https://example.com/profile.jpg',
+};
+
