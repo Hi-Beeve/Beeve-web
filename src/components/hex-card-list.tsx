@@ -24,7 +24,7 @@ export default function HexCardList({ data }: HexCardListProps) {
       <RankCard rank={data.totalRank}/>
       <PlaceCard place={data.measurePlace}/>
       <h3 className={`${FONT_STYLES.heading3} py-3 px-1`}>체력항목</h3>
-      <FitnessCardList fitness={data.fitness}/>
+      <FitnessCardList fitness={data.fitness} age={data.age}/>
     </section>
   );
 }
@@ -72,7 +72,7 @@ const PlaceCard = ({place}: {place: string}) => {
     )
 }
 
-const FitnessCardList = ({fitness}: {fitness: HexData[]}) => {
+const FitnessCardList = ({fitness, age}: {fitness: HexData[], age: number}) => {
   const getSize = (fitnessType: any) => {
     return fitnessType === "STRENGTH" ? 20 : 24;
   }
@@ -84,7 +84,7 @@ const FitnessCardList = ({fitness}: {fitness: HexData[]}) => {
                 <CardBackground key={item.fitnessType} className="flex-col items-start gap-4">
                     <CardTitleWithIcon className="bg-[#BDB2DD]" icon={<Image src={FitnessIconMap[item.fitnessType]} alt="gradeIcon" width={size} height={size}/>} title={FitnessNameMap[item.fitnessType]}/>
                     <ResultData program={item.program} value={item.rawValue || item.value}/>
-                    <ResultGraph value={item.value}/>
+                    <ResultGraph value={item.value} age={age}/>
                 </CardBackground>
                 )
               }
@@ -146,7 +146,7 @@ const ResultData = ({program, value}: {program: string, value: number}) => {
     )
 }
 
-const ResultGraph = ({value}: {value: number}) => {
+const ResultGraph = ({value, age}: {value: number, age: number}) => {
     return (
         <div className="w-full h-2 bg-[#D9D9D9]">
             <div className="h-full bg-[#BDB2DD]" style={{width: `${value}%`}}></div>
