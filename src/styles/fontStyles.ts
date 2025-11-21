@@ -13,10 +13,13 @@ export const FONT_STYLES = {
   body12: "text-[13px] leading-[130%] tracking-[-0.2px] font-normal",
   body13: "text-[12px] leading-[130%] tracking-[-0.2px] font-semibold",
   body14: "text-[11px] leading-[130%] tracking-[-0.2px] font-normal",
+  body15: "text-[10px] leading-[130%] tracking-[-0.2px] font-normal",
+  body16: "text-[9px] leading-[130%] tracking-[-0.2px] font-normal",
+  body17: "text-[8px] leading-[130%] tracking-[-0.2px] font-normal",
 
   heading1: "text-[38px] leading-[130%] tracking-[-0.2px] font-bold",
   heading2: "text-[34px] leading-[130%] tracking-[-0.2px] font-bold",
-  heading3: "text-[26px] leading-[130%] tracking-[-0.2px] font-bold",
+  heading3: "text-[22px] leading-[130%] tracking-[-0.2px] font-bold",
   heading4: "text-[20px] leading-[130%] tracking-[-0.2px] font-bold",
   heading5: "text-[18px] leading-[130%] tracking-[-0.2px] font-bold",
   heading6: "text-[16px] leading-[130%] tracking-[-0.2px] font-bold",
@@ -25,4 +28,5 @@ export const FONT_STYLES = {
 
 export const FONT_COLORS = {
   grey: "text-[#767676]",
+  primaryDark: "text-[#9B8EC2]",
 } as const;

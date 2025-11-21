@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/auth-context';
 import { kakaoLogout } from '@/lib/kakao-auth';
 import { googleLogout } from '@/lib/google-auth';
+import Image from 'next/image';
 
 interface UserProfileProps {
   className?: string;
@@ -11,8 +12,14 @@ interface UserProfileProps {
 
 export function UserProfile({ className = '' }: UserProfileProps) {
   const { user, logout, isAuthenticated } = useAuth();
+  const [profile, setProfile] = useState(user?.profileImage);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+
+  useEffect(()=>{
+    setProfile(user?.profileImage)
+  },[user])
 
   if (!isAuthenticated || !user) {
     return (
@@ -71,11 +78,19 @@ export function UserProfile({ className = '' }: UserProfileProps) {
       >
         {/* 프로필 이미지 */}
         <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-600 flex-shrink-0">
-          {user.profileImage ? (
-            <img
-              src={user.profileImage}
+          {profile ? (
+            <Image
+              src={profile}
               alt={user.nickname}
               className="w-full h-full object-cover"
+              onLoadingComplete={(img) => {
+        if (img.naturalWidth === 0) {
+          console.log("이미지 로딩 실패")
+          setProfile('/fallback.svg'); // 실패 → 대체 이미지로 변경
+        }
+      }}
+              width={32}
+              height={32}
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-gray-300">

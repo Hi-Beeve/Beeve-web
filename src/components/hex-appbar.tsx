@@ -2,22 +2,28 @@
 
 import home from "../../public/home.svg"
 import graph from "../../public/graph.svg"
-import rank from "../../public/rank.svg"
+import rank from "../../public/grade.svg"
 import recommend from "../../public/recommend.svg"
 import Image from "next/image"
 import add from "../../public/add.svg"
 import { FONT_COLORS, FONT_STYLES } from "@/styles/fontStyles"
 import Link from 'next/link';
+import { BottomSheetPlusHex } from "./bottom-sheet-plus-hex"
+import { BottomSheet } from "./common/BottomSheet"
+import { useState } from "react"
 
 export const AppBar = () => {
-
+    const [open, setOpen] = useState(false);
+    const handleClickPlus = () => {
+        setOpen(true);
+    }
     return (
-        <div className="w-full h-18 bg-white absolute bottom-0 left-0 flex ">
+        <div className="w-full max-w-screen h-18 bg-white fixed bottom-0 left-0 flex ">
             <div className="flex px-3 w-[calc((100%-65px)/2)] justify-evenly gap-4">
                 <MenuIcon icon={home} name="홈" path="/hex" />
                 <MenuIcon icon={graph} name="변화" path="/hex/graph" />
             </div>
-            <div className="relative w-[65px] h-[65px] rounded-full bg-[#BDB2DD] bottom-5 ">
+            <div className="relative w-[65px] h-[65px] rounded-full bg-[#BDB2DD] bottom-5 " onClick={handleClickPlus}>
                 <div className="w-full h-full flex justify-center">
                     <Image src={add} alt="add" width={48} height={48} />
                 </div>
@@ -26,6 +32,10 @@ export const AppBar = () => {
                 <MenuIcon icon={rank} name="순위" path="/hex/rank"/>
                 <MenuIcon icon={recommend} name="추천" path="/hex/recommend"/>
             </div>
+            <BottomSheet open={open} onClose={() => setOpen(false)} className="rounded-t-[50px]">
+
+            <BottomSheetPlusHex />
+            </BottomSheet>
         </div>
     )
 }
