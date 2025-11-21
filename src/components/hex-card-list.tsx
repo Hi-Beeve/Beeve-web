@@ -1,5 +1,5 @@
 import React from "react";
-import { HexData, HexWithDateResponse } from "@/types/hex";
+import { FitnessUnitMap, HexData, HexWithDateResponse } from "@/types/hex";
 import { FONT_COLORS, FONT_STYLES } from "@/styles/fontStyles";
 import Image from "next/image";
 import gradeIcon from "../../public/grade.svg"
@@ -10,6 +10,8 @@ import place_home from "../../public/place_home.svg"
 import place_gym from "../../public/place_gym.svg"
 import place_outside from "../../public/place_outside.svg"
 import { FitnessIconMap, FitnessNameMap, FitnessProgramMap } from "./common/Fitness";
+import HexProgramBarGraph from "./hex/hex_program_bar_graph";
+import HexProgramBar from "./hex/hex_program_bar";
 
 interface HexCardListProps {
   data: HexWithDateResponse;
@@ -17,14 +19,14 @@ interface HexCardListProps {
 
 export default function HexCardList({ data }: HexCardListProps) {
   return (
-    <section className="w-full py-5 flex flex-col gap-2" >
+    <section className="w-full py-5 flex flex-col gap-4" >
 
       <ProfileCard user={data}/>
       <TotalGradeCard grade={data.totalGrade}/>
       <RankCard rank={data.totalRank}/>
       <PlaceCard place={data.measurePlace}/>
       <h3 className={`${FONT_STYLES.heading3} py-3 px-1`}>체력항목</h3>
-      <FitnessCardList fitness={data.fitness} age={data.age}/>
+      <FitnessCardList fitness={data.fitness} age={data.age} gender={data.gender}/>
     </section>
   );
 }
@@ -72,19 +74,20 @@ const PlaceCard = ({place}: {place: string}) => {
     )
 }
 
-const FitnessCardList = ({fitness, age}: {fitness: HexData[], age: number}) => {
+const FitnessCardList = ({fitness, age, gender}: {fitness: HexData[], age: number, gender: string}) => {
   const getSize = (fitnessType: any) => {
     return fitnessType === "STRENGTH" ? 20 : 24;
   }
     return(
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-4">
             {fitness.map((item) => {
               const size = getSize(item.fitnessType);
               return(
                 <CardBackground key={item.fitnessType} className="flex-col items-start gap-4">
                     <CardTitleWithIcon className="bg-[#BDB2DD]" icon={<Image src={FitnessIconMap[item.fitnessType]} alt="gradeIcon" width={size} height={size}/>} title={FitnessNameMap[item.fitnessType]}/>
-                    <ResultData program={item.program} value={item.rawValue || item.value}/>
-                    <ResultGraph value={item.value} age={age}/>
+                    <ResultData program={item.program} value={item.rawValue || item.value} fitnessType={item.fitnessType}/>
+                    {/* TODO : 성별 데이터 형식 useHex에서 수정 */}
+                    <HexProgramBar value={item.value} age={age} fitnessType={item.fitnessType} gender={gender === "MALE" ? "male" : "female"} grade={item.grade}/>
                 </CardBackground>
                 )
               }
@@ -131,7 +134,7 @@ const CardTitleWithIcon = ({icon, title, className}: {icon: React.ReactNode, tit
     ) 
   }
 
-const ResultData = ({program, value}: {program: string, value: number}) => {
+const ResultData = ({program, value, fitnessType}: {program: string, value: number, fitnessType: string}) => {
     return (
         <div className={`flex items-center gap-2 text-[#767676]`}>
           <div className="pr-5 border-r-[1px] border-[#D9D9D9]">
@@ -140,16 +143,8 @@ const ResultData = ({program, value}: {program: string, value: number}) => {
             </div>
           <div>
             <CardCaption caption="기록"/>
-            <div className={FONT_STYLES.heading6}>{value}</div>
+            <div className={FONT_STYLES.heading6}>{value}{FitnessUnitMap[fitnessType as keyof typeof FitnessUnitMap]}</div>
           </div>
-        </div>
-    )
-}
-
-const ResultGraph = ({value, age}: {value: number, age: number}) => {
-    return (
-        <div className="w-full h-2 bg-[#D9D9D9]">
-            <div className="h-full bg-[#BDB2DD]" style={{width: `${value}%`}}></div>
         </div>
     )
 }

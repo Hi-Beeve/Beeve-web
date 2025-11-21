@@ -35,44 +35,45 @@ const mockHexData: HexWithDateResponse = {
     {
       fitnessType: "STRENGTH",
       program: "WALL_PUSH_UP",
-      value: 12,
-      rawValue: 16,
+      value: 22,
+      rawValue: 30,
       grade: 1
     },
     {
       fitnessType: "CARDIO",
       program: "VO2MAX",
-      value: 12,
+      value: 50,
       grade: 1
     },
     {
       fitnessType: "ENDURANCE",
       program: "CROSS_CRUNCH",
-      value: 12,
+      value: 20,
       grade: 2
     },
     {
       fitnessType: "FLEXIBILITY",
       program: "SIT_AND_REACH",
-      value: 12,
+      value: 17,
       grade: 3
     },
     {
       fitnessType: "AGILITY",
       program: "REACTION_TIME",
-      value: 12,
-      grade: 4
+      value: 0.223,
+      grade: 2
     },
     {
       fitnessType: "QUICKNESS",
       program: "FLIGHT_TIME",
-      value: 12,
-      grade: 1
+      value: 0.941,
+      grade: 2
     }
   ],
 
     // name: 'John Doe',
     // profileImage: 'https://example.com/profile.jpg',
   date: '2025-11-17',
+  gender: "MALE",
 
 };

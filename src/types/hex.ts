@@ -26,14 +26,24 @@ export interface HexWithDateResponse {
  height : number; // 키
  weight : number; // 체중
  age : number; // 나이
+ gender : string; // 성별 >>>>> 추가 필요 
  fitness : HexData[]; // 헥데이터
 
- date : string; // 측정일
+ date : string; // 측정일 >>>>> 추가 필요 
 }
 
 export interface HexWithDateRequest {
   date?: string;
   userId?: string;
+}
+
+export const FitnessUnitMap = {
+  STRENGTH : "회",
+  CARDIO : "분",
+  ENDURANCE : "회",
+  FLEXIBILITY : "cm",
+  AGILITY : "초",
+  QUICKNESS : "초"
 }
 
 // - fitnessType 종류

@@ -193,7 +193,7 @@ const programStandard: ProgramStandardType = {
             // 19~24	44.8	43–54	48	11.1	0.33	0.568
             "19~24":{
                 "CARDIO": 44.8,
-                "STRENGTH": "43-54",
+                "STRENGTH": 43,
                 "ENDURANCE": 48,
                 "FLEXIBILITY": 11.1,
                 "AGILITY": 0.33,
@@ -202,7 +202,7 @@ const programStandard: ProgramStandardType = {
             // 25~29	42.2	42–53	45	10.1	0.335	0.559
             "25~29":{
                 "CARDIO": 42.2,
-                "STRENGTH": "42-53",
+                "STRENGTH": 42,
                 "ENDURANCE": 45,
                 "FLEXIBILITY": 10.1,
                 "AGILITY": 0.335,
@@ -211,7 +211,7 @@ const programStandard: ProgramStandardType = {
             // 30~34	40.6	43–54	41	9.4	0.337	0.548
             "30~34":{
                 "CARDIO": 40.6,
-                "STRENGTH": "43-54",
+                "STRENGTH": 43,
                 "ENDURANCE": 41,
                 "FLEXIBILITY": 9.4,
                 "AGILITY": 0.337,
@@ -220,7 +220,7 @@ const programStandard: ProgramStandardType = {
             // 35~39	39.5	42–53	39	9.3	0.339	0.551
             "35~39":{
                 "CARDIO": 39.5,
-                "STRENGTH": "42-53",
+                "STRENGTH": 42,
                 "ENDURANCE": 39,
                 "FLEXIBILITY": 9.3,
                 "AGILITY": 0.339,
@@ -229,7 +229,7 @@ const programStandard: ProgramStandardType = {
             // 40~44	38.8	43–54	38	9.5	0.346	0.521
             "40~44":{
                 "CARDIO": 38.8,
-                "STRENGTH": "43-54",
+                "STRENGTH": 43,
                 "ENDURANCE": 38,
                 "FLEXIBILITY": 9.5,
                 "AGILITY": 0.346,
@@ -238,7 +238,7 @@ const programStandard: ProgramStandardType = {
             // 45~49	38.1	42–53	36	9.1	0.366	0.497
             "45~49":{
                 "CARDIO": 38.1,
-                "STRENGTH": "42-53",
+                "STRENGTH": 42,
                 "ENDURANCE": 36,
                 "FLEXIBILITY": 9.1,
                 "AGILITY": 0.366,
@@ -247,7 +247,7 @@ const programStandard: ProgramStandardType = {
             // 50~54	36.9	40–51	32	9.3	0.371	0.486
             "50~54":{
                 "CARDIO": 36.9,
-                "STRENGTH": "40-51",
+                "STRENGTH": 40,
                 "ENDURANCE": 32,
                 "FLEXIBILITY": 9.3,
                 "AGILITY": 0.371,
@@ -256,7 +256,7 @@ const programStandard: ProgramStandardType = {
             // 55~59	35.9	38–49	29	8.6	0.383	0.475
             "55~59":{
                 "CARDIO": 35.9,
-                "STRENGTH": "38-49",
+                "STRENGTH": 38,
                 "ENDURANCE": 29,
                 "FLEXIBILITY": 8.6,
                 "AGILITY": 0.383,
@@ -265,7 +265,7 @@ const programStandard: ProgramStandardType = {
             // 60~64	34.8	35–46	25	7.1	0.402	0.443
             "60~64":{
                 "CARDIO": 34.8,
-                "STRENGTH": "35-46",
+                "STRENGTH": 35,
                 "ENDURANCE": 25,
                 "FLEXIBILITY": 7.1,
                 "AGILITY": 0.402,
@@ -276,7 +276,7 @@ const programStandard: ProgramStandardType = {
             // 19~24	34.8	17–20	30	14.9	0.374	0.447
             "19~24":{
                 "CARDIO": 34.8,
-                "STRENGTH": "17-20",
+                "STRENGTH": 17,
                 "ENDURANCE": 30,
                 "FLEXIBILITY": 14.9,
                 "AGILITY": 0.374,
@@ -285,7 +285,7 @@ const programStandard: ProgramStandardType = {
             // 25~29	34.1	17–20	27	13.8	0.383	0.442
             "25~29":{
                 "CARDIO": 34.1,
-                "STRENGTH": "17-20",
+                "STRENGTH": 17,
                 "ENDURANCE": 27,
                 "FLEXIBILITY": 13.8,
                 "AGILITY": 0.383,
@@ -294,7 +294,7 @@ const programStandard: ProgramStandardType = {
             // 30~34	32.9	18–21	25	13.8	0.381	0.437
             "30~34":{
                 "CARDIO": 32.9,
-                "STRENGTH": "18-21",
+                "STRENGTH": 18,
                 "ENDURANCE": 25,
                 "FLEXIBILITY": 13.8,
                 "AGILITY": 0.381,
@@ -303,7 +303,7 @@ const programStandard: ProgramStandardType = {
             // 35~39	32.3	16–20	25	14.5	0.388	0.425
             "35~39":{
                 "CARDIO": 32.3,
-                "STRENGTH": "16-20",
+                "STRENGTH": 16,
                 "ENDURANCE": 25,
                 "FLEXIBILITY": 14.5,
                 "AGILITY": 0.388,
@@ -312,7 +312,7 @@ const programStandard: ProgramStandardType = {
             // 40~44	32	16–20	25	14.6	0.382	0.417
             "40~44":{
                 "CARDIO": 32,
-                "STRENGTH": "16-20",
+                "STRENGTH": 16,
                 "ENDURANCE": 25,
                 "FLEXIBILITY": 14.6,
                 "AGILITY": 0.382,
@@ -321,7 +321,7 @@ const programStandard: ProgramStandardType = {
             // 45~49	31.4	15–19	22	14.8	0.392	0.404
             "45~49":{
                 "CARDIO": 31.4,
-                "STRENGTH": "15-19",
+                "STRENGTH": 15,
                 "ENDURANCE": 22,
                 "FLEXIBILITY": 14.8,
                 "AGILITY": 0.392,
@@ -330,7 +330,7 @@ const programStandard: ProgramStandardType = {
             // 50~54	30.7	15–18	19	15.6	0.395	0.381
             "50~54":{
                 "CARDIO": 30.7,
-                "STRENGTH": "15-18",
+                "STRENGTH": 15,
                 "ENDURANCE": 19,
                 "FLEXIBILITY": 15.6,
                 "AGILITY": 0.395,
@@ -339,7 +339,7 @@ const programStandard: ProgramStandardType = {
             // 55~59	29.8	14–18	15	15.7	0.416	0.374
             "55~59":{
                 "CARDIO": 29.8,
-                "STRENGTH": "14-18",
+                "STRENGTH": 14,
                 "ENDURANCE": 15,
                 "FLEXIBILITY": 15.7,
                 "AGILITY": 0.416,
@@ -348,7 +348,7 @@ const programStandard: ProgramStandardType = {
             // 60~64	29	13–16	12	15.7	0.434	0.366
             "60~64":{
                 "CARDIO": 29,
-                "STRENGTH": "13-16",
+                "STRENGTH": 13,
                 "ENDURANCE": 12,
                 "FLEXIBILITY": 15.7,
                 "AGILITY": 0.434,
@@ -362,63 +362,63 @@ const programStandard: ProgramStandardType = {
             // 19~24	42	12–42	42	6.1
             "19~24":{
                 "CARDIO": 42,
-                "STRENGTH": "12-42",
+                "STRENGTH": 12,
                 "ENDURANCE": 42,
                 "FLEXIBILITY": 6.1,
             },
             // 25~29	39.6	11–41	38	5.3
             "25~29":{
                 "CARDIO": 39.6,
-                "STRENGTH": "11-41",
+                "STRENGTH": 11,
                 "ENDURANCE": 38,
                 "FLEXIBILITY": 5.3,
             },
             // 30~34	38.2	12–42	35	4.6
             "30~34":{
                 "CARDIO": 38.2,
-                "STRENGTH": "12-42",
+                "STRENGTH": 12,
                 "ENDURANCE": 35,
                 "FLEXIBILITY": 4.6,
             },
             // 35~39	37.2	11–41	33	4.6
             "35~39":{
                 "CARDIO": 37.2,
-                "STRENGTH": "11-41",
+                "STRENGTH": 11,
                 "ENDURANCE": 33,
                 "FLEXIBILITY": 4.6,
             },
             // 40~44	36.6	12–42	32	4.8
             "40~44":{
                 "CARDIO": 36.6,
-                "STRENGTH": "12-42",
+                "STRENGTH": 12,
                 "ENDURANCE": 32,
                 "FLEXIBILITY": 4.8,
             },
             // 45~49	36	11–41	30	4.6
             "45~49":{
                 "CARDIO": 36,
-                "STRENGTH": "11-41",
+                "STRENGTH": 11,
                 "ENDURANCE": 30,
                 "FLEXIBILITY": 4.6,
             },
             // 50~54	35	10–39	26	4.7
             "50~54":{
                 "CARDIO": 35,
-                "STRENGTH": "10-39",
+                "STRENGTH": 10,
                 "ENDURANCE": 26,
                 "FLEXIBILITY": 4.7,
             },
             // 55~59	34.1	9–37	23	3.9
             "55~59":{
                 "CARDIO": 34.1,
-                "STRENGTH": "9-37",
+                "STRENGTH": 9,
                 "ENDURANCE": 23,
                 "FLEXIBILITY": 3.9,
             },
             // 60~64	33.2	8–34	19	2.3
             "60~64":{
                 "CARDIO": 33.2,
-                "STRENGTH": "8-34",
+                "STRENGTH": 8,
                 "ENDURANCE": 19,
                 "FLEXIBILITY": 2.3,
             },
@@ -427,63 +427,63 @@ const programStandard: ProgramStandardType = {
             // 19~24	32.8	4–16	23	10.1
             "19~24":{
                 "CARDIO": 32.8,
-                "STRENGTH": "4-16",
+                "STRENGTH": 4,
                 "ENDURANCE": 23,
                 "FLEXIBILITY": 10.1,
             },
             // 25~29	32.2	4–16	21	9.1
             "25~29":{
                 "CARDIO": 32.2,
-                "STRENGTH": "4-16",
+                "STRENGTH": 4,
                 "ENDURANCE": 21,
                 "FLEXIBILITY": 9.1,
             },
             // 30~34	31	4–16	19	9.4
             "30~34":{
                 "CARDIO": 31,
-                "STRENGTH": "4-16",
+                "STRENGTH": 4,
                 "ENDURANCE": 19,
                 "FLEXIBILITY": 9.4,
             },
             // 35~39	30.5	4–15	19	10.1
             "35~39":{
                 "CARDIO": 30.5,
-                "STRENGTH": "4-15",
+                "STRENGTH": 4,
                 "ENDURANCE": 19,
                 "FLEXIBILITY": 10.1,
             },
             // 40~44	30.3	4–15	19	10.4
             "40~44":{
                 "CARDIO": 30.3,
-                "STRENGTH": "4-15",
+                "STRENGTH": 4,
                 "ENDURANCE": 19,
                 "FLEXIBILITY": 10.4,
             },
             // 45~49	29.7	4–15	16	10.7
             "45~49":{
                 "CARDIO": 29.7,
-                "STRENGTH": "4-15",
+                "STRENGTH": 4,
                 "ENDURANCE": 16,
                 "FLEXIBILITY": 10.7,
             },
             // 50~54	29.1	4–14	13	11.7
             "50~54":{
                 "CARDIO": 29.1,
-                "STRENGTH": "4-14",
+                "STRENGTH": 4,
                 "ENDURANCE": 13,
                 "FLEXIBILITY": 11.7,
             },
             // 55~59	28.4	4–13	9	11.9
             "55~59":{
                 "CARDIO": 28.4,
-                "STRENGTH": "4-13",
+                "STRENGTH": 4,
                 "ENDURANCE": 9,
                 "FLEXIBILITY": 11.9,
             },
             // 60~64	27.7	3–12	7	11.8
             "60~64":{
                 "CARDIO": 27.7,
-                "STRENGTH": "3-12",
+                "STRENGTH": 3,
                 "ENDURANCE": 7,
                 "FLEXIBILITY": 11.8,
             },
