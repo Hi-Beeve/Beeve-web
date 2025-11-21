@@ -40,9 +40,9 @@ export default function HexPage() {
   }
 
   return (
-    <main className="flex flex-col items-center pb-20 min-h-screen bg-gradient-to-b from-[#F5F5F5] to-[#D9D4E8]">
+    <main className="flex flex-col items-center pb-20 min-h-screen w-full max-w-screen bg-gradient-to-b from-[#F5F5F5] to-[#D9D4E8]">
       <HexProfileHeader user={data.user} />
-      <div>
+      <div className="w-full px-4">
 
       <HexChartSection
         hexDataArray={data.hexDataArray}
@@ -50,16 +50,6 @@ export default function HexPage() {
         onDateClick={() => setSheetOpen(true)}
       />
       <HexCardList user={data.user} gradeInfo={data.gradeInfo} />
-      {/* <BottomSheetDatePicker
-        open={sheetOpen}
-        dateList={dateList}
-        selectedDate={selectedDate}
-        onSelectDate={(date) => {
-          setSelectedDate(date);
-          setSheetOpen(false);
-        }}
-        onClose={() => setSheetOpen(false)}
-      /> */}
       <BottomSheet open={sheetOpen} onClose={() => setSheetOpen(false)}>
         <BottomSheetDatePicker 
         dateList={dateList}
