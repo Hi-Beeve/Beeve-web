@@ -1,23 +1,30 @@
 import React from "react";
-import { HexWithDateResponse } from "@/types/hex";
+import { HexData, HexWithDateResponse } from "@/types/hex";
 import { FONT_COLORS, FONT_STYLES } from "@/styles/fontStyles";
 import Image from "next/image";
 import gradeIcon from "../../public/grade.svg"
 import placeIcon from "../../public/place.svg"
 import rankIcon from "../../public/rank.svg"
 import ProfileCircle from "./profile-circle";
+import place_home from "../../public/place_home.svg"
+import place_gym from "../../public/place_gym.svg"
+import place_outside from "../../public/place_outside.svg"
+import { FitnessIconMap, FitnessNameMap, FitnessProgramMap } from "./common/Fitness";
+
 interface HexCardListProps {
   data: HexWithDateResponse;
 }
 
 export default function HexCardList({ data }: HexCardListProps) {
   return (
-    <section className="w-full py-5 rounded-6 mt-4 flex flex-col gap-2" >
+    <section className="w-full py-5 flex flex-col gap-2" >
 
       <ProfileCard user={data}/>
       <TotalGradeCard grade={data.totalGrade}/>
       <RankCard rank={data.totalRank}/>
       <PlaceCard place={data.measurePlace}/>
+      <h3 className={`${FONT_STYLES.heading3} py-3 px-1`}>체력항목</h3>
+      <FitnessCardList fitness={data.fitness}/>
     </section>
   );
 }
@@ -50,17 +57,39 @@ const RankCard = ({rank}: {rank: number}) => {
     return(
         <CardBackground>
             <CardTitleWithIcon className="bg-[#F4D5DB]" icon={<Image src={rankIcon} alt="rankIcon" width={24} height={24}/>} title="순위"/>
-            <div className="flex items-end gap-1">동년배 100명 중 <CardValue value={`${rank}등`}/></div>
+            <div className={`flex items-end gap-1`}><span className={`${FONT_STYLES.body14} ${FONT_COLORS.grey}`}>동년배 100명 중 </span><CardValue value={`${rank}등`}/></div>
         </CardBackground>
     )
 }
 
 const PlaceCard = ({place}: {place: string}) => {
+
     return(
         <CardBackground>
-            <CardTitleWithIcon className="bg-[#9AC5ED]" icon={<Image src={placeIcon} alt="placeIcon" width={24} height={24}/>} title="지역"/>
-            <CardValue value={`${place}`}/>
+            <CardTitleWithIcon className="bg-[#9AC5ED]" icon={<Image src={placeIcon} alt="placeIcon" width={24} height={24}/>} title="측정장소"/>
+        <Image src={place === "GYM" ? place_gym : place === "HOME" ? place_home : place_outside} alt="placeIcon" width={24} height={24}/>
         </CardBackground>
+    )
+}
+
+const FitnessCardList = ({fitness}: {fitness: HexData[]}) => {
+  const getSize = (fitnessType: any) => {
+    return fitnessType === "STRENGTH" ? 20 : 24;
+  }
+    return(
+        <div className="flex flex-col gap-2">
+            {fitness.map((item) => {
+              const size = getSize(item.fitnessType);
+              return(
+                <CardBackground key={item.fitnessType} className="flex-col items-start gap-4">
+                    <CardTitleWithIcon className="bg-[#BDB2DD]" icon={<Image src={FitnessIconMap[item.fitnessType]} alt="gradeIcon" width={size} height={size}/>} title={FitnessNameMap[item.fitnessType]}/>
+                    <ResultData program={item.program} value={item.rawValue || item.value}/>
+                    <ResultGraph value={item.value}/>
+                </CardBackground>
+                )
+              }
+            )}
+        </div>
     )
 }
 
@@ -84,7 +113,7 @@ const CardTitleWithIcon = ({icon, title, className}: {icon: React.ReactNode, tit
 
   const CardValue = ({value}: {value: string}) => {
     return (
-      <div className={FONT_STYLES.heading3 + ` ${FONT_COLORS.primaryDark}`}>{value}</div>
+      <div className={`${FONT_STYLES.heading3} ${FONT_COLORS.primaryDark} tracking-[-0.2px]`}>{value}</div>
     )
   }
 
@@ -94,10 +123,33 @@ const CardTitleWithIcon = ({icon, title, className}: {icon: React.ReactNode, tit
     )
   }
 
-  const CardBackground = ({children}: {children: React.ReactNode}) => {
+  const CardBackground = ({children, className}: {children: React.ReactNode, className?: string}) => {
     return(
-      <div className={"flex items-center px-5 py-4 rounded-[20px] justify-between bg-white"}>
+      <div className={`flex items-center px-5 py-4 rounded-[20px] justify-between bg-white ${className}`}>
         {children}
       </div>
     ) 
   }
+
+const ResultData = ({program, value}: {program: string, value: number}) => {
+    return (
+        <div className={`flex items-center gap-2 text-[#767676]`}>
+          <div className="pr-5 border-r-[1px] border-[#D9D9D9]">
+            <CardCaption caption="측정항목"/>
+            <div className={FONT_STYLES.heading6}>{FitnessProgramMap[program as keyof typeof FitnessProgramMap]}</div>
+            </div>
+          <div>
+            <CardCaption caption="기록"/>
+            <div className={FONT_STYLES.heading6}>{value}</div>
+          </div>
+        </div>
+    )
+}
+
+const ResultGraph = ({value}: {value: number}) => {
+    return (
+        <div className="w-full h-2 bg-[#D9D9D9]">
+            <div className="h-full bg-[#BDB2DD]" style={{width: `${value}%`}}></div>
+        </div>
+    )
+}
