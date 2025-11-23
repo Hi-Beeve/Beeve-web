@@ -96,7 +96,7 @@ const FitnessCardList = ({fitness, age, gender}: {fitness: HexData[], age: numbe
     )
 }
 
-const CardTitleWithIcon = ({icon, title, className}: {icon: React.ReactNode, title: string, className: string}) => {
+export const CardTitleWithIcon = ({icon, title, className}: {icon: React.ReactNode, title: string, className?: string}) => {
     return (
         <div className="flex items-center gap-2">
         <div className={`flex items-center justify-center w-10 h-10 rounded-full ${className}`}>
@@ -114,7 +114,7 @@ const CardTitleWithIcon = ({icon, title, className}: {icon: React.ReactNode, tit
       )
   }
 
-  const CardValue = ({value}: {value: string}) => {
+  export const CardValue = ({value}: {value: string}) => {
     return (
       <div className={`${FONT_STYLES.heading3} ${FONT_COLORS.primaryDark} tracking-[-0.2px]`}>{value}</div>
     )
@@ -126,7 +126,7 @@ const CardTitleWithIcon = ({icon, title, className}: {icon: React.ReactNode, tit
     )
   }
 
-  const CardBackground = ({children, className}: {children: React.ReactNode, className?: string}) => {
+  export const CardBackground = ({children, className}: {children: React.ReactNode, className?: string}) => {
     return(
       <div className={`flex items-center px-5 py-4 rounded-[20px] justify-between bg-white ${className}`}>
         {children}
