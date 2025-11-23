@@ -9,7 +9,7 @@ import totalIcon from "../../../../public/TotalGraph.svg"
 
 export default function GraphPage() {
     return(
-        <div className="w-full pt-10 px-5 flex flex-col gap-3">
+        <div className="w-full pt-10 px-5 pb-10 flex flex-col gap-3">
             {Object.entries(MockData).map(([key, value]) => (
                 <HexLineGraph key={key} title={key} data={value} maxValue={key==='종합등급' ? 5 : 4} />
             ))}

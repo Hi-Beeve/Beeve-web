@@ -62,6 +62,7 @@ export const HexLineGraph = ({ title, data, maxValue = 4 }: HexLineGraphProps) =
         pointHoverRadius: 8,
         tension: 0.3,
         fill: false,
+        clip: false, 
       },
     ],
   };
@@ -69,6 +70,12 @@ export const HexLineGraph = ({ title, data, maxValue = 4 }: HexLineGraphProps) =
   const options = {
     responsive: true,
     maintainAspectRatio: false,
+    layout: {
+      padding: {
+        // top: 25,
+        // bottom: 25,
+      },
+    },
     plugins: {
       legend: {
         display: false,
@@ -114,8 +121,8 @@ export const HexLineGraph = ({ title, data, maxValue = 4 }: HexLineGraphProps) =
         },
         border: {
           color: 'transparent',
-          dash: [6, 6],
-        }
+          dash: [3,3],
+        }      
       },
     },
     elements: {
@@ -128,7 +135,7 @@ export const HexLineGraph = ({ title, data, maxValue = 4 }: HexLineGraphProps) =
   };
 
   return (
-    <div className="w-full h-48 bg-white rounded-lg relative">
+    <div className="w-full h-52 bg-white rounded-lg relative">
       <div className="w-full h-full p-4 pt-14">
       {title && (
         <div className="absolute flex top-5 left-4 z-20 gap-2 pl-2">

@@ -2,7 +2,7 @@
 
 import home from "../../public/home.svg"
 import graph from "../../public/graph.svg"
-import rank from "../../public/grade.svg"
+import rank from "../../public/rank_appbar.svg"
 import recommend from "../../public/recommend.svg"
 import Image from "next/image"
 import add from "../../public/add.svg"
