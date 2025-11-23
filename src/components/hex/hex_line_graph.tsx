@@ -61,8 +61,13 @@ export const HexLineGraph = ({ title, data, maxValue = 4 }: HexLineGraphProps) =
         pointRadius: 6,
         pointHoverRadius: 8,
         tension: 0.3,
-        fill: false,
-        clip: false, 
+        fill: false, 
+           clip: {
+      left: 10,
+      right: 10,
+      top:10,     // 위로 10px 더 여유
+      bottom: 10,  // 아래로 10px 더 여유
+    },
       },
     ],
   };
