@@ -33,9 +33,11 @@ interface HexLineGraphProps {
     icon: string;
   };
   maxValue?: number;
+  minValue?: number;
+  stepSize?: number;
 }
 
-export const HexLineGraph = ({ title, data, maxValue = 4 }: HexLineGraphProps) => {
+export const HexLineGraph = ({ title, data, maxValue = 4, minValue = 1, stepSize = 1 }: HexLineGraphProps) => {
   const formatDateLabels = (labels: string[]) => {
     return labels.map(label => {
       const date = new Date(label);
@@ -61,13 +63,7 @@ export const HexLineGraph = ({ title, data, maxValue = 4 }: HexLineGraphProps) =
         pointRadius: 6,
         pointHoverRadius: 8,
         tension: 0.3,
-        fill: false, 
-           clip: {
-      left: 10,
-      right: 10,
-      top:10,     // 위로 10px 더 여유
-      bottom: 10,  // 아래로 10px 더 여유
-    },
+        fill: false,
       },
     ],
   };
@@ -111,7 +107,7 @@ export const HexLineGraph = ({ title, data, maxValue = 4 }: HexLineGraphProps) =
         position: 'right' as const,
         beginAtZero: false,
         reverse: true,
-        min: 1,
+        min: minValue,
         max: maxValue,
         grid: {
           drawBorder: false,
@@ -122,7 +118,7 @@ export const HexLineGraph = ({ title, data, maxValue = 4 }: HexLineGraphProps) =
           font: {
             size: 12,
           },
-          stepSize: 1,
+          stepSize: stepSize,
         },
         border: {
           color: 'transparent',

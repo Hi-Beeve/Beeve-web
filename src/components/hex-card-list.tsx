@@ -96,7 +96,7 @@ const FitnessCardList = ({fitness, age, gender}: {fitness: HexData[], age: numbe
     )
 }
 
-export const CardTitleWithIcon = ({icon, title, className}: {icon: React.ReactNode, title: string, className: string}) => {
+export const CardTitleWithIcon = ({icon, title, className}: {icon: React.ReactNode, title: string, className?: string}) => {
     return (
         <div className="flex items-center gap-2">
         <div className={`flex items-center justify-center w-10 h-10 rounded-full ${className}`}>
