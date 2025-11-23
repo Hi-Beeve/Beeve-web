@@ -32,9 +32,10 @@ interface HexLineGraphProps {
     values: number[];
     icon: string;
   };
+  maxValue?: number;
 }
 
-export const HexLineGraph = ({ title, data }: HexLineGraphProps) => {
+export const HexLineGraph = ({ title, data, maxValue = 4 }: HexLineGraphProps) => {
   const formatDateLabels = (labels: string[]) => {
     return labels.map(label => {
       const date = new Date(label);
@@ -98,6 +99,8 @@ export const HexLineGraph = ({ title, data }: HexLineGraphProps) => {
         position: 'right' as const,
         beginAtZero: false,
         reverse: true,
+        min: 1,
+        max: maxValue,
         grid: {
           drawBorder: false,
           lineWidth: 1,

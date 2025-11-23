@@ -11,7 +11,7 @@ export default function GraphPage() {
     return(
         <div className="w-full pt-10 px-5 flex flex-col gap-3">
             {Object.entries(MockData).map(([key, value]) => (
-                <HexLineGraph key={key} title={key} data={value} />
+                <HexLineGraph key={key} title={key} data={value} maxValue={key==='종합등급' ? 5 : 4} />
             ))}
             </div>
     )
@@ -21,7 +21,7 @@ export default function GraphPage() {
 const MockData = {
     '종합등급':{
         labels: ['2025-01-01', '2025-01-02', '2025-01-03', '2025-01-04', '2025-01-05', '2025-01-06', '2025-01-07'],
-        values: [4, 4, 3, 4, 3, 2, 1],
+        values: [5, 4, 3, 4, 3, 2, 1],
         icon:totalIcon
     },
     '근력' : {
