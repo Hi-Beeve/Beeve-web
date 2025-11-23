@@ -40,8 +40,7 @@ export default function HexPage() {
   }
 
   return (
-    <main className="flex flex-col items-center pb-20 min-h-screen w-full max-w-screen bg-gradient-to-b from-[#F5F5F5] to-[#D9D4E8]">
-      <HexProfileHeader user={USER_DATA} />
+    <main className="w-full pb-10">
       <div className="w-full px-4">
 
       <HexChartSection
@@ -64,9 +63,3 @@ export default function HexPage() {
     </main>
   );
 }
-
-const USER_DATA = {
-    name: 'YERIEL',
-    profileImage: 'https://example.com/profile.jpg',
-};
-

@@ -8,7 +8,6 @@ export const HEX_COLORS = {
   hexLabel: "#767676",
 
   // 기존 값
-  chartFill: "rgba(150, 120, 200, 0.18)", // 기존 바탕 연보라(미사용 예정)
   valueFill: "rgba(117, 101, 183, 0.5)", // 값 진한 보라 
   valueBorder: "rgba(168, 168, 168, 0.6)", // 값 보라 테두리
   label: "#888",

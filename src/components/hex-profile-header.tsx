@@ -9,7 +9,7 @@ interface HexProfileHeaderProps {
 
 export default function HexProfileHeader({ user }: HexProfileHeaderProps) {
   return (
-    <header className="w-full " >
+    <header className="w-full z-100 bg-[#F5F5F5] fixed top-0 left-0 right-0 " >
       <div className="w-full flex items-center justify-between py-4 px-5">
        
       <div className="flex items-center gap-2" >
