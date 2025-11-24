@@ -34,3 +34,11 @@ export type ClientOAuthInfo = {
   profileImage?: string;
   provider: 'kakao' | 'google';
 }
+
+// 클라이언트 추가 정보 타입
+export type ClientAdditionalInfo = {
+  birthDate: string;
+  gender: string;
+  height: number;
+  weight: number;
+}
