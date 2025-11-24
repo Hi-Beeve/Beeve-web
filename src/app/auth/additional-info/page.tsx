@@ -375,7 +375,7 @@ export default function AdditionalInfoPage() {
                     placeholder=""
                     min="100"
                     max="250"
-                    className="w-full px-4 py-4 text-lg bg-[#F5F5F5] rounded-[20px] text-[#767676] placeholder-[#767676] focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="w-full px-4 py-4 text-lg bg-[#F5F5F5] rounded-[20px] text-[#767676] placeholder-[#767676] focus:outline-none focus:ring-2 focus:ring-[#BDB2DD] focus:border-transparent"
                     required
                   />
                 </div>
@@ -391,7 +391,7 @@ export default function AdditionalInfoPage() {
                     placeholder=""
                     min="30"
                     max="200"
-                    className="w-full px-4 py-4 text-lg bg-[#F5F5F5] rounded-[20px] text-[#767676] placeholder-[#767676] focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="w-full px-4 py-4 text-lg bg-[#F5F5F5] rounded-[20px] text-[#767676] placeholder-[#767676] focus:outline-none focus:ring-2 focus:ring-[#BDB2DD] focus:border-transparent"
                     required
                   />
                 </div>
