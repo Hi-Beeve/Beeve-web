@@ -6,8 +6,7 @@ import { useAuth } from '@/contexts/auth-context';
 import { useSignUp } from '@/api/auth/useAuth';
 import { ClientOAuthInfo, ClientAdditionalInfo } from '@/types/auth';
 import { FONT_STYLES } from '@/styles/fontStyles';
-import Picker from "react-mobile-picker";
-import BottomSheet from '@/components/bottom-sheet';
+import { GenderSelect, BirthDateSelect, PhysicalInfoInput } from '@/components/common/FormComponents';
 
 type FunnelStep = 'gender' | 'birthDate' | 'physicalInfo';
 
@@ -26,71 +25,7 @@ function AdditionalInfoContent() {
     weight: 0
   });
 
-  // 날짜 선택을 위한 상태 (년, 월, 일 분리)
-  const [datePickerValue, setDatePickerValue] = useState({
-    year: '',
-    month: '',
-    day: ''
-  });
 
-  // Bottom Sheet 상태
-  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
-
-  // 날짜 범위 계산 (19세~100세)
-  const getDateRanges = () => {
-    const currentDate = new Date();
-    const currentYear = currentDate.getFullYear();
-    
-    // 19세부터 100세까지
-    const minYear = currentYear - 100;
-    const maxYear = currentYear - 19;
-    
-    const years = [];
-    for (let year = maxYear; year >= minYear; year--) {
-      years.push(year.toString());
-    }
-    
-    const months = [];
-    for (let month = 1; month <= 12; month++) {
-      months.push(month.toString().padStart(2, '0'));
-    }
-    
-    const getDaysInMonth = (year: number, month: number) => {
-      return new Date(year, month, 0).getDate();
-    };
-    
-    const selectedYear = parseInt(datePickerValue.year) || maxYear;
-    const selectedMonth = parseInt(datePickerValue.month) || 1;
-    const daysInMonth = getDaysInMonth(selectedYear, selectedMonth);
-    
-    const days = [];
-    for (let day = 1; day <= daysInMonth; day++) {
-      days.push(day.toString().padStart(2, '0'));
-    }
-    
-    return { years, months, days };
-  };
-
-  // 초기 날짜 설정
-  useEffect(() => {
-    if (!datePickerValue.year) {
-      const currentDate = new Date();
-      const defaultYear = (currentDate.getFullYear() - 25).toString(); // 기본 25세
-      const defaultMonth = '01';
-      const defaultDay = '01';
-      
-      setDatePickerValue({
-        year: defaultYear,
-        month: defaultMonth,
-        day: defaultDay
-      });
-      
-      setFormData(prev => ({
-        ...prev,
-        birthDate: `${defaultYear}-${defaultMonth}-${defaultDay}`
-      }));
-    }
-  }, [datePickerValue.year]);
 
   // 소셜 로그인 후 리다이렉트된 경우 임시 사용자 정보 가져오기
   const tempUserData = searchParams.get('tempUser');
@@ -141,35 +76,6 @@ function AdditionalInfoContent() {
     }
   }, [isSuccess, signUpData, tempUser, router, login]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: name === 'height' || name === 'weight' ? parseInt(value) || 0 : value
-    }));
-  };
-
-  // 날짜 선택 핸들러
-  const handleDateChange = (newValue: { year: string; month: string; day: string }) => {
-    setDatePickerValue(newValue);
-  };
-
-  // 날짜 선택 완료 핸들러
-  const handleDateConfirm = () => {
-    const birthDate = `${datePickerValue.year}-${datePickerValue.month}-${datePickerValue.day}`;
-    setFormData(prev => ({
-      ...prev,
-      birthDate
-    }));
-    setIsDatePickerOpen(false);
-  };
-
-  // 날짜 포맷팅 함수
-  const formatDisplayDate = (dateString: string) => {
-    if (!dateString) return '';
-    const [year, month, day] = dateString.split('-');
-    return `${year}.${month}.${day}`;
-  };
 
   // 단계별 검증 함수들
   const validateGender = (): boolean => {
@@ -297,86 +203,42 @@ function AdditionalInfoContent() {
         <div className="space-y-6">
           {/* 1단계: 성별 선택 */}
           {currentStep === 'gender' && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                {['male', 'female'].map((gender) => (
-                  <button
-                    key={gender}
-                    type="button"
-                    onClick={() => {
-                      setFormData(prev => ({ ...prev, gender }));
-                      setError('');
-                    }}
-                    className={`px-3 h-14 rounded-[20px] transition-all duration-200 ${
-                      formData.gender === gender
-                        ? 'bg-black text-white'
-                        : 'bg-[#F5F5F5] text-[#767676] hover:border-gray-500'
-                    }`}
-                  >
-                    <div className="text-center">
-                      <div className="font-medium">{gender === 'male' ? '남성' : '여성'}</div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
+            <GenderSelect
+              value={formData.gender}
+              onChange={(gender) => {
+                setFormData(prev => ({ ...prev, gender }));
+                setError('');
+              }}
+              error={error}
+            />
           )}
 
           {/* 2단계: 생년월일 입력 */}
           {currentStep === 'birthDate' && (
-            <div className="space-y-6">
-              <div
-                onClick={() => setIsDatePickerOpen(true)}
-                className="w-full px-4 py-4 text-lg bg-[#F5F5F5] rounded-[20px] text-[#767676] cursor-pointer flex items-center justify-between"
-              >
-                <span>
-                  {formData.birthDate ? formatDisplayDate(formData.birthDate) : '연.월.일'}
-                </span>
-                <svg className="w-5 h-5 text-[#767676]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-              </div>
-            </div>
+            <BirthDateSelect
+              value={formData.birthDate}
+              onChange={(birthDate) => {
+                setFormData(prev => ({ ...prev, birthDate }));
+                setError('');
+              }}
+              error={error}
+            />
           )}
 
           {/* 3단계: 키와 체중 입력 */}
           {currentStep === 'physicalInfo' && (
-            <div className="space-y-6">
-              <div className="flex flex-col gap-5">
-                <div>
-                  <label className="block text-[13px] font-medium text-[#767676] mb-2">
-                    키 (cm)
-                  </label>
-                  <input
-                    type="number"
-                    name="height"
-                    value={formData.height || ''}
-                    onChange={handleInputChange}
-                    placeholder=""
-                    min="100"
-                    max="250"
-                    className="w-full px-4 py-4 text-lg bg-[#F5F5F5] rounded-[20px] text-[#767676] placeholder-[#767676] focus:outline-none focus:ring-2 focus:ring-[#BDB2DD] focus:border-transparent"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-[13px] font-medium text-[#767676] mb-2">
-                    체중 (kg)
-                  </label>
-                  <input
-                    type="number"
-                    name="weight"
-                    value={formData.weight || ''}
-                    onChange={handleInputChange}
-                    placeholder=""
-                    min="30"
-                    max="200"
-                    className="w-full px-4 py-4 text-lg bg-[#F5F5F5] rounded-[20px] text-[#767676] placeholder-[#767676] focus:outline-none focus:ring-2 focus:ring-[#BDB2DD] focus:border-transparent"
-                    required
-                  />
-                </div>
-              </div>
-            </div>
+            <PhysicalInfoInput
+              height={formData.height}
+              weight={formData.weight}
+              onHeightChange={(height) => {
+                setFormData(prev => ({ ...prev, height }));
+                setError('');
+              }}
+              onWeightChange={(weight) => {
+                setFormData(prev => ({ ...prev, weight }));
+                setError('');
+              }}
+            />
           )}
         </div>
         
@@ -410,59 +272,6 @@ function AdditionalInfoContent() {
           </button>
         </div>
 
-        {/* 날짜 선택 Bottom Sheet */}
-        <BottomSheet
-          isOpen={isDatePickerOpen}
-          onClose={() => setIsDatePickerOpen(false)}
-          title="생년월일 선택"
-        >
-          <div className="pb-4">
-            <div className="h-[280px] mb-6">
-              <Picker
-                height={280}
-                itemHeight={40}
-                value={datePickerValue}
-                onChange={handleDateChange}
-              >
-                <Picker.Column name="year">
-                  {getDateRanges().years.map(year => (
-                    <Picker.Item key={year} value={year}>
-                      <div className="text-center font-medium text-gray-700">
-                        {year}년
-                      </div>
-                    </Picker.Item>
-                  ))}
-                </Picker.Column>
-                <Picker.Column name="month">
-                  {getDateRanges().months.map(month => (
-                    <Picker.Item key={month} value={month}>
-                      <div className="text-center font-medium text-gray-700">
-                        {month}월
-                      </div>
-                    </Picker.Item>
-                  ))}
-                </Picker.Column>
-                <Picker.Column name="day">
-                  {getDateRanges().days.map(day => (
-                    <Picker.Item key={day} value={day}>
-                      <div className="text-center font-medium text-gray-700">
-                        {day}일
-                      </div>
-                    </Picker.Item>
-                  ))}
-                </Picker.Column>
-              </Picker>
-            </div>
-            
-            {/* 확인 버튼 */}
-            <button
-              onClick={handleDateConfirm}
-              className="w-full px-4 py-3 bg-[#BDB2DD] text-white font-medium rounded-[20px] transition-colors duration-200"
-            >
-              확인
-            </button>
-          </div>
-        </BottomSheet>
       </div>
     </div>
   );
