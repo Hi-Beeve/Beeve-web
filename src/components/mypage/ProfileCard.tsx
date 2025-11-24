@@ -1,12 +1,16 @@
 import { FONT_COLORS, FONT_STYLES } from "@/styles/fontStyles";
 import { ProfileResponse } from "@/types/mypage";
+import Image from "next/image";
+import ProfileIcon from "../../../public/profile.svg";
+import ArrowIcon from "../../../public/arrow_right.svg";
 
 export const ProfileCard = ({ data }: { data: ProfileResponse }) => {
+    const onClickProfile = () => {
+        // 프로필 수정 페이지로 이동
+    }
     return (
         <GrayCard className="flex flex-col items-start gap-5 py-5 px-4 w-full rounded-[20px]">
-            <div className="flex items-center gap-2">
-                <ProfileInfo tag="신체정보" value={`${data.height}cm/${data.weight}kg`} />
-            </div>
+                <TitleWithIcon title="프로필 수정" icon={ProfileIcon} onClick={onClickProfile} />
             <div className="h-[1px] w-full bg-[#D9D9D9]"> </div>
             <BMI bmi={data.bmi.toString()} />
         </GrayCard>
@@ -21,6 +25,18 @@ export const GrayCard = ({ children, className }: { children: React.ReactNode, c
     );
 }
 
+const TitleWithIcon = ({title, icon, className, onClick}: {title: string, icon?: string, className?: string, onClick?: () => void}) => {
+    return (
+        <div className={`flex justify-between w-full ${className}`} onClick={onClick}>
+
+        <div className="flex items-center gap-2">
+            {icon && <Image src={icon} alt="icon" width={24} height={24} />}
+            <p className={`${FONT_STYLES.body2}`}>{title}</p>
+        </div>
+        <Image src={ArrowIcon} alt="icon" width={24} height={24} />
+        </div>
+    );
+}
 export const ProfileInfo = ({tag, value}: {tag: string, value: string}) => {
     return (
         <div className="flex items-center gap-2">
@@ -28,6 +44,35 @@ export const ProfileInfo = ({tag, value}: {tag: string, value: string}) => {
             <p className={FONT_STYLES.heading3}>{value}</p>
         </div>
     );
+}
+
+export const AppInfoCard = () => {
+    const onClickUseTerm = () => {
+        // TODO : 이용약관 페이지로 이동
+    }
+    const onClickPrivacyPolicy = () => {
+        // TODO : 개인정보 처리방침 페이지로 이동
+    }
+    const onClickOpenSource = () => {
+        // TODO : 오픈소스 라이센스 페이지로 이동
+    }
+    return(
+        <div className="flex flex-col w-full items-start gap-2">
+            <h3 className={`${FONT_STYLES.body6} ${FONT_COLORS.grey}`}>앱정보</h3>
+            <div className="flex flex-col bg-[#F5F5F5] rounded-[20px] w-full py-6">
+                <div className="flex items-center justify-between gap-2 px-4 pb-4">
+                    <p className={`${FONT_STYLES.body2}`}>버전</p>
+                    <p className={`${FONT_STYLES.body2}`}>1.0.0</p>
+                </div>
+                <div className="h-[1px] w-full bg-[#D9D9D9] "> </div>
+                <TitleWithIcon title="이용약관" className="px-4 py-4" onClick={onClickUseTerm}/>
+                <div className="h-[1px] w-full bg-[#D9D9D9]"> </div>
+                <TitleWithIcon title="개인정보 처리방침" className="px-4 py-4" onClick={onClickPrivacyPolicy}/>
+                <div className="h-[1px] w-full bg-[#D9D9D9]"> </div>
+                <TitleWithIcon title="오픈소스 라이센스" className="px-4 pt-4" onClick={onClickOpenSource}/>
+            </div>   
+        </div>
+    )
 }
 
 export const BMI = ({bmi}: {bmi: string}) => {
