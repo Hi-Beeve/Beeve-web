@@ -16,7 +16,7 @@ export type ProfileUpdateRequest = {
   gender: string;
   height: number;
   weight: number;
-  profileUrl: string;
+  profileUrl?: string;
 }
 
 export type ProfileUpdateResponse = {

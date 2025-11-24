@@ -7,7 +7,7 @@ export const useMypage = () => {
   const mockData = {
     name: "김개발",
     birthDate: "1995-03-15",
-    gender: "M",
+    gender: "male",
     height: 175.5,
     weight: 68.2,
     bmi: 22.1,

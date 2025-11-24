@@ -6,7 +6,7 @@ import ArrowIcon from "../../../public/arrow_right.svg";
 
 export const ProfileCard = ({ data }: { data: ProfileResponse }) => {
     const onClickProfile = () => {
-        // 프로필 수정 페이지로 이동
+        window.location.href = '/mypage/edit';
     }
     return (
         <GrayCard className="flex flex-col items-start gap-5 py-5 px-4 w-full rounded-[20px]">
