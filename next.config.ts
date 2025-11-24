@@ -6,7 +6,21 @@ const nextConfig: NextConfig = {
   
   // 이미지 최적화 설정
   images: {
-    domains: ['localhost','example.com'],
+    domains: [
+      'localhost',
+      'example.com',
+      // 카카오 이미지 도메인들
+      'img1.kakaocdn.net',
+      'img2.kakaocdn.net', 
+      't1.kakaocdn.net',
+      't2.kakaocdn.net',
+      'k.kakaocdn.net',
+      // 구글 이미지 도메인들
+      'lh3.googleusercontent.com',
+      'lh4.googleusercontent.com',
+      'lh5.googleusercontent.com',
+      'lh6.googleusercontent.com'
+    ],
     unoptimized: false,
   },
   

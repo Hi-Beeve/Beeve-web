@@ -5,7 +5,7 @@ export const hexWithDateApi = async (params: HexWithDateRequest): Promise<HexWit
   // const response = await instance.get<HexWithDateResponse>('/hex/data', {
   //   params,
   // });
-  // 임시 mock 데이터 반환하도록 주석처리 
+  // TODO : 임시 mock 데이터 반환하도록 주석처리 
   
   return new Promise((resolve) => {
     setTimeout(()=>{
@@ -18,7 +18,7 @@ export const getHexDateListApi = async (): Promise<string[]> => {
   // const response = await instance.get<string[]>('/hex/dates');
   // return response.data;
 
-  // MOCK
+  // TODO : MOCK
   return ['2025-11-17', '2025-02-12', '2024-03-08','2024-11-17', '2023-02-12', '2022-03-08','2022-11-17', '2021-02-12', '2020-03-08'];
 };
 

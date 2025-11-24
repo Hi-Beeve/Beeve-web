@@ -24,6 +24,7 @@ export const FONT_STYLES = {
   heading5: "text-[18px] leading-[130%] tracking-[-0.2px] font-bold",
   heading6: "text-[16px] leading-[130%] tracking-[-0.2px] font-bold",
   heading28: "text-[28px] leading-[130%] tracking-[-0.2px] font-bold",
+  heading32: "text-[32px] leading-[130%] tracking-[-0.2px] font-bold",
 
 } as const;
 
