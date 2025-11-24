@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
 import { KakaoLoginButton } from '@/components/kakao-login-button';
@@ -12,14 +12,27 @@ export default function LoginPage() {
   const [error, setError] = useState<string>('');
 
   // 이미 로그인된 경우 메인 페이지로 리다이렉트
-  if (isAuthenticated) {
-    router.push('/');
-    return null;
-  }
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push('/');
+    }
+  }, [isAuthenticated, router]);
 
   const handleLoginError = (errorMessage: string) => {
     setError(errorMessage);
   };
+
+  // 로그인된 상태에서는 리다이렉트 중임을 표시
+  if (isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-white">메인 페이지로 이동 중...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
