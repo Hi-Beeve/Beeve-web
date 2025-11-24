@@ -1,30 +1,23 @@
 'use client';
 
-import { useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { convertKakaoUserToUser } from '@/contexts/auth-context';
+import { useEffect, useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useAuth, convertKakaoUserToUser } from '@/contexts/auth-context';
 import { getKakaoAccessToken, getKakaoUserInfo } from '@/lib/kakao-auth';
-import { useSocialLoginCallback } from '@/hooks/useSocialLoginCallback';
 
 function KakaoCallbackContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
-  const { processSocialLogin, status, errorMessage } = useSocialLoginCallback();
+  const { login } = useAuth();
+  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
+  const [errorMessage, setErrorMessage] = useState<string>('');
 
   useEffect(() => {
     let isProcessing = false; // 중복 실행 방지
 
     const handleKakaoCallback = async () => {
       if (isProcessing) return; // 이미 처리 중이면 리턴
-      
-      // 전역 플래그로도 확인
-      const globalFlag = sessionStorage.getItem('kakao_processing');
-      if (globalFlag === 'true') {
-        console.log('다른 탭에서 이미 처리 중입니다.');
-        return;
-      }
-      
       isProcessing = true;
-      sessionStorage.setItem('kakao_processing', 'true');
       
       try {
         // URL에서 인증 코드 또는 에러 확인
@@ -37,7 +30,11 @@ function KakaoCallbackContent() {
         }
 
         if (!code) {
-          console.log('인증 코드가 없습니다.');
+          // 코드가 없으면 이미 로그인 처리가 완료된 상태일 수 있음
+          console.log('인증 코드가 없습니다. 이미 처리되었을 수 있습니다.');
+          setTimeout(() => {
+            router.push('/');
+          }, 1000);
           return;
         }
 
@@ -51,6 +48,10 @@ function KakaoCallbackContent() {
           
           if (timeDiff < oneHour) {
             console.log('이미 처리된 인증 코드입니다.');
+            setStatus('success');
+            setTimeout(() => {
+              router.push('/');
+            }, 1000);
             return;
           } else {
             // 1시간이 지났으면 정리
@@ -58,6 +59,8 @@ function KakaoCallbackContent() {
             localStorage.removeItem('kakao_processed_time');
           }
         }
+
+        setStatus('loading');
 
         // 1. 인증 코드로 액세스 토큰 요청
         const tokenResponse = await getKakaoAccessToken(code);
@@ -68,21 +71,38 @@ function KakaoCallbackContent() {
         // 3. 사용자 정보를 내부 형식으로 변환
         const user = convertKakaoUserToUser(kakaoUser, tokenResponse.access_token);
         
-        // 4. 공통 로직 처리 (새로운 훅 사용)
-        await processSocialLogin(user, code, 'kakao');
+        // 4. 로그인 처리
+        login(user);
+        
+        // 5. 처리된 코드 저장 (1시간 후 자동 삭제)
+        localStorage.setItem('kakao_processed_code', code);
+        localStorage.setItem('kakao_processed_time', Date.now().toString());
+        
+        setStatus('success');
+        
+        // 6. URL에서 코드 제거 (중복 사용 방지)
+        window.history.replaceState({}, '', '/auth/kakao/callback');
+        
+        // 7. 메인 페이지로 리다이렉트
+        setTimeout(() => {
+          router.push('/');
+        }, 2000);
 
       } catch (error) {
         console.error('카카오 로그인 콜백 처리 실패:', error);
-        // 에러 처리는 훅에서 담당
-      } finally {
-        // 처리 완료 후 플래그 정리
-        sessionStorage.removeItem('kakao_processing');
-        isProcessing = false;
+        const message = error instanceof Error ? error.message : '로그인 처리 중 오류가 발생했습니다.';
+        setErrorMessage(message);
+        setStatus('error');
+        
+        // 5초 후 메인 페이지로 리다이렉트
+        setTimeout(() => {
+          router.push('/');
+        }, 5000);
       }
     };
 
     handleKakaoCallback();
-  }, [searchParams, processSocialLogin]);
+  }, [searchParams, login, router]);
 
   return (
     <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
@@ -118,7 +138,7 @@ function KakaoCallbackContent() {
             <h2 className="text-xl font-semibold text-white mb-2">로그인 실패</h2>
             <p className="text-gray-400 mb-4">{errorMessage}</p>
             <button
-              onClick={() => window.location.href = '/'}
+              onClick={() => router.push('/')}
               className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
             >
               메인 페이지로 돌아가기

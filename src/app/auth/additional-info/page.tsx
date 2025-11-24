@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
 import { useSignUp } from '@/api/auth/useAuth';
@@ -11,7 +11,7 @@ import BottomSheet from '@/components/bottom-sheet';
 
 type FunnelStep = 'gender' | 'birthDate' | 'physicalInfo';
 
-export default function AdditionalInfoPage() {
+function AdditionalInfoContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { login } = useAuth();
@@ -139,7 +139,7 @@ export default function AdditionalInfoPage() {
     //     signUpData: signUpData
     //   });
     }
-  }, [isSuccess, signUpData, tempUser, router]);
+  }, [isSuccess, signUpData, tempUser, router, login]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -200,43 +200,33 @@ export default function AdditionalInfoPage() {
     return true;
   };
 
-  // 단계 진행 함수들
+  // 네비게이션 함수들
   const handleNext = () => {
     setError('');
     
-    switch (currentStep) {
-      case 'gender':
-        if (validateGender()) {
-          setCurrentStep('birthDate');
-        }
-        break;
-      case 'birthDate':
-        if (validateBirthDate()) {
-          setCurrentStep('physicalInfo');
-        }
-        break;
-      case 'physicalInfo':
-        if (validatePhysicalInfo()) {
-          handleFinalSubmit();
-        }
-        break;
+    if (currentStep === 'gender') {
+      if (validateGender()) {
+        setCurrentStep('birthDate');
+      }
+    } else if (currentStep === 'birthDate') {
+      if (validateBirthDate()) {
+        setCurrentStep('physicalInfo');
+      }
+    } else if (currentStep === 'physicalInfo') {
+      handleFinalSubmit();
     }
   };
 
   const handleBack = () => {
     setError('');
     
-    switch (currentStep) {
-      case 'birthDate':
-        setCurrentStep('gender');
-        break;
-      case 'physicalInfo':
-        setCurrentStep('birthDate');
-        break;
+    if (currentStep === 'birthDate') {
+      setCurrentStep('gender');
+    } else if (currentStep === 'physicalInfo') {
+      setCurrentStep('birthDate');
     }
   };
 
-  // 단계 정보
   const getStepInfo = () => {
     switch (currentStep) {
       case 'gender':
@@ -250,13 +240,11 @@ export default function AdditionalInfoPage() {
 
   const handleFinalSubmit = async () => {
     setError('');
-
     if (!tempUser) {
       setError('사용자 정보를 찾을 수 없습니다.');
       return;
     }
-
-    // 회원가입 API 호출
+    
     signUp(tempUser, formData);
   };
 
@@ -276,7 +264,7 @@ export default function AdditionalInfoPage() {
         {/* 진행 상황 표시 */}
         <div className="mb-8">
           <div className="flex justify-between items-center mb-4">
-            <span className="text-sm text-gray-400">
+            <span className="text-sm text-gray-600">
               {stepInfo.step} / {stepInfo.total}
             </span>
           </div>
@@ -300,15 +288,8 @@ export default function AdditionalInfoPage() {
 
         {/* 에러 메시지 */}
         {(error || signUpError) && (
-          <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 mb-6">
-            <div className="flex items-center gap-2">
-              <svg className="w-5 h-5 text-red-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <p className="text-red-400 text-sm">
-                {error || (signUpError instanceof Error ? signUpError.message : '회원가입 중 오류가 발생했습니다.')}
-              </p>
-            </div>
+          <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+            {error || signUpError?.message || '오류가 발생했습니다.'}
           </div>
         )}
 
@@ -318,26 +299,25 @@ export default function AdditionalInfoPage() {
           {currentStep === 'gender' && (
             <div className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
-                {
-                    ['male', 'female'].map((gender) => (
-                        <button
-                            type="button"
-                            onClick={() => {
-                                setFormData(prev => ({ ...prev, gender }));
-                                setError('');
-                            }}
-                            className={`px-3 h-14 rounded-[20px] transition-all duration-200 ${
-                                formData.gender === gender
-                                    ? 'bg-black text-white'
-                                    : 'bg-[#F5F5F5] text-[#767676] hover:border-gray-500'
-                            }`}
-                        >
-                            <div className="text-center">
-                                <div className="font-medium">{gender === 'male' ? '남성' : '여성'}</div>
-                            </div>
-                        </button>
-                    ))
-                }
+                {['male', 'female'].map((gender) => (
+                  <button
+                    key={gender}
+                    type="button"
+                    onClick={() => {
+                      setFormData(prev => ({ ...prev, gender }));
+                      setError('');
+                    }}
+                    className={`px-3 h-14 rounded-[20px] transition-all duration-200 ${
+                      formData.gender === gender
+                        ? 'bg-black text-white'
+                        : 'bg-[#F5F5F5] text-[#767676] hover:border-gray-500'
+                    }`}
+                  >
+                    <div className="text-center">
+                      <div className="font-medium">{gender === 'male' ? '남성' : '여성'}</div>
+                    </div>
+                  </button>
+                ))}
               </div>
             </div>
           )}
@@ -398,92 +378,104 @@ export default function AdditionalInfoPage() {
               </div>
             </div>
           )}
-
         </div>
-          {/* 네비게이션 버튼들 */}
-          <div className="flex gap-4 fixed bottom-4 left-5 right-5 h-[56px]">
-            {currentStep !== 'gender' && (
-              <button
-                type="button"
-                onClick={handleBack}
-                className="flex-1 px-4 py-3 bg-[#F5F5F5] text-[#767676] font-medium rounded-[20px] transition-colors duration-200"
-              >
-                이전
-              </button>
-            )}
+        
+        {/* 네비게이션 버튼들 */}
+        <div className="flex gap-4 fixed bottom-4 left-5 right-5 h-[56px]">
+          {currentStep !== 'gender' && (
             <button
               type="button"
-              onClick={handleNext}
-              disabled={isLoading}
-              className="flex-1 px-4 py-3 bg-[#BDB2DD] text-white font-medium rounded-[20px] transition-colors duration-200 disabled:cursor-not-allowed"
+              onClick={handleBack}
+              className="flex-1 px-4 py-3 bg-[#F5F5F5] text-[#767676] font-medium rounded-[20px] transition-colors duration-200"
             >
-              {isLoading ? (
-                <div className="flex items-center justify-center gap-2">
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span>처리 중...</span>
-                </div>
-              ) : currentStep === 'physicalInfo' ? (
-                '가입 완료'
-              ) : (
-                '다음'
-              )}
+              이전
             </button>
-          </div>
-      </div>
-
-      {/* 날짜 선택 Bottom Sheet */}
-      <BottomSheet
-        isOpen={isDatePickerOpen}
-        onClose={() => setIsDatePickerOpen(false)}
-        title="생년월일 선택"
-      >
-        <div className="pb-4">
-          <div className="h-[280px] mb-6">
-            <Picker
-              height={280}
-              itemHeight={40}
-              value={datePickerValue}
-              onChange={handleDateChange}
-            >
-              <Picker.Column name="year">
-                {getDateRanges().years.map(year => (
-                  <Picker.Item key={year} value={year}>
-                    <div className="text-center font-medium text-gray-700">
-                      {year}년
-                    </div>
-                  </Picker.Item>
-                ))}
-              </Picker.Column>
-              <Picker.Column name="month">
-                {getDateRanges().months.map(month => (
-                  <Picker.Item key={month} value={month}>
-                    <div className="text-center font-medium text-gray-700">
-                      {month}월
-                    </div>
-                  </Picker.Item>
-                ))}
-              </Picker.Column>
-              <Picker.Column name="day">
-                {getDateRanges().days.map(day => (
-                  <Picker.Item key={day} value={day}>
-                    <div className="text-center font-medium text-gray-700">
-                      {day}일
-                    </div>
-                  </Picker.Item>
-                ))}
-              </Picker.Column>
-            </Picker>
-          </div>
-          
-          {/* 확인 버튼 */}
+          )}
           <button
-            onClick={handleDateConfirm}
-            className="w-full px-4 py-3 bg-[#BDB2DD] text-white font-medium rounded-[20px] transition-colors duration-200"
+            type="button"
+            onClick={handleNext}
+            disabled={isLoading}
+            className="flex-1 px-4 py-3 bg-[#BDB2DD] text-white font-medium rounded-[20px] transition-colors duration-200 disabled:cursor-not-allowed"
           >
-            확인
+            {isLoading ? (
+              <div className="flex items-center justify-center gap-2">
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span>처리 중...</span>
+              </div>
+            ) : currentStep === 'physicalInfo' ? (
+              '가입 완료'
+            ) : (
+              '다음'
+            )}
           </button>
         </div>
-      </BottomSheet>
+
+        {/* 날짜 선택 Bottom Sheet */}
+        <BottomSheet
+          isOpen={isDatePickerOpen}
+          onClose={() => setIsDatePickerOpen(false)}
+          title="생년월일 선택"
+        >
+          <div className="pb-4">
+            <div className="h-[280px] mb-6">
+              <Picker
+                height={280}
+                itemHeight={40}
+                value={datePickerValue}
+                onChange={handleDateChange}
+              >
+                <Picker.Column name="year">
+                  {getDateRanges().years.map(year => (
+                    <Picker.Item key={year} value={year}>
+                      <div className="text-center font-medium text-gray-700">
+                        {year}년
+                      </div>
+                    </Picker.Item>
+                  ))}
+                </Picker.Column>
+                <Picker.Column name="month">
+                  {getDateRanges().months.map(month => (
+                    <Picker.Item key={month} value={month}>
+                      <div className="text-center font-medium text-gray-700">
+                        {month}월
+                      </div>
+                    </Picker.Item>
+                  ))}
+                </Picker.Column>
+                <Picker.Column name="day">
+                  {getDateRanges().days.map(day => (
+                    <Picker.Item key={day} value={day}>
+                      <div className="text-center font-medium text-gray-700">
+                        {day}일
+                      </div>
+                    </Picker.Item>
+                  ))}
+                </Picker.Column>
+              </Picker>
+            </div>
+            
+            {/* 확인 버튼 */}
+            <button
+              onClick={handleDateConfirm}
+              className="w-full px-4 py-3 bg-[#BDB2DD] text-white font-medium rounded-[20px] transition-colors duration-200"
+            >
+              확인
+            </button>
+          </div>
+        </BottomSheet>
+      </div>
     </div>
+  );
+}
+
+export default function AdditionalInfoPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-gray-400">로딩 중...</div>
+      </div>
+    }>
+      <AdditionalInfoContent />
+    </Suspense>
   );
 }

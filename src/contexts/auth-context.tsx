@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import Cookies from 'js-cookie';
 import { KakaoUser } from '@/lib/kakao-auth';
 import { GoogleUser } from '@/lib/google-auth';
@@ -31,24 +31,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // 쿠키와 로컬 스토리지에서 사용자 정보 복원
+  // 쿠키에서 사용자 정보 복원
   useEffect(() => {
     try {
-      // 먼저 쿠키에서 시도
-      let savedUser = Cookies.get(AUTH_COOKIE_KEY);
-      let savedToken = Cookies.get(TOKEN_COOKIE_KEY);
-      
-      // 쿠키에 없으면 로컬 스토리지에서 시도
-      if (!savedUser || !savedToken) {
-        const localUser = localStorage.getItem('beeve_user_info');
-        const localToken = localStorage.getItem('beeve_access_token');
-        
-        if (localUser && localToken) {
-          savedUser = localUser;
-          savedToken = localToken;
-          console.log('로컬 스토리지에서 사용자 정보를 복원했습니다.');
-        }
-      }
+      const savedUser = Cookies.get(AUTH_COOKIE_KEY);
+      const savedToken = Cookies.get(TOKEN_COOKIE_KEY);
       
       if (savedUser && savedToken) {
         const parsedUser = JSON.parse(savedUser);
@@ -56,17 +43,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     } catch (error) {
       console.error('사용자 정보 복원 실패:', error);
-      // 손상된 데이터 제거
+      // 손상된 쿠키 제거
       Cookies.remove(AUTH_COOKIE_KEY);
       Cookies.remove(TOKEN_COOKIE_KEY);
-      localStorage.removeItem('beeve_user_info');
-      localStorage.removeItem('beeve_access_token');
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  const login = useCallback((userData: User) => {
+  const login = (userData: User) => {
     setUser(userData);
     
     // 토큰과 사용자 정보를 분리하여 저장
@@ -84,31 +69,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict'
     });
+  };
 
-    // 로컬 스토리지에도 회원 정보 저장
-    try {
-      localStorage.setItem('beeve_user_info', JSON.stringify(userWithoutToken));
-      localStorage.setItem('beeve_access_token', accessToken);
-      console.log('회원 정보가 로컬 스토리지에 저장되었습니다:', userWithoutToken);
-    } catch (error) {
-      console.error('로컬 스토리지 저장 실패:', error);
-    }
-  }, []); // 의존성 없음 - 함수가 변경되지 않음
-
-  const logout = useCallback(() => {
+  const logout = () => {
     setUser(null);
     Cookies.remove(AUTH_COOKIE_KEY);
     Cookies.remove(TOKEN_COOKIE_KEY);
-    
-    // 로컬 스토리지도 정리
-    try {
-      localStorage.removeItem('beeve_user_info');
-      localStorage.removeItem('beeve_access_token');
-      console.log('로컬 스토리지가 정리되었습니다.');
-    } catch (error) {
-      console.error('로컬 스토리지 정리 실패:', error);
-    }
-  }, []); // 의존성 없음 - 함수가 변경되지 않음
+  };
 
   const value: AuthContextType = {
     user,

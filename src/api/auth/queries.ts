@@ -1,5 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
-import { useRefreshTokenApi, useSignUpApi, useSocialAuthApi } from "./auth.api";
+import { socialAuthApi, signUpApi, refreshTokenApi } from "./auth.api";
 import { AuthLoginRequest, AuthSignUpRequest } from "@/types/auth";
 
 export const authQueryKeys = {
@@ -11,23 +11,25 @@ export const authQueryKeys = {
 export const useLoginQuery = () => {
     return useMutation({
         mutationKey: authQueryKeys.login(),
-        mutationFn: (params: AuthLoginRequest) => useSocialAuthApi(params),
+        mutationFn: (params: AuthLoginRequest) => socialAuthApi(params),
     });
 };
 
 export const useSignUpQuery = () => {
     return useMutation({
         mutationKey: authQueryKeys.signUp(),
-        mutationFn: (params: AuthSignUpRequest) => useSignUpApi(params),
+        mutationFn: (params: AuthSignUpRequest) => signUpApi(params),
     });
 };
 
 export const useRefreshTokenQuery = () => {
     return useMutation({
         mutationKey: authQueryKeys.refresh(),
-        mutationFn: (params: {refreshToken: string}) => useRefreshTokenApi(params),
+        mutationFn: (params: {refreshToken: string}) => refreshTokenApi(params),
     });
 };
+
+
 
 
 
