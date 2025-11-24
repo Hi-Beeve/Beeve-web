@@ -1,7 +1,7 @@
 "use client"
 
 import { useMypage } from '@/api/mypage/useMypage';
-import { AppInfoCard, ProfileCard } from '@/components/mypage/ProfileCard';
+import { AppInfoCard, MemberLogout, ProfileCard } from '@/components/mypage/ProfileCard';
 import { FONT_STYLES } from '@/styles/fontStyles';
 import Image from 'next/image'
 
@@ -18,6 +18,7 @@ const Mypage = () => {
             </div>
             {data && <ProfileCard data={data} />}
             <AppInfoCard />
+            <MemberLogout />
         </div>
     )
 }

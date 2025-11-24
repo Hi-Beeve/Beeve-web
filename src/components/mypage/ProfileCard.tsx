@@ -75,6 +75,21 @@ export const AppInfoCard = () => {
     )
 }
 
+export const MemberLogout = () => {
+    const onClickLogout = () => {
+        // TODO : 로그아웃
+    }
+    const onClickWithdrawal = () => {
+        // TODO : 회원탈퇴
+    }
+    return(
+        <div className="flex w-full justify-center gap-4 text-[#767676] gap-4 text-[11px]">
+         <div onClick={onClickLogout}>로그아웃</div>
+         <div className="w-[1px] h-[14px] bg-[#767676]"></div>
+        <div onClick={onClickWithdrawal}>회원탈퇴</div>
+        </div>
+    )
+}
 export const BMI = ({bmi}: {bmi: string}) => {
     const bmiValue = parseFloat(bmi);
     
