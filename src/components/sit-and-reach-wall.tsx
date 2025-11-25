@@ -102,9 +102,9 @@ export function SitAndReachWall() {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { 
           facingMode: 'user', 
-          width: 720, 
-          height: 1280, // 16:9 세로 비율
-          aspectRatio: 9/16 
+          width: 480, 
+          height: 640, // 3:4 세로 비율
+          aspectRatio: 3/4 
         },
         audio: false,
       });
@@ -388,7 +388,7 @@ export function SitAndReachWall() {
     };
 
     // 코에서 발뒤꿈치까지의 픽셀 거리 (전신 높이)
-    const bodyHeightInPixels = Math.abs(nose.y - heelMidpoint.y) * 1280; // 세로 해상도 기준
+    const bodyHeightInPixels = Math.abs(nose.y - heelMidpoint.y) * 640; // 3:4 세로 해상도 기준
     
     if (bodyHeightInPixels > 200) { // 최소 200픽셀 이상일 때만 캘리브레이션
       // 실제 키와 픽셀 거리의 비율 계산
@@ -447,10 +447,15 @@ export function SitAndReachWall() {
   }, [voiceGuidanceTimer]);
 
   useEffect(() => {
-    // 모바일에서 MediaPipe 초기화
+    // 페이지 로드 시 자동으로 카메라 시작 및 측정 시작
     const initializeOnMount = async () => {
       if (typeof window !== 'undefined') {
         await initializePoseLandmarker();
+        // 자동으로 카메라 시작
+        setIsActive(true);
+        await startCamera();
+        // 자동으로 측정 시작
+        startMeasurement();
       }
     };
     
@@ -539,16 +544,6 @@ export function SitAndReachWall() {
                       </div>
                     </div>
 
-                    <div className="text-center">
-                      <button
-                        onClick={() => {
-                          startMeasurement();
-                        }}
-                        className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 font-semibold"
-                      >
-                        🎯 키 기반 측정 시작
-                      </button>
-                    </div>
                   </div>
                 </div>
               )}
