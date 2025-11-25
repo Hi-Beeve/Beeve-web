@@ -569,67 +569,6 @@ export function SitAndReachWall() {
           state={phase}
           additionalInfo={
             <>
-              {/* Phase indicator */}
-              {/* <div className="bg-gray-800 p-4 rounded-lg mb-4">
-                <div className="font-semibold text-white mb-2">📊 측정 단계</div>
-                <div className="flex gap-2 text-sm flex-wrap">
-                  {Object.values(MeasurementPhase).map((p) => (
-                    <span
-                      key={p}
-                      className={`px-2 py-1 rounded ${
-                        phase === p ? 'bg-blue-500 text-white' : 'bg-gray-600 text-gray-300'
-                      }`}
-                    >
-                      {p}
-                    </span>
-                  ))}
-                </div>
-              </div> */}
-
-              {/* Height Input */}
-              {/* {phase === MeasurementPhase.SETUP && (
-                <div className="bg-gray-800 p-4 rounded-lg mb-4">
-                  <div className="font-semibold text-white mb-2">� 키 설정</div>
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm text-gray-300 mb-2">
-                        본인의 키를 입력하세요 (cm):
-                      </label>
-                      <input
-                        type="number"
-                        min="140"
-                        max="220"
-                        step="0.1"
-                        value={userHeight}
-                        onChange={(e) => setUserHeight(Number(e.target.value))}
-                        className="w-24 px-3 py-2 bg-gray-700 text-white rounded text-center text-lg"
-                      />
-                      <span className="ml-2 text-gray-400">cm</span>
-                    </div>
-                    
-                    <div className="bg-blue-900 p-3 rounded text-xs">
-                      <div className="text-blue-200 font-bold mb-1">� 측정 방법:</div>
-                      <div className="text-blue-300">
-                        • 세로로 긴 화면 비율 (16:9)<br/>
-                        • 전신 측정 → 음성 안내 → 앉아서 측정<br/>
-                        • 키 기반 자동 스케일링
-                      </div>
-                    </div>
-
-                    <div className="bg-gray-700 p-3 rounded text-xs">
-                      <div className="text-gray-300 mb-1">참고 사이즈:</div>
-                      <div className="grid grid-cols-2 gap-2 text-gray-400">
-                        <div>• 230mm → 23cm</div>
-                        <div>• 240mm → 24cm</div>
-                        <div>• 250mm → 25cm</div>
-                        <div>• 260mm → 26cm</div>
-                      </div>
-                    </div>
-
-                  </div>
-                </div>
-              )} */}
-
               {/* Height Calibration Status */}
               {phase === MeasurementPhase.HEIGHT_CALIBRATION && (
                 <div className="bg-gray-800 p-4 rounded-lg mb-4">
@@ -655,29 +594,6 @@ export function SitAndReachWall() {
                 </div>
               )}
 
-              {/* Measurement data */}
-              {/* {measurement && (
-                <div className="bg-gray-800 p-4 rounded-lg mb-4">
-                  <div className="font-semibold text-white mb-2">📏 측정 데이터</div>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">거리:</span>
-                      <span className="text-green-400 font-bold">{measurement.distanceInCm.toFixed(1)}cm</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">유지 시간:</span>
-                      <span className="text-yellow-400 font-bold">{currentHoldTime.toFixed(1)}s</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">올바른 자세:</span>
-                      <span className={`font-bold ${measurement.isValidPosture ? 'text-green-400' : 'text-red-400'}`}>
-                        {measurement.isValidPosture ? 'Yes' : 'No'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              )} */}
-
               {/* Results */}
               {measurement && phase === MeasurementPhase.RESULT && (
                 <div className="bg-green-800 p-4 rounded-lg mb-4">
@@ -690,18 +606,6 @@ export function SitAndReachWall() {
               )}
             </>
           }
-          instructions={
-            <div className="bg-gray-800 p-4 rounded-lg">
-              <div className="font-semibold text-white mb-2">💡 사용 방법:</div>
-              <ul className="list-disc list-inside space-y-1 text-sm text-gray-400">
-                <li><strong className="text-white">벽을 향해</strong> 앉아서 다리를 펴세요</li>
-                <li><strong className="text-white">손끝이 벽에 닿도록</strong> 몸을 기울이세요</li>
-                <li><strong className="text-white">3초간</strong> 자세를 유지하세요</li>
-                <li>무릎이 구부러지지 않도록 주의하세요</li>
-                <li>양손이 함께 움직이도록 하세요</li>
-              </ul>
-            </div>
-          }
           onStartCamera={startCamera}
           onStartMeasurement={() => {
             if (phase === MeasurementPhase.SETUP) {
@@ -711,8 +615,6 @@ export function SitAndReachWall() {
           onStopMeasurement={resetMeasurement}
           onReset={resetMeasurement}
           onVideoClick={() => {}}
-          countLabel="거리 (cm)"
-          timeLabel="유지 시간"
         />
       )}
     </div>
