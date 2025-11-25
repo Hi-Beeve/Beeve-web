@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { PoseLandmarker, FilesetResolver } from '@mediapipe/tasks-vision';
 import { MeasurementUI } from './measurement-ui';
 
@@ -94,7 +94,7 @@ export function SitAndReachWall() {
     }
   };
 
-  const startCamera = async () => {
+  const startCamera = useCallback(async () => {
     try {
       if (typeof window === 'undefined') return;
 
@@ -205,7 +205,7 @@ export function SitAndReachWall() {
       console.error('Failed to start camera:', err);
       setError(`Failed to access camera: ${err instanceof Error ? err.message : 'Unknown error'}`);
     }
-  };
+  }, [setError]);
 
   const stopCamera = () => {
     if (cleanupDetectionRef.current) {
@@ -578,7 +578,7 @@ export function SitAndReachWall() {
         poseLandmarkerRef.current.close();
       }
     };
-  }, [startCamera]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="flex flex-col h-screen bg-gray-900 text-white">
