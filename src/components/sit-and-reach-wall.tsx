@@ -461,7 +461,20 @@ export function SitAndReachWall() {
     const leftHeel = landmarks[POSE_LANDMARKS.LEFT_HEEL];
     const rightHeel = landmarks[POSE_LANDMARKS.RIGHT_HEEL];
 
-    if (!nose || !leftHeel || !rightHeel) return false;
+    // 디버깅: 랜드마크 감지 상태 확인
+    console.log('Calibration Debug:', {
+      nose: nose ? 'detected' : 'missing',
+      leftHeel: leftHeel ? 'detected' : 'missing',
+      rightHeel: rightHeel ? 'detected' : 'missing',
+      noseY: nose?.y,
+      leftHeelY: leftHeel?.y,
+      rightHeelY: rightHeel?.y
+    });
+
+    if (!nose || !leftHeel || !rightHeel) {
+      setFeedback('전신이 보이도록 서주세요 (코와 발뒤꿈치가 모두 보여야 함)');
+      return false;
+    }
 
     // 발뒤꿈치 중점
     const heelMidpoint = {
@@ -470,15 +483,28 @@ export function SitAndReachWall() {
     };
 
     // 코에서 발뒤꿈치까지의 픽셀 거리 (전신 높이)
-    const bodyHeightInPixels = Math.abs(nose.y - heelMidpoint.y) * 640; // 3:4 세로 해상도 기준
+    // 실제 비디오 해상도 사용
+    const videoHeight = videoRef.current?.videoHeight || 640;
+    const bodyHeightInPixels = Math.abs(nose.y - heelMidpoint.y) * videoHeight;
     
-    if (bodyHeightInPixels > 200) { // 최소 200픽셀 이상일 때만 캘리브레이션
+    console.log('Height calculation:', {
+      noseY: nose.y,
+      heelMidpointY: heelMidpoint.y,
+      bodyHeightInPixels: bodyHeightInPixels,
+      userHeight: userHeight,
+      videoHeight: videoHeight,
+      threshold: 100
+    });
+    
+    if (bodyHeightInPixels > 100) { // 최소 100픽셀 이상일 때만 캘리브레이션 (임계값 낮춤)
       // 실제 키와 픽셀 거리의 비율 계산
       const newPixelToRealRatio = userHeight / bodyHeightInPixels;
       setPixelToRealRatio(newPixelToRealRatio);
       setIsHeightCalibrated(true);
       setFeedback(`키 기반 캘리브레이션 완료! (${bodyHeightInPixels.toFixed(0)}픽셀 = ${userHeight}cm)`);
       return true;
+    } else {
+      setFeedback(`전신을 더 가깝게 보여주세요 (현재: ${bodyHeightInPixels.toFixed(0)}픽셀, 필요: 100픽셀 이상)`);
     }
     
     return false;
