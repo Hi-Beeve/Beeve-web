@@ -480,10 +480,10 @@ export function SitAndReachWall() {
     const videoHeight = videoRef.current?.videoHeight || 640;
     const shoulderToFootPixels = Math.abs(shoulderMidpoint.y - footMidpoint.y) * videoHeight;
     
-    // 인체공학적 비율: 어깨 높이는 전체 키의 약 83%
-    // 따라서 어깨→발 거리 = 전체 키의 83%
-    // 실제 키 = (어깨-발 거리) / 0.83
-    const estimatedBodyHeightFromShoulder = shoulderToFootPixels / 0.83;
+    // 인체공학적 비율: 어깨 높이는 전체 키의 약 81%
+    // 따라서 어깨→발 거리 = 전체 키의 81%
+    // 실제 키 = (어깨-발 거리) / 0.81
+    const estimatedBodyHeightFromShoulder = shoulderToFootPixels / 0.81;
     
     // 최종 사용할 픽셀 거리
     const bodyHeightInPixels = estimatedBodyHeightFromShoulder;
@@ -596,6 +596,8 @@ export function SitAndReachWall() {
           isFullBodyDetected={true}
           feedback={feedback}
           state={phase}
+          showCount={false}
+          showTimer={false}
           additionalInfo={
             <>
               {/* Height Calibration Status */}

@@ -40,6 +40,10 @@ interface MeasurementUIProps {
   // 커스텀 레이블
   countLabel?: string;
   timeLabel?: string;
+  
+  // 표시 옵션
+  showCount?: boolean;
+  showTimer?: boolean;
 }
 
 export function MeasurementUI({
@@ -60,6 +64,8 @@ export function MeasurementUI({
   onVideoClick,
   countLabel = '개수',
   timeLabel = '남은 시간',
+  showCount = true,
+  showTimer = true,
 }: MeasurementUIProps) {
   // 타이머 포맷 (MM:SS)
   const formatTime = (seconds: number) => {
@@ -117,19 +123,25 @@ export function MeasurementUI({
           </div>
 
           {/* 카운트 & 남은 시간 */}
-          <div className="grid grid-cols-2 gap-4 mb-4">
-            <div className="bg-gray-800 p-6 rounded-lg text-center">
-              <div className="text-5xl font-bold text-blue-400">{count}</div>
-              <div className="text-lg text-gray-300 mt-2">{countLabel}</div>
+          {(showCount || showTimer) && (
+            <div className={`grid gap-4 mb-4 ${showCount && showTimer ? 'grid-cols-2' : 'grid-cols-1'}`}>
+              {showCount && (
+                <div className="bg-gray-800 p-6 rounded-lg text-center">
+                  <div className="text-5xl font-bold text-blue-400">{count}</div>
+                  <div className="text-lg text-gray-300 mt-2">{countLabel}</div>
+                </div>
+              )}
+              
+              {showTimer && (
+                <div className="bg-gray-800 p-6 rounded-lg text-center">
+                  <div className="text-5xl font-bold text-green-400">
+                    {formatTime(remainingTime)}
+                  </div>
+                  <div className="text-lg text-gray-300 mt-2">{timeLabel}</div>
+                </div>
+              )}
             </div>
-            
-            <div className="bg-gray-800 p-6 rounded-lg text-center">
-              <div className="text-5xl font-bold text-green-400">
-                {formatTime(remainingTime)}
-              </div>
-              <div className="text-lg text-gray-300 mt-2">{timeLabel}</div>
-            </div>
-          </div>
+          )}
 
           {/* 추가 정보 (각도 등) */}
           {additionalInfo}
