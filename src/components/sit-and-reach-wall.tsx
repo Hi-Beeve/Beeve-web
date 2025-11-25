@@ -44,13 +44,13 @@ const POSE_LANDMARKS = {
 export function SitAndReachWall() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [, setError] = useState<string | null>(null);
   const [isActive, setIsActive] = useState(false);
   const [phase, setPhase] = useState<MeasurementPhase>(MeasurementPhase.SETUP);
   const [measurement, setMeasurement] = useState<WallMeasurement | null>(null);
   const [pixelToRealRatio, setPixelToRealRatio] = useState<number>(0.1); // 기본값: 1픽셀 = 0.1cm
   const [wallPosition, setWallPosition] = useState<number>(100); // 화면에서 벽의 x 좌표
-  const [userHeight, setUserHeight] = useState<number>(170); // 사용자 키 (cm) - 기본값 또는 프로필에서 가져옴
+  const [userHeight] = useState<number>(170); // 사용자 키 (cm) - 기본값 또는 프로필에서 가져옴
   const [isHeightCalibrated, setIsHeightCalibrated] = useState<boolean>(false);
   const [voiceGuidanceTimer, setVoiceGuidanceTimer] = useState<number>(0);
   const [isUserSitting, setIsUserSitting] = useState<boolean>(false);
@@ -112,25 +112,6 @@ export function SitAndReachWall() {
         }
       }
 
-      // 모바일에서 세로 모드 카메라 스트림 요청
-      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      
-      const constraints = {
-        video: isMobile ? {
-          facingMode: 'user',
-          // 모바일에서는 해상도를 명시적으로 세로로 요청
-          width: { exact: 480 },
-          height: { exact: 640 },
-          frameRate: { ideal: 30 }
-        } : {
-          facingMode: 'user',
-          width: { ideal: 480, min: 320, max: 640 },
-          height: { ideal: 640, min: 480, max: 960 },
-          aspectRatio: { ideal: 0.75 },
-          frameRate: { ideal: 30, max: 60 }
-        },
-        audio: false,
-      };
 
       // 여러 해상도 시도
       let stream;
@@ -422,24 +403,6 @@ export function SitAndReachWall() {
     };
   };
 
-  const toggleCamera = async () => {
-    if (!isActive) {
-      setIsActive(true);
-      
-      if (!poseLandmarkerRef.current) {
-        const initialized = await initializePoseLandmarker();
-        if (!initialized) {
-          setIsActive(false);
-          return;
-        }
-      }
-      
-      await startCamera();
-    } else {
-      setIsActive(false);
-      stopCamera();
-    }
-  };
 
   const startMeasurement = () => {
     setPhase(MeasurementPhase.HEIGHT_CALIBRATION);
@@ -494,8 +457,8 @@ export function SitAndReachWall() {
     }
 
     // 발뒤꿈치 우선, 없으면 발목 사용
-    let footLeft = leftHeel || leftAnkle;
-    let footRight = rightHeel || rightAnkle;
+    const footLeft = leftHeel || leftAnkle;
+    const footRight = rightHeel || rightAnkle;
 
     if (!shoulderMidpoint || (!footLeft && !footRight)) {
       setFeedback('전신이 보이도록 서주세요 (어깨와 발이 모두 보여야 함)');
@@ -615,7 +578,7 @@ export function SitAndReachWall() {
         poseLandmarkerRef.current.close();
       }
     };
-  }, []);
+  }, [startCamera]);
 
   return (
     <div className="flex flex-col h-screen bg-gray-900 text-white">
