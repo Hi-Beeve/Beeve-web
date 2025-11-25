@@ -570,7 +570,7 @@ export function SitAndReachWall() {
           additionalInfo={
             <>
               {/* Phase indicator */}
-              <div className="bg-gray-800 p-4 rounded-lg mb-4">
+              {/* <div className="bg-gray-800 p-4 rounded-lg mb-4">
                 <div className="font-semibold text-white mb-2">📊 측정 단계</div>
                 <div className="flex gap-2 text-sm flex-wrap">
                   {Object.values(MeasurementPhase).map((p) => (
@@ -584,10 +584,10 @@ export function SitAndReachWall() {
                     </span>
                   ))}
                 </div>
-              </div>
+              </div> */}
 
               {/* Height Input */}
-              {phase === MeasurementPhase.SETUP && (
+              {/* {phase === MeasurementPhase.SETUP && (
                 <div className="bg-gray-800 p-4 rounded-lg mb-4">
                   <div className="font-semibold text-white mb-2">� 키 설정</div>
                   <div className="space-y-4">
@@ -628,7 +628,7 @@ export function SitAndReachWall() {
 
                   </div>
                 </div>
-              )}
+              )} */}
 
               {/* Height Calibration Status */}
               {phase === MeasurementPhase.HEIGHT_CALIBRATION && (
@@ -656,7 +656,7 @@ export function SitAndReachWall() {
               )}
 
               {/* Measurement data */}
-              {measurement && (
+              {/* {measurement && (
                 <div className="bg-gray-800 p-4 rounded-lg mb-4">
                   <div className="font-semibold text-white mb-2">📏 측정 데이터</div>
                   <div className="space-y-2">
@@ -676,7 +676,7 @@ export function SitAndReachWall() {
                     </div>
                   </div>
                 </div>
-              )}
+              )} */}
 
               {/* Results */}
               {measurement && phase === MeasurementPhase.RESULT && (
