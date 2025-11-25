@@ -80,7 +80,7 @@ export function MeasurementUI({
               className={`block w-full h-auto ${onVideoClick ? 'cursor-pointer' : ''}`}
               style={{ 
                 transform: 'scaleX(-1)',
-                aspectRatio: '4/3',
+                aspectRatio: '3/4',
                 maxHeight: '70vh'
               }}
               playsInline
