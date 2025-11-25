@@ -108,19 +108,71 @@ export function SitAndReachWall() {
         }
       }
 
-      // 세로 모드 카메라 스트림 요청
+      // 모바일에서 세로 모드 카메라 스트림 요청
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      
       const constraints = {
-        video: { 
+        video: isMobile ? {
+          facingMode: 'user',
+          // 모바일에서는 해상도를 명시적으로 세로로 요청
+          width: { exact: 480 },
+          height: { exact: 640 },
+          frameRate: { ideal: 30 }
+        } : {
           facingMode: 'user',
           width: { ideal: 480, min: 320, max: 640 },
           height: { ideal: 640, min: 480, max: 960 },
-          aspectRatio: { ideal: 0.75 }, // 3:4 비율 (0.75)
+          aspectRatio: { ideal: 0.75 },
           frameRate: { ideal: 30, max: 60 }
         },
         audio: false,
       };
 
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      // 여러 해상도 시도
+      let stream;
+      const portraitConfigs = [
+        // 첫 번째 시도: 정확한 세로 해상도
+        {
+          video: {
+            facingMode: 'user',
+            width: { exact: 480 },
+            height: { exact: 640 }
+          },
+          audio: false
+        },
+        // 두 번째 시도: 이상적인 세로 해상도
+        {
+          video: {
+            facingMode: 'user',
+            width: { ideal: 480 },
+            height: { ideal: 640 },
+            aspectRatio: { ideal: 0.75 }
+          },
+          audio: false
+        },
+        // 세 번째 시도: 기본 설정
+        {
+          video: {
+            facingMode: 'user'
+          },
+          audio: false
+        }
+      ];
+
+      for (const config of portraitConfigs) {
+        try {
+          stream = await navigator.mediaDevices.getUserMedia(config);
+          console.log('Camera started with config:', config);
+          break;
+        } catch (err) {
+          console.log('Failed with config:', config, err);
+          continue;
+        }
+      }
+
+      if (!stream) {
+        throw new Error('Could not start camera with any configuration');
+      }
 
       if (videoRef.current) {
         videoRef.current.srcObject = stream;

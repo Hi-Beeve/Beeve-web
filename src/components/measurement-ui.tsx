@@ -82,14 +82,6 @@ export function MeasurementUI({
                 transform: 'scaleX(-1)',
                 objectFit: 'cover'
               }}
-              onLoadedMetadata={(e) => {
-                const video = e.currentTarget;
-                // 가로가 세로보다 크면 (가로 모드 스트림) 90도 회전
-                if (video.videoWidth > video.videoHeight) {
-                  video.style.transform = 'scaleX(-1) rotate(90deg)';
-                  console.log('Rotating video 90 degrees for portrait mode');
-                }
-              }}
               playsInline
               autoPlay
               muted
