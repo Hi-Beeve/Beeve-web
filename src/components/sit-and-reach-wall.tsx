@@ -16,9 +16,10 @@ interface WallMeasurement {
 
 enum MeasurementPhase {
   SETUP = 'setup',
-  CALIBRATION = 'calibration',
-  POSITIONING = 'positioning',
-  MEASURING = 'measuring',
+  HEIGHT_CALIBRATION = 'height_calibration', // 키 기반 캘리브레이션
+  STANDING_MEASUREMENT = 'standing_measurement', // 서서 전신 측정
+  VOICE_GUIDANCE = 'voice_guidance', // 음성 안내
+  SITTING_MEASUREMENT = 'sitting_measurement', // 앉아서 측정
   RESULT = 'result'
 }
 
@@ -30,7 +31,10 @@ const POSE_LANDMARKS = {
   LEFT_KNEE: 25,
   RIGHT_KNEE: 26,
   LEFT_HIP: 23,
-  RIGHT_HIP: 24
+  RIGHT_HIP: 24,
+  NOSE: 0,
+  LEFT_SHOULDER: 11,
+  RIGHT_SHOULDER: 12
 };
 
 export function SitAndReachWall() {
@@ -42,8 +46,11 @@ export function SitAndReachWall() {
   const [measurement, setMeasurement] = useState<WallMeasurement | null>(null);
   const [pixelToRealRatio, setPixelToRealRatio] = useState<number>(0.1); // 기본값: 1픽셀 = 0.1cm
   const [wallPosition, setWallPosition] = useState<number>(100); // 화면에서 벽의 x 좌표
-  const [userFootSize, setUserFootSize] = useState<number>(25); // 사용자 발 크기 (cm)
-  const [isFootCalibrated, setIsFootCalibrated] = useState<boolean>(false);
+  const [userHeight, setUserHeight] = useState<number>(170); // 사용자 키 (cm) - 기본값 또는 프로필에서 가져옴
+  const [isHeightCalibrated, setIsHeightCalibrated] = useState<boolean>(false);
+  const [voiceGuidanceTimer, setVoiceGuidanceTimer] = useState<number>(0);
+  const [isUserSitting, setIsUserSitting] = useState<boolean>(false);
+  
   const [holdStartTime, setHoldStartTime] = useState<number | null>(null);
   const [currentHoldTime, setCurrentHoldTime] = useState<number>(0);
   const [feedback, setFeedback] = useState<string>('측정 시작 버튼을 눌러주세요');
@@ -93,7 +100,12 @@ export function SitAndReachWall() {
       }
 
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: 640, height: 480 },
+        video: { 
+          facingMode: 'user', 
+          width: 720, 
+          height: 1280, // 16:9 세로 비율
+          aspectRatio: 9/16 
+        },
         audio: false,
       });
 
@@ -107,8 +119,20 @@ export function SitAndReachWall() {
         });
         
         await videoRef.current.play();
+        
+        // MediaPipe 초기화 확인
+        if (!poseLandmarkerRef.current) {
+          console.log('MediaPipe 초기화 대기 중...');
+          await initializePoseLandmarker();
+        }
+        
         const cleanup = detectPose();
         cleanupDetectionRef.current = cleanup || null;
+        
+        // 카메라 시작 후 피드백 업데이트 (강제로)
+        setTimeout(() => {
+          setFeedback('카메라가 시작되었습니다. 측정 시작 버튼을 눌러주세요.');
+        }, 100);
       }
     } catch (err) {
       console.error('Failed to start camera:', err);
@@ -220,11 +244,44 @@ export function SitAndReachWall() {
         if (results.landmarks && results.landmarks.length > 0) {
           const landmarks = results.landmarks[0];
 
-          // 발 사이즈 기반 자동 캘리브레이션 (POSITIONING 단계에서)
-          if (phase === MeasurementPhase.POSITIONING && !isFootCalibrated) {
-            const calibrated = calibrateWithFootSize(landmarks);
+          // 새로운 측정 시나리오 구현
+          if (phase === MeasurementPhase.HEIGHT_CALIBRATION && !isHeightCalibrated) {
+            // 키 기반 캘리브레이션
+            const calibrated = calibrateWithHeight(landmarks);
             if (!calibrated) {
-              setFeedback('발 전체가 화면에 보이도록 자세를 조정해주세요');
+              setFeedback('전신이 화면에 보이도록 자세를 조정해주세요');
+            } else {
+              // 캘리브레이션 완료 후 서서 측정 단계로 이동
+              setTimeout(() => {
+                setPhase(MeasurementPhase.STANDING_MEASUREMENT);
+                setFeedback('서서 팔을 앞으로 뻗어주세요');
+              }, 2000);
+            }
+          } else if (phase === MeasurementPhase.STANDING_MEASUREMENT) {
+            // 서서 전신 측정 (3초간)
+            if (!holdStartTime) {
+              setHoldStartTime(Date.now());
+              setFeedback('서서 팔을 앞으로 뻗은 자세를 유지하세요...');
+            } else {
+              const elapsed = (Date.now() - holdStartTime) / 1000;
+              if (elapsed >= 3) {
+                setPhase(MeasurementPhase.VOICE_GUIDANCE);
+                setHoldStartTime(null);
+                setVoiceGuidanceTimer(5); // 5초 음성 안내
+                playVoiceGuidance('이제 바닥에 앉아서 다리를 쭉 펴고 앞으로 몸을 숙여주세요');
+                setFeedback('음성 안내를 듣고 바닥에 앉아주세요');
+              } else {
+                setFeedback(`서서 자세 유지 중... ${(3 - elapsed).toFixed(1)}초 남음`);
+              }
+            }
+          } else if (phase === MeasurementPhase.VOICE_GUIDANCE) {
+            // 음성 안내 중 앉기 감지
+            const isSitting = detectSittingPosture(landmarks);
+            if (isSitting && !isUserSitting) {
+              setIsUserSitting(true);
+              setPhase(MeasurementPhase.SITTING_MEASUREMENT);
+              setFeedback('좋습니다! 이제 앞으로 몸을 숙여주세요');
+              playVoiceGuidance('다리를 쭉 펴고 앞으로 최대한 몸을 숙여주세요');
             }
           }
 
@@ -233,8 +290,8 @@ export function SitAndReachWall() {
           if (currentMeasurement) {
             setMeasurement(currentMeasurement);
 
-            // Handle measurement phases
-            if (phase === MeasurementPhase.MEASURING) {
+            // 앉아서 측정하는 단계
+            if (phase === MeasurementPhase.SITTING_MEASUREMENT) {
               if (currentMeasurement.isValidPosture) {
                 if (!holdStartTime) {
                   setHoldStartTime(Date.now());
@@ -247,6 +304,7 @@ export function SitAndReachWall() {
                     setPhase(MeasurementPhase.RESULT);
                     setHoldStartTime(null);
                     setFeedback('측정 완료!');
+                    playVoiceGuidance('측정이 완료되었습니다');
                   } else {
                     setFeedback(`자세 유지 중... ${(3 - elapsed).toFixed(1)}초 남음`);
                   }
@@ -254,13 +312,7 @@ export function SitAndReachWall() {
               } else {
                 setHoldStartTime(null);
                 setCurrentHoldTime(0);
-                setFeedback('올바른 자세를 취해주세요');
-              }
-            } else if (phase === MeasurementPhase.POSITIONING) {
-              if (currentMeasurement.isValidPosture) {
-                setFeedback('좋은 자세입니다! 측정을 시작하세요');
-              } else {
-                setFeedback('자세를 조정해주세요');
+                setFeedback('다리를 쭉 펴고 앞으로 몸을 숙여주세요');
               }
             }
           }
@@ -304,47 +356,106 @@ export function SitAndReachWall() {
   };
 
   const startMeasurement = () => {
-    setPhase(MeasurementPhase.MEASURING);
+    setPhase(MeasurementPhase.HEIGHT_CALIBRATION);
     setHoldStartTime(null);
     setCurrentHoldTime(0);
+    setIsHeightCalibrated(false);
+    setIsUserSitting(false);
+    setFeedback('전신이 화면에 보이도록 서주세요');
   };
 
   const resetMeasurement = () => {
-    setPhase(MeasurementPhase.POSITIONING);
+    setPhase(MeasurementPhase.SETUP);
     setMeasurement(null);
     setHoldStartTime(null);
     setCurrentHoldTime(0);
+    setIsHeightCalibrated(false);
+    setIsUserSitting(false);
   };
 
-  // 발 사이즈 기반 자동 캘리브레이션
-  const calibrateWithFootSize = (landmarks: any[]) => {
+  // 키 기반 자동 캘리브레이션
+  const calibrateWithHeight = (landmarks: any[]) => {
+    const nose = landmarks[POSE_LANDMARKS.NOSE];
     const leftHeel = landmarks[POSE_LANDMARKS.LEFT_HEEL];
     const rightHeel = landmarks[POSE_LANDMARKS.RIGHT_HEEL];
-    const leftToe = landmarks[POSE_LANDMARKS.LEFT_INDEX]; // 발가락 대신 손가락 사용 (임시)
-    const rightToe = landmarks[POSE_LANDMARKS.RIGHT_INDEX];
 
-    if (!leftHeel || !rightHeel) return false;
+    if (!nose || !leftHeel || !rightHeel) return false;
 
-    // 발 길이 계산 (발뒤꿈치에서 발끝까지)
-    // 실제로는 발가락 랜드마크를 사용해야 하지만, 현재는 대략적으로 계산
-    const leftFootLength = Math.abs(leftHeel.y - leftToe.y) * 640; // 픽셀 단위
-    const rightFootLength = Math.abs(rightHeel.y - rightToe.y) * 640;
+    // 발뒤꿈치 중점
+    const heelMidpoint = {
+      x: (leftHeel.x + rightHeel.x) / 2,
+      y: (leftHeel.y + rightHeel.y) / 2
+    };
+
+    // 코에서 발뒤꿈치까지의 픽셀 거리 (전신 높이)
+    const bodyHeightInPixels = Math.abs(nose.y - heelMidpoint.y) * 1280; // 세로 해상도 기준
     
-    // 더 잘 보이는 발 사용
-    const footPixelLength = Math.max(leftFootLength, rightFootLength);
-    
-    if (footPixelLength > 20) { // 최소 20픽셀 이상일 때만 캘리브레이션
-      const newPixelToRealRatio = footPixelLength / userFootSize;
+    if (bodyHeightInPixels > 200) { // 최소 200픽셀 이상일 때만 캘리브레이션
+      // 실제 키와 픽셀 거리의 비율 계산
+      const newPixelToRealRatio = userHeight / bodyHeightInPixels;
       setPixelToRealRatio(newPixelToRealRatio);
-      setIsFootCalibrated(true);
-      setFeedback(`발 크기 기반 캘리브레이션 완료! (${footPixelLength.toFixed(0)}픽셀 = ${userFootSize}cm)`);
+      setIsHeightCalibrated(true);
+      setFeedback(`키 기반 캘리브레이션 완료! (${bodyHeightInPixels.toFixed(0)}픽셀 = ${userHeight}cm)`);
       return true;
     }
     
     return false;
   };
 
+  // 사용자가 앉았는지 감지하는 함수
+  const detectSittingPosture = (landmarks: any[]) => {
+    const leftHip = landmarks[POSE_LANDMARKS.LEFT_HIP];
+    const rightHip = landmarks[POSE_LANDMARKS.RIGHT_HIP];
+    const leftKnee = landmarks[POSE_LANDMARKS.LEFT_KNEE];
+    const rightKnee = landmarks[POSE_LANDMARKS.RIGHT_KNEE];
+    const leftHeel = landmarks[POSE_LANDMARKS.LEFT_HEEL];
+    const rightHeel = landmarks[POSE_LANDMARKS.RIGHT_HEEL];
+
+    if (!leftHip || !rightHip || !leftKnee || !rightKnee || !leftHeel || !rightHeel) {
+      return false;
+    }
+
+    // 엉덩이와 무릎의 높이 차이로 앉기 판단
+    const hipMidpoint = (leftHip.y + rightHip.y) / 2;
+    const kneeMidpoint = (leftKnee.y + rightKnee.y) / 2;
+    const heelMidpoint = (leftHeel.y + rightHeel.y) / 2;
+
+    // 앉은 자세: 엉덩이가 무릎보다 아래에 있고, 무릎이 발뒤꿈치보다 위에 있음
+    const isSitting = hipMidpoint > kneeMidpoint && kneeMidpoint < heelMidpoint;
+    
+    return isSitting;
+  };
+
+  // 음성 안내 함수
+  const playVoiceGuidance = (text: string) => {
+    if ('speechSynthesis' in window) {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'ko-KR';
+      utterance.rate = 0.9;
+      speechSynthesis.speak(utterance);
+    }
+  };
+
+  // 음성 안내 타이머 useEffect
   useEffect(() => {
+    if (voiceGuidanceTimer > 0) {
+      const timer = setTimeout(() => {
+        setVoiceGuidanceTimer(voiceGuidanceTimer - 1);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [voiceGuidanceTimer]);
+
+  useEffect(() => {
+    // 모바일에서 MediaPipe 초기화
+    const initializeOnMount = async () => {
+      if (typeof window !== 'undefined') {
+        await initializePoseLandmarker();
+      }
+    };
+    
+    initializeOnMount();
+    
     return () => {
       stopCamera();
       if (poseLandmarkerRef.current) {
@@ -362,7 +473,7 @@ export function SitAndReachWall() {
       ) : (
         <MeasurementUI
           videoRef={videoRef}
-          timerStatus={phase === MeasurementPhase.MEASURING ? 'measuring' : 'idle'}
+          timerStatus={phase === MeasurementPhase.SITTING_MEASUREMENT ? 'measuring' : 'idle'}
           preparingTime={preparingTime}
           remainingTime={remainingTime}
           count={measurement ? Math.round(measurement.distanceInCm) : 0}
@@ -388,33 +499,33 @@ export function SitAndReachWall() {
                 </div>
               </div>
 
-              {/* Foot Size Input */}
-              {phase === MeasurementPhase.CALIBRATION && (
+              {/* Height Input */}
+              {phase === MeasurementPhase.SETUP && (
                 <div className="bg-gray-800 p-4 rounded-lg mb-4">
-                  <div className="font-semibold text-white mb-2">👟 발 크기 설정</div>
+                  <div className="font-semibold text-white mb-2">� 키 설정</div>
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm text-gray-300 mb-2">
-                        본인의 발 크기를 입력하세요 (cm):
+                        본인의 키를 입력하세요 (cm):
                       </label>
                       <input
                         type="number"
-                        min="20"
-                        max="35"
-                        step="0.5"
-                        value={userFootSize}
-                        onChange={(e) => setUserFootSize(Number(e.target.value))}
+                        min="140"
+                        max="220"
+                        step="0.1"
+                        value={userHeight}
+                        onChange={(e) => setUserHeight(Number(e.target.value))}
                         className="w-24 px-3 py-2 bg-gray-700 text-white rounded text-center text-lg"
                       />
                       <span className="ml-2 text-gray-400">cm</span>
                     </div>
                     
                     <div className="bg-blue-900 p-3 rounded text-xs">
-                      <div className="text-blue-200 font-bold mb-1">💡 발 크기 측정 방법:</div>
+                      <div className="text-blue-200 font-bold mb-1">� 측정 방법:</div>
                       <div className="text-blue-300">
-                        • 벽에 발뒤꿈치를 대고 서기<br/>
-                        • 가장 긴 발가락 끝까지 자로 측정<br/>
-                        • 보통 신발 사이즈보다 0.5-1cm 작음
+                        • 세로로 긴 화면 비율 (16:9)<br/>
+                        • 전신 측정 → 음성 안내 → 앉아서 측정<br/>
+                        • 키 기반 자동 스케일링
                       </div>
                     </div>
 
@@ -428,39 +539,39 @@ export function SitAndReachWall() {
                       </div>
                     </div>
 
-                    <button
-                      onClick={() => {
-                        setPhase(MeasurementPhase.POSITIONING);
-                        setIsFootCalibrated(false);
-                        setFeedback('발 전체가 화면에 보이도록 앉아주세요');
-                      }}
-                      className="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-                    >
-                      다음 단계 (자동 캘리브레이션)
-                    </button>
+                    <div className="text-center">
+                      <button
+                        onClick={() => {
+                          startMeasurement();
+                        }}
+                        className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 font-semibold"
+                      >
+                        🎯 키 기반 측정 시작
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}
 
-              {/* Calibration Status */}
-              {phase === MeasurementPhase.POSITIONING && (
+              {/* Height Calibration Status */}
+              {phase === MeasurementPhase.HEIGHT_CALIBRATION && (
                 <div className="bg-gray-800 p-4 rounded-lg mb-4">
-                  <div className="font-semibold text-white mb-2">🔧 자동 캘리브레이션</div>
+                  <div className="font-semibold text-white mb-2">� 키 기반 캘리브레이션</div>
                   <div className="space-y-2">
                     <div className="flex justify-between">
-                      <span className="text-gray-400">발 크기 설정:</span>
-                      <span className="text-blue-400 font-bold">{userFootSize}cm</span>
+                      <span className="text-gray-400">설정된 키:</span>
+                      <span className="text-blue-400 font-bold">{userHeight}cm</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-400">캘리브레이션 상태:</span>
-                      <span className={`font-bold ${isFootCalibrated ? 'text-green-400' : 'text-yellow-400'}`}>
-                        {isFootCalibrated ? '완료' : '진행 중...'}
+                      <span className={`font-bold ${isHeightCalibrated ? 'text-green-400' : 'text-yellow-400'}`}>
+                        {isHeightCalibrated ? '완료' : '진행 중...'}
                       </span>
                     </div>
-                    {isFootCalibrated && (
+                    {isHeightCalibrated && (
                       <div className="flex justify-between">
                         <span className="text-gray-400">스케일:</span>
-                        <span className="text-green-400 font-bold">{(1/pixelToRealRatio).toFixed(1)} 픽셀/cm</span>
+                        <span className="text-green-400 font-bold">{pixelToRealRatio.toFixed(4)} cm/픽셀</span>
                       </div>
                     )}
                   </div>
@@ -517,13 +628,12 @@ export function SitAndReachWall() {
           onStartCamera={startCamera}
           onStartMeasurement={() => {
             if (phase === MeasurementPhase.SETUP) {
-              setPhase(MeasurementPhase.CALIBRATION);
-            } else if (phase === MeasurementPhase.POSITIONING) {
               startMeasurement();
             }
           }}
           onStopMeasurement={resetMeasurement}
           onReset={resetMeasurement}
+          onVideoClick={() => {}}
           countLabel="거리 (cm)"
           timeLabel="유지 시간"
         />

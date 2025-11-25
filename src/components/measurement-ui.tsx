@@ -34,6 +34,9 @@ interface MeasurementUIProps {
   onStopMeasurement?: () => void;
   onReset?: () => void;
   
+  // 비디오 클릭 이벤트
+  onVideoClick?: (event: React.MouseEvent<HTMLVideoElement>) => void;
+  
   // 커스텀 레이블
   countLabel?: string;
   timeLabel?: string;
@@ -54,6 +57,7 @@ export function MeasurementUI({
   onStartMeasurement,
   onStopMeasurement,
   onReset,
+  onVideoClick,
   countLabel = '개수',
   timeLabel = '남은 시간',
 }: MeasurementUIProps) {
@@ -73,7 +77,7 @@ export function MeasurementUI({
           <div className="relative mb-4 bg-gray-800 rounded-lg overflow-hidden border-4 border-blue-500">
             <video
               ref={videoRef}
-              className="block w-full h-auto"
+              className={`block w-full h-auto ${onVideoClick ? 'cursor-pointer' : ''}`}
               style={{ 
                 transform: 'scaleX(-1)',
                 aspectRatio: '4/3',
@@ -86,6 +90,7 @@ export function MeasurementUI({
               x5-playsinline="true"
               x5-video-player-type="h5"
               x5-video-player-fullscreen="false"
+              onClick={onVideoClick}
             />
             {!videoRef.current?.srcObject && (
               <div className="absolute inset-0 flex items-center justify-center text-gray-400">
