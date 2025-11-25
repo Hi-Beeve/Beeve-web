@@ -74,14 +74,21 @@ export function MeasurementUI({
       <div className="flex-1 overflow-y-auto p-4">
         <div className="w-full max-w-2xl mx-auto">
           {/* 카메라 화면 */}
-          <div className="relative mb-4 bg-gray-800 rounded-lg overflow-hidden border-4 border-blue-500">
+          <div className="relative mb-4 bg-gray-800 rounded-lg overflow-hidden border-4 border-blue-500" style={{ aspectRatio: '3/4' }}>
             <video
               ref={videoRef}
-              className={`block w-full h-auto ${onVideoClick ? 'cursor-pointer' : ''}`}
+              className={`absolute inset-0 w-full h-full ${onVideoClick ? 'cursor-pointer' : ''}`}
               style={{ 
                 transform: 'scaleX(-1)',
-                aspectRatio: '3/4',
-                maxHeight: '70vh'
+                objectFit: 'cover'
+              }}
+              onLoadedMetadata={(e) => {
+                const video = e.currentTarget;
+                // 가로가 세로보다 크면 (가로 모드 스트림) 90도 회전
+                if (video.videoWidth > video.videoHeight) {
+                  video.style.transform = 'scaleX(-1) rotate(90deg)';
+                  console.log('Rotating video 90 degrees for portrait mode');
+                }
               }}
               playsInline
               autoPlay

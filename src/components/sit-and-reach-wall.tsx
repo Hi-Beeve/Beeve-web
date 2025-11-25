@@ -99,22 +99,52 @@ export function SitAndReachWall() {
         return;
       }
 
-      const stream = await navigator.mediaDevices.getUserMedia({
+      // 화면 방향 잠금 시도 (모바일에서)
+      if ('screen' in window && 'orientation' in window.screen && 'lock' in window.screen.orientation) {
+        try {
+          await (window.screen.orientation as any).lock('portrait');
+        } catch (err) {
+          console.log('Screen orientation lock not supported or failed:', err);
+        }
+      }
+
+      // 세로 모드 카메라 스트림 요청
+      const constraints = {
         video: { 
-          facingMode: 'user', 
-          width: 480, 
-          height: 640, // 3:4 세로 비율
-          aspectRatio: 3/4 
+          facingMode: 'user',
+          width: { ideal: 480, min: 320, max: 640 },
+          height: { ideal: 640, min: 480, max: 960 },
+          aspectRatio: { ideal: 0.75 }, // 3:4 비율 (0.75)
+          frameRate: { ideal: 30, max: 60 }
         },
         audio: false,
-      });
+      };
+
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
 
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         
         await new Promise<void>((resolve) => {
           if (videoRef.current) {
-            videoRef.current.onloadedmetadata = () => resolve();
+            videoRef.current.onloadedmetadata = () => {
+              // 실제 비디오 해상도 확인
+              const video = videoRef.current!;
+              console.log('Video dimensions:', {
+                videoWidth: video.videoWidth,
+                videoHeight: video.videoHeight,
+                aspectRatio: video.videoWidth / video.videoHeight
+              });
+              
+              // 스트림 트랙 정보 확인
+              const videoTrack = stream.getVideoTracks()[0];
+              if (videoTrack) {
+                const settings = videoTrack.getSettings();
+                console.log('Video track settings:', settings);
+              }
+              
+              resolve();
+            };
           }
         });
         
