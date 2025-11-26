@@ -122,10 +122,9 @@ export function Metronome({ bpm, isPlaying, onBeatCount }: MetronomeProps) {
 
   return (
     <div className="text-center">
-      <div className="mb-4">
+      {/* <div className="mb-4">
         <div className="text-4xl font-bold text-blue-400 mb-2">{bpm} BPM</div>
-        <div className="text-gray-400">메트로놈</div>
-      </div>
+      </div> */}
       
       {/* 박자 시각적 표시 */}
       <div className="flex justify-center space-x-2 mb-4">
@@ -146,12 +145,7 @@ export function Metronome({ bpm, isPlaying, onBeatCount }: MetronomeProps) {
       <div className="text-lg text-gray-300">
         총 박자: {beatCount}
       </div>
-      
-      {isPlaying && (
-        <div className="mt-4 text-sm text-gray-400">
-          스텝박스를 박자에 맞춰 오르내리세요
-        </div>
-      )}
+    
     </div>
   );
 }

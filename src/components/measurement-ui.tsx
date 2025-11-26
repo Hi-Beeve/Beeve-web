@@ -74,11 +74,6 @@ export function MeasurementUI({
   showCount = true,
   showTimer = true,
 }: MeasurementUIProps) {
-  // 타이머 포맷 (SS) 
-  const formatTime = (seconds: number) => {
-    const secs = seconds % 60;
-    return `${secs.toString().padStart(2, '0')}`;
-  };
 
   return (
     <>
@@ -224,7 +219,7 @@ export function MeasurementUI({
   );
 }
 
-const CircleButton = ({ onClick, children }: { onClick: () => void; children: ReactNode }) => {
+export const CircleButton = ({ onClick, children }: { onClick: () => void; children: ReactNode }) => {
   return (
     <button
       onClick={onClick}
@@ -234,3 +229,56 @@ const CircleButton = ({ onClick, children }: { onClick: () => void; children: Re
     </button>
   );
 };
+
+  // 타이머 포맷 (MM:SS 또는 SS) 
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    
+    // 60초 이상이면 MM:SS 형식, 미만이면 SS 형식
+    if (seconds >= 60) {
+      return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    } else {
+      return `${secs.toString().padStart(2, '0')}`;
+    }
+  };
+
+export const CircleTimer = ({ remainingTime, totalTime }: { remainingTime: number; totalTime?: number }) => {
+  // totalTime이 제공되지 않으면 remainingTime을 기준으로 추정
+  const maxTime = totalTime || Math.max(remainingTime, 60);
+  
+  return(
+     <div className="relative h-[140px] w-[140px]">
+                  {/* SVG 원형 프로그레스 바 */}
+                  <svg className="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                    {/* 배경 원 */}
+                    <circle
+                      cx="50"
+                      cy="50"
+                      r="45"
+                      fill="none"
+                      stroke="#D9D9D9"
+                      strokeWidth="4"
+                    />
+                    {/* 프로그레스 원 */}
+                    <circle
+                      cx="50"
+                      cy="50"
+                      r="45"
+                      fill="none"
+                      stroke="#9B8EC2"
+                      strokeWidth="4"
+                      strokeLinecap="round"
+                      strokeDasharray={`${2 * Math.PI * 45}`}
+                      strokeDashoffset={`${2 * Math.PI * 45 * (1 - (remainingTime / maxTime))}`}
+                      style={{
+                        transition: 'stroke-dashoffset 1s linear'
+                      }}
+                    />
+                  </svg>
+                  {/* 중앙 텍스트 */}
+                  <div className={`absolute inset-0 flex items-center justify-center text-[#767676] ${FONT_STYLES.heading32}`}>
+                    {formatTime(remainingTime)}
+                  </div>
+                </div>
+  )}
