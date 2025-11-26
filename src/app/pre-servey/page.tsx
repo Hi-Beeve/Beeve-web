@@ -2,12 +2,12 @@
 
 import { useMember } from "@/api/mypage/useMypage";
 import { CHECK_LIST, EXERCISE_PLACE, EXERCISE_PLACE_WITH_ICON } from "@/config/exercise-guides";
-import checkWhite from '../../../public/check_white.svg';
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { ProgressBar } from "@/components/progress_bar";
 import { FONT_STYLES } from "@/styles/fontStyles";
 import { InfoCard } from "@/components/info-card";
+import { CheckListCard } from "@/components/check-list-card";
 import Image from "next/image";
 
 const STEPS = ["Body Information","Measurement Place","Check List"];
@@ -158,14 +158,6 @@ const CheckList = ({isChecked, setIsChecked}: {isChecked: boolean[], setIsChecke
     );
 };
 
-const CheckListCard = ({text, isChecked, onClick}: {text: string, isChecked: boolean, onClick: () => void}) => {
-    return (
-        <div onClick={onClick} className={`${isChecked? 'bg-[#656565] text-white' : 'bg-[#F5F5F5] text-[#767676]'} rounded-[20px] flex h-22 items-center py-2 px-5 justify-between whitespace-pre-line`}>
-            <div>{text}</div>
-            {isChecked&&<Image src={checkWhite} alt=""  width={24} height={24}/>}
-        </div>
-    );
-};
 
 const PageTitle = ({title}: {title: string}) => {
     return (

@@ -1,100 +1,139 @@
-import Link from "next/link";
-import { UserProfile } from "@/components/user-profile";
+"use client";
 
-export default function Home() {
+import { useState, useEffect } from "react";
+import { CheckListCard } from "@/components/check-list-card";
+import { getMeasurementCompletions } from "@/utils/measurement-storage";
+import { FitnessIconType } from "@/components/fitness-icon";
+
+interface MeasurementItem {
+  id: string;
+  title: string;
+  subtitle: string;
+  icon: FitnessIconType;
+  href: string;
+}
+
+const MEASUREMENT_ITEMS: MeasurementItem[] = [
+  {
+    id: "muscle",
+    title: "근력",
+    subtitle: "(측정시간) 1분", // 측정 완료 시 이곳에 데이터 추가 
+    icon: "STRENGTH",
+    href: "/measurement/pushup-counter"
+  },
+  {
+    id: "endurance",
+    title: "근지구력",
+    subtitle: "(측정시간) 1분", // 측정 완료 시 이곳에 데이터 추가 
+    icon: "ENDURANCE",
+    href: "/measurement/description?type=situp"
+  },
+  {
+    id: "cardio",
+    title: "심폐지구력",
+    subtitle: "(측정시간) 4분",
+    icon: "CARDIO",
+    href: "/measurement/description?type=step"
+  },
+  {
+    id: "flexibility",
+    title: "유연성",
+    subtitle: "(측정시간) 3분",
+    icon: "FLEXIBILITY",
+    href: "/measurement/description?type=sit-and-reach"
+  },
+  {
+    id: "agility",
+    title: "민첩성",
+    subtitle: "(측정시간) 3분",
+    icon: "AGILITY",
+    href: "/measurement/description?type=reaction-time"
+  },
+  {
+    id: "quickness",
+    title: "순발력",
+    subtitle: "(측정시간) 3분",
+    icon: "QUICKNESS",
+    href: "/measurement/description?type=standing-jump"
+  }
+];
+
+export default function MeasurementPage() {
+  const [completedItems, setCompletedItems] = useState<string[]>([]);
+
+  useEffect(() => {
+    // 로컬 스토리지에서 완료된 측정 항목들을 불러옴
+    setCompletedItems(getMeasurementCompletions());
+  }, []);
+
+  const handleItemClick = (item: MeasurementItem) => {
+    // 측정 페이지로 이동
+    window.location.href = item.href;
+  };
+
+  const isCompleted = (itemId: string) => {
+    return completedItems.includes(itemId);
+  };
+
   return (
-    <div className="font-sans min-h-screen bg-gray-900 text-white">
+    <div className="min-h-screen bg-white">
       {/* 헤더 */}
-      <header className="flex justify-between items-center p-6 border-b border-gray-800">
-        <div>
-          <h1 className="text-2xl font-bold">Beeve Web</h1>
-          <p className="text-gray-400 text-sm">AI 기반 운동 측정 플랫폼</p>
+      <div className="px-4 py-6">
+        <h1 className="text-2xl font-bold text-black">Beeve</h1>
+        <h2 className="text-lg font-medium text-black mt-2">체력 측정하기</h2>
+      </div>
+
+      {/* STEP 1. 근체력 */}
+      <div className="px-4 mb-8">
+        <h3 className="text-lg font-semibold text-black mb-4">STEP 1. 건강체력</h3>
+        <div className="space-y-3">
+          {MEASUREMENT_ITEMS.slice(0, 4).map((item) => (
+            <CheckListCard
+              key={item.id}
+              text={item.title}
+              subtitle={item.subtitle}
+              icon={item.icon}
+              isChecked={isCompleted(item.id)}
+              onClick={() => handleItemClick(item)}
+            />
+          ))}
         </div>
-        <UserProfile />
-      </header>
+      </div>
 
-      {/* 메인 컨텐츠 */}
-      <main className="flex flex-col gap-8 items-center max-w-6xl mx-auto p-8">
-        <div className="text-center">
-          <h2 className="text-3xl font-bold mb-2">운동 측정을 시작해보세요</h2>
-          <p className="text-gray-300">
-            MediaPipe AI를 활용한 정확한 운동 자세 분석
-          </p>
+      {/* STEP 2. 운동체력 */}
+      <div className="px-4 mb-8">
+        <h3 className="text-lg font-semibold text-black mb-4">STEP 2. 운동체력</h3>
+        <div className="space-y-3">
+          {MEASUREMENT_ITEMS.slice(4).map((item) => (
+            <CheckListCard
+              key={item.id}
+              text={item.title}
+              subtitle={item.subtitle}
+              icon={item.icon}
+              isChecked={isCompleted(item.id)}
+              onClick={() => handleItemClick(item)}
+            />
+          ))}
         </div>
-        
-        {/* 운동 측정 메뉴 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-6xl">
-          <Link
-            href="/measurement/pushup-counter"
-            className="bg-gray-800 hover:bg-gray-700 p-6 rounded-lg text-center transition-colors border border-gray-700"
-          >
-            <div className="text-4xl mb-3">💪</div>
-            <h3 className="text-xl font-bold mb-2">푸시업 측정</h3>
-            <p className="text-gray-400 text-sm">
-              벽 푸시업, 무릎 푸시업, 일반 푸시업
-            </p>
-          </Link>
+      </div>
 
-          <Link
-            href="/measurement/description?type=situp"
-            className="bg-gray-800 hover:bg-gray-700 p-6 rounded-lg text-center transition-colors border border-gray-700"
-          >
-            <div className="text-4xl mb-3">🏃</div>
-            <h3 className="text-xl font-bold mb-2">싯업 측정!!</h3>
-            <p className="text-gray-400 text-sm">
-              1분 내 최대 싯업 개수 측정
-            </p>
-          </Link>
-
-          <Link
-            href="/measurement/description?type=step"
-            className="bg-gray-800 hover:bg-gray-700 p-6 rounded-lg text-center transition-colors border border-gray-700"
-          >
-            <div className="text-4xl mb-3">🏃‍♂️</div>
-            <h3 className="text-xl font-bold mb-2">스텝검사</h3>
-            <p className="text-gray-400 text-sm">
-              3분 스텝박스 심폐지구력 측정
-            </p>
-          </Link>
-
-          <Link
-            href="/measurement/description?type=standing-jump"
-            className="bg-gray-800 hover:bg-gray-700 p-6 rounded-lg text-center transition-colors border border-gray-700"
-          >
-            <div className="text-4xl mb-3">🦘</div>
-            <h3 className="text-xl font-bold mb-2">제자리 높이뛰기</h3>
-            <p className="text-gray-400 text-sm">
-              체공시간 측정 (최대 3회)
-            </p>
-          </Link>
-
-          <Link
-            href="/measurement/description?type=reaction-time"
-            className="bg-gray-800 hover:bg-gray-700 p-6 rounded-lg text-center transition-colors border border-gray-700"
-          >
-            <div className="text-4xl mb-3">⚡</div>
-            <h3 className="text-xl font-bold mb-2">반응 시간 검사</h3>
-            <p className="text-gray-400 text-sm">
-              민첩성 측정 (0.001초 단위)
-            </p>
-          </Link>
-
-          <Link
-            href="/measurement/description?type=sit-and-reach"
-            className="bg-gray-800 hover:bg-gray-700 p-6 rounded-lg text-center transition-colors border border-gray-700"
-          >
-            <div className="text-4xl mb-3">🧘‍♀️</div>
-            <h3 className="text-xl font-bold mb-2">유연성 검사</h3>
-            <p className="text-gray-400 text-sm">
-              앉아 윗몸 숙이기 (키 기반 정확 측정)
-            </p>
-          </Link>
-        </div>
-
-        <div className="text-center text-sm text-gray-400">
-          <p>AI 포즈 인식을 통한 정확한 운동 측정</p>
-        </div>
-      </main>
+      {/* 다음 버튼 */}
+      <div className="fixed bottom-6 left-6 right-6">
+        <button 
+          className="w-full h-14 bg-[#BDB2DD] text-white rounded-[20px] font-medium"
+          onClick={() => {
+            // 모든 측정이 완료되었는지 확인하고 다음 단계로 이동
+            if (completedItems.length === MEASUREMENT_ITEMS.length) {
+              // 결과 페이지로 이동
+              window.location.href = '/results';
+            } else {
+              alert('모든 측정을 완료해주세요.');
+            }
+          }}
+        >
+          다음
+        </button>
+      </div>
     </div>
   );
 }
