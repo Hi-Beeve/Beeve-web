@@ -3,6 +3,11 @@
 import { useState, useRef, useEffect } from 'react';
 import { VideoAnalyzer } from './video-analyzer';
 import { CameraPermissionModal } from './camera-permission-modal';
+import { BackHeader } from './common/BackHeader';
+import { useRouter } from 'next/navigation';
+import { EXERCISE_GUIDES } from '@/config/exercise-guides';
+import { FONT_STYLES } from '@/styles/fontStyles';
+import FloatingButton from './common/FloatingButton';
 
 // 제자리 높이뛰기 단계 정의
 type StandingJumpPhase = 
@@ -19,11 +24,7 @@ interface JumpRecord {
   airTime: number | null;
 }
 
-interface StandingJumpProps {
-  onBack?: () => void;
-}
-
-export function StandingJump({ onBack }: StandingJumpProps) {
+export function StandingJump() {
   const [phase, setPhase] = useState<StandingJumpPhase>('intro');
   const [currentAttempt, setCurrentAttempt] = useState(1);
   const [records, setRecords] = useState<JumpRecord[]>([]);
@@ -51,7 +52,10 @@ export function StandingJump({ onBack }: StandingJumpProps) {
     setCameraPermissionGranted(true);
     // 카메라 시작은 useEffect에서 처리
   };
-
+const router = useRouter()
+  const onBack = () => {
+    router.push("/measurement")
+  };
   const handleCameraPermissionDenied = () => {
     setShowCameraPermission(false);
     if (onBack) {
@@ -260,7 +264,7 @@ export function StandingJump({ onBack }: StandingJumpProps) {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gray-900 text-white">
+    <div className="flex flex-col">
       {/* 카메라 권한 요청 모달 */}
       <CameraPermissionModal
         isOpen={showCameraPermission}
@@ -276,40 +280,28 @@ export function StandingJump({ onBack }: StandingJumpProps) {
       ) : (
         <>
           {/* 헤더 */}
-          <div className="bg-gray-800 flex items-center justify-between px-4 py-3 border-b border-gray-700">
+          <div className="flex items-center justify-between px-4 py-3 ">
         {onBack && (
-          <button
-            onClick={onBack}
-            className="p-2 hover:bg-gray-700 rounded-lg transition"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
+          <BackHeader handleClickBack={onBack} />
         )}
-        <h1 className="text-xl font-bold flex-1 text-center">제자리 높이뛰기</h1>
-        <div className="w-10"></div>
       </div>
 
       {/* 메인 콘텐츠 */}
-      <div className="flex-1 flex flex-col items-center justify-center p-8">
+      <div className="flex-1 flex flex-col p-4">
         {phase === 'intro' && (
-          <div className="text-center max-w-md">
+          <div className="">
             <h2 className="text-3xl font-bold mb-6">제자리 높이뛰기</h2>
-            <p className="text-gray-300 mb-8 leading-relaxed">
+            <p className="text-[#767676] mb-8 leading-relaxed">
               최대 3회 측정하여 가장 긴 체공시간을 기록합니다.
               <br />
               영상을 촬영한 후 시작점과 최고점을 선택해주세요.
             </p>
-            <div className="bg-gray-800 p-4 rounded-lg mb-8">
-              <h3 className="font-bold mb-2">측정 방법:</h3>
-              <ul className="text-sm text-gray-300 text-left space-y-1">
-                <li>• 양발을 어깨너비만큼 벌리고 선다</li>
-                <li>• 팔과 몸으로 반동을 주며 최대한 높이 뛴다</li>
-                <li>• 착지 시 양발이 모두 바닥에 있어야 한다</li>
-              </ul>
-            </div>
-            <button
+           <div className="bg-[#F5F5F5] p-4 rounded-[20px] flex flex-col gap-2">
+                         <p className={`${FONT_STYLES.body9} text-[#767676]`}>사용방법</p>
+                         <div className={`${FONT_STYLES.body10} text-[#767676] flex flex-col gap-1`}>{EXERCISE_GUIDES[`standing-jump`]?.instructions.map((instruction, index) => <p key={index}>{instruction}</p>)}</div>
+                        </div>
+
+            <FloatingButton
               onClick={async () => {
                 setPhase('recording');
                 
@@ -323,15 +315,15 @@ export function StandingJump({ onBack }: StandingJumpProps) {
                   setPhase('intro'); // 실패 시 다시 intro로
                 }
               }}
-              className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 px-8 rounded-full text-xl transition-transform transform hover:scale-105"
+              className="py-4 px-8 h-12"
             >
               {currentAttempt}회차 측정 시작
-            </button>
+            </FloatingButton>
           </div>
         )}
 
         {phase === 'recording' && (
-          <div className="text-center max-w-md">
+          <div className="">
             <h2 className="text-3xl font-bold mb-6">{currentAttempt}회차 촬영</h2>
             
             {/* 카메라 화면 */}
@@ -372,21 +364,21 @@ export function StandingJump({ onBack }: StandingJumpProps) {
             </div>
 
             {countdown !== null ? (
-              <p className="text-gray-300 mb-6">
+              <p className="text-[#767676] mb-6">
                 준비하세요! 카운트다운이 끝나면 제자리 높이뛰기를 해주세요.
               </p>
             ) : isRecording ? (
-              <p className="text-gray-300 mb-6">
+              <p className="text-[#767676] mb-6">
                 녹화 중입니다. 최대한 높이 뛰어주세요!
                 <br />
                 (자동으로 정지됩니다)
               </p>
             ) : showJumpMessage ? (
-              <p className="text-gray-300 mb-6">
+              <p className="text-[#767676] mb-6">
                 지금 뛰세요! 최대한 높이!
               </p>
             ) : (
-              <p className="text-gray-300 mb-6">
+              <p className="text-[#767676] mb-6">
                 카메라를 준비하고 있습니다...
                 <br />
                 <span className="text-sm text-gray-400">잠시만 기다려주세요</span>
@@ -395,23 +387,19 @@ export function StandingJump({ onBack }: StandingJumpProps) {
 
             {/* 녹화 중지 버튼 (필요시) */}
             {isRecording && (
-              <button
+              <FloatingButton
                 onClick={stopRecording}
-                className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg"
+                className="bg-red-500 text-white font-bold py-3 px-6 rounded-lg"
               >
                 녹화 중지
-              </button>
+              </FloatingButton>
             )}
           </div>
         )}
 
         {phase === 'analysis' && records[currentAttempt - 1] && (
-          <div className="w-full max-w-4xl">
-            <h2 className="text-3xl font-bold mb-6 text-center">{currentAttempt}회차 분석</h2>
-            <p className="text-gray-300 mb-6 text-center">
-              영상에서 (1) 발이 떨어지는 시점과 (2) 가장 높은 시점을 선택해주세요.
-            </p>
-            
+          <div className="w-full w-full">
+            <h2 className={`mb-6 ${FONT_STYLES.heading32}`}>{currentAttempt}회차 분석</h2>          
             <VideoAnalyzer
               videoBlob={records[currentAttempt - 1].videoBlob}
               onAnalysisComplete={(startTime, peakTime, airTime) => {
@@ -441,7 +429,7 @@ export function StandingJump({ onBack }: StandingJumpProps) {
           <div className="text-center max-w-md">
             <h2 className="text-3xl font-bold mb-6">{currentAttempt}회차 결과</h2>
             
-            <div className="bg-gray-800 p-6 rounded-lg mb-8">
+            <div className="p-6 rounded-lg mb-8">
               <div className="text-4xl font-bold text-green-400 mb-4">
                 {records[currentAttempt - 1].airTime?.toFixed(2)}초
               </div>
@@ -452,47 +440,45 @@ export function StandingJump({ onBack }: StandingJumpProps) {
             </div>
 
             {currentAttempt < 3 ? (
-              <div className="space-y-4">
+              <FloatingButton className={`bg-transparent px-0 flex gap-1`}>
                 <button
                   onClick={() => {
                     setCurrentAttempt(prev => prev + 1);
                     setPhase('intro');
                   }}
-                  className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg mr-4"
+                  className="bg-[#BDB2DD] text-white font-bold py-3 px-6 rounded-[16px] w-[50%] h-12"
                 >
                   다음 측정 ({currentAttempt + 1}회차)
                 </button>
                 <button
                   onClick={() => setPhase('final-result')}
-                  className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg"
+                  className="bg-gray-600 text-white font-bold py-3 px-6 rounded-[16px] w-[50%] h-12"
                 >
                   측정 완료
                 </button>
-              </div>
+              </FloatingButton>
             ) : (
               <button
                 onClick={() => setPhase('final-result')}
-                className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg"
+                className="bg-green-500 text-white font-bold py-3 px-6 rounded-[16px] w-[50%] h-12"
               >
-                최종 결과 보기
+                결과 보기
               </button>
             )}
           </div>
         )}
 
         {phase === 'final-result' && (
-          <div className="text-center max-w-md">
-            <h2 className="text-3xl font-bold mb-8">측정 완료</h2>
-            
-            <div className="bg-gray-800 p-6 rounded-lg mb-8">
-              <div className="text-gray-400 text-sm mb-4">측정 결과</div>
+          <div className="">            
+            <div className="bg-[#F5F5F5] p-6 rounded-lg mb-8">
+              <div className="text-[#767676] text-sm mb-4">측정 결과</div>
               
               {/* 개별 결과 */}
               <div className="space-y-2 mb-6">
                 {records.map((record, index) => (
                   record.airTime !== null && (
                     <div key={index} className="flex justify-between items-center">
-                      <span className="text-gray-300">{index + 1}회차:</span>
+                      <span className="text-[#767676]">{index + 1}회차:</span>
                       <span className="font-mono text-lg">
                         {record.airTime.toFixed(2)}초
                       </span>
@@ -502,33 +488,21 @@ export function StandingJump({ onBack }: StandingJumpProps) {
               </div>
               
               {/* 최고 기록 */}
-              <div className="border-t border-gray-600 pt-4">
-                <div className="text-gray-400 text-sm">최고 기록</div>
-                <div className="text-3xl font-bold text-green-400">
+              <div className="w-full flex justify-end gap-2 items-center pt-4">
+                <div className="text-[#767676] text-sm">최고 기록</div>
+                <div className="text-3xl font-bold text-[#22C55D]">
                   {Math.max(...records.filter(r => r.airTime !== null).map(r => r.airTime!)).toFixed(2)}초
                 </div>
               </div>
             </div>
             
-            <div className="space-y-4">
-              <button
-                onClick={() => {
-                  // 다시 측정
-                  setCurrentAttempt(1);
-                  setRecords([]);
-                  setPhase('intro');
-                }}
-                className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg mr-4"
-              >
-                다시 측정
-              </button>
-              <button
+            
+              <FloatingButton
                 onClick={onBack}
-                className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg"
+                className="px-0 h-12"
               >
                 완료
-              </button>
-            </div>
+              </FloatingButton>
           </div>
         )}
       </div>
