@@ -14,8 +14,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Beeve - 운동 측정 앱",
-  description: "MediaPipe를 활용한 AI 기반 운동 자세 측정 및 분석 서비스",
+  title: "Beeve Web - AI 기반 운동 측정",
+  description: "AI 포즈 인식을 통한 정확한 운동 측정 플랫폼",
+  viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover",
 };
 
 export default function RootLayout({

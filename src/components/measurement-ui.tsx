@@ -34,9 +34,16 @@ interface MeasurementUIProps {
   onStopMeasurement?: () => void;
   onReset?: () => void;
   
+  // 비디오 클릭 이벤트
+  onVideoClick?: (event: React.MouseEvent<HTMLVideoElement>) => void;
+  
   // 커스텀 레이블
   countLabel?: string;
   timeLabel?: string;
+  
+  // 표시 옵션
+  showCount?: boolean;
+  showTimer?: boolean;
 }
 
 export function MeasurementUI({
@@ -54,8 +61,11 @@ export function MeasurementUI({
   onStartMeasurement,
   onStopMeasurement,
   onReset,
+  onVideoClick,
   countLabel = '개수',
   timeLabel = '남은 시간',
+  showCount = true,
+  showTimer = true,
 }: MeasurementUIProps) {
   // 타이머 포맷 (MM:SS)
   const formatTime = (seconds: number) => {
@@ -70,14 +80,13 @@ export function MeasurementUI({
       <div className="flex-1 overflow-y-auto p-4">
         <div className="w-full max-w-2xl mx-auto">
           {/* 카메라 화면 */}
-          <div className="relative mb-4 bg-gray-800 rounded-lg overflow-hidden border-4 border-blue-500">
+          <div className="relative mb-4 bg-gray-800 rounded-lg overflow-hidden border-4 border-blue-500" style={{ aspectRatio: '3/4' }}>
             <video
               ref={videoRef}
-              className="block w-full h-auto"
+              className={`absolute inset-0 w-full h-full ${onVideoClick ? 'cursor-pointer' : ''}`}
               style={{ 
                 transform: 'scaleX(-1)',
-                aspectRatio: '4/3',
-                maxHeight: '70vh'
+                objectFit: 'cover'
               }}
               playsInline
               autoPlay
@@ -86,6 +95,7 @@ export function MeasurementUI({
               x5-playsinline="true"
               x5-video-player-type="h5"
               x5-video-player-fullscreen="false"
+              onClick={onVideoClick}
             />
             {!videoRef.current?.srcObject && (
               <div className="absolute inset-0 flex items-center justify-center text-gray-400">
@@ -113,19 +123,25 @@ export function MeasurementUI({
           </div>
 
           {/* 카운트 & 남은 시간 */}
-          <div className="grid grid-cols-2 gap-4 mb-4">
-            <div className="bg-gray-800 p-6 rounded-lg text-center">
-              <div className="text-5xl font-bold text-blue-400">{count}</div>
-              <div className="text-lg text-gray-300 mt-2">{countLabel}</div>
+          {(showCount || showTimer) && (
+            <div className={`grid gap-4 mb-4 ${showCount && showTimer ? 'grid-cols-2' : 'grid-cols-1'}`}>
+              {showCount && (
+                <div className="bg-gray-800 p-6 rounded-lg text-center">
+                  <div className="text-5xl font-bold text-blue-400">{count}</div>
+                  <div className="text-lg text-gray-300 mt-2">{countLabel}</div>
+                </div>
+              )}
+              
+              {showTimer && (
+                <div className="bg-gray-800 p-6 rounded-lg text-center">
+                  <div className="text-5xl font-bold text-green-400">
+                    {formatTime(remainingTime)}
+                  </div>
+                  <div className="text-lg text-gray-300 mt-2">{timeLabel}</div>
+                </div>
+              )}
             </div>
-            
-            <div className="bg-gray-800 p-6 rounded-lg text-center">
-              <div className="text-5xl font-bold text-green-400">
-                {formatTime(remainingTime)}
-              </div>
-              <div className="text-lg text-gray-300 mt-2">{timeLabel}</div>
-            </div>
-          </div>
+          )}
 
           {/* 추가 정보 (각도 등) */}
           {additionalInfo}
