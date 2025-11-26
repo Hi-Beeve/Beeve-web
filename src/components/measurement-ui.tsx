@@ -139,6 +139,8 @@ export function MeasurementUI({
             </div>
           )} */}
 
+          {/* 사용방법 */}
+          {instructions}
           {/* 추가 정보 (각도 등) */}
           {additionalInfo}
           
@@ -154,8 +156,6 @@ export function MeasurementUI({
             </div>
           )} */}
 
-          {/* 사용방법 */}
-          {instructions}
       </div>
 
       {/* 하단 고정 버튼 */}

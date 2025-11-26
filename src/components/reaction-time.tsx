@@ -1,6 +1,10 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { BackHeader } from './common/BackHeader';
+import { FONT_STYLES } from '@/styles/fontStyles';
+import FloatingButton from './common/FloatingButton';
+import { useRouter } from 'next/navigation';
 
 // 민첩성 측정 단계 정의
 type ReactionTimePhase = 
@@ -19,12 +23,9 @@ interface ReactionRecord {
   valid: boolean;
 }
 
-interface ReactionTimeProps {
-  onBack?: () => void;
-}
 
-export function ReactionTime({ onBack }: ReactionTimeProps) {
-  const [phase, setPhase] = useState<ReactionTimePhase>('intro');
+export function ReactionTime() {
+  const [phase, setPhase] = useState<ReactionTimePhase>('ready');
   const [currentAttempt, setCurrentAttempt] = useState(1);
   const [records, setRecords] = useState<ReactionRecord[]>([]);
   const [isListening, setIsListening] = useState(false);
@@ -48,6 +49,11 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
   const currentAttemptRef = useRef(currentAttempt); // currentAttempt 동기화를 위한 ref
   const stabilityTimerRef = useRef<NodeJS.Timeout | null>(null);
 
+  const router = useRouter()
+  
+  const onBack = () => {
+    router.push("/measurement")
+  };
   // phase 변경 시 phaseRef 업데이트
   useEffect(() => {
     phaseRef.current = phase;
@@ -744,80 +750,34 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
   }, []);
 
   return (
-    <div className="flex flex-col h-screen bg-gray-900 text-white">
+    <div className="flex flex-col h-screen">
       {/* 헤더 */}
-      <div className="bg-gray-800 flex items-center justify-between px-4 py-3 border-b border-gray-700">
+      <div className="flex px-4 py-3 ">
         {onBack && (
-          <button
-            onClick={onBack}
-            className="p-2 hover:bg-gray-700 rounded-lg transition"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
+          <BackHeader handleClickBack={onBack} />
         )}
-        <h1 className="text-xl font-bold flex-1 text-center">반응 시간 검사</h1>
-        <div className="w-10"></div>
       </div>
 
       {/* 메인 콘텐츠 */}
-      <div className="flex-1 flex flex-col items-center justify-center p-8">
-        {phase === 'intro' && (
-          <div className="text-center max-w-md">
-            <h2 className="text-3xl font-bold mb-6">반응 시간 검사</h2>
-            <p className="text-gray-300 mb-8 leading-relaxed">
-              예고 없이 들리는 신호에 반응하여 양 발을 동시에 벌리는 민첩성을 측정합니다.
-              <br />
-              3회 측정하여 가장 좋은 기록을 0.001초 단위로 측정합니다.
-            </p>
-            <div className="bg-gray-800 p-4 rounded-lg mb-8">
-              <h3 className="font-bold mb-2">측정 방법:</h3>
-              <ul className="text-sm text-gray-300 text-left space-y-1">
-                <li>• 양발을 모으고 어깨너비만큼 편하게 선다</li>
-                <li>• 휴대폰을 허리에 단단히 고정한다</li>
-                <li>• 신호음이 들리면 즉시 양발을 벌린다</li>
-              </ul>
-            </div>
-            <button
-              onClick={() => setPhase('setup-guide')}
-              className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 px-8 rounded-full text-xl transition-transform transform hover:scale-105"
-            >
-              측정 시작
-            </button>
-          </div>
-        )}
-
+      <div className="flex-1 flex flex-col items-center justify-center p-8 w-full">
         {phase === 'setup-guide' && (
-          <div className="text-center max-w-md">
-            <h2 className="text-3xl font-bold mb-6">휴대폰 고정 가이드</h2>
-            
-            <div className="bg-gray-800 p-6 rounded-lg mb-8">
-              <h3 className="font-bold mb-4 text-yellow-400">📱 휴대폰을 허리에 고정해주세요</h3>
+          <div className="text-center w-full">            
+            <div className="bg-[#F5F5F5] p-6 rounded-[20px] mb-8 w-full">
+              <h3 className={`${FONT_STYLES.heading5}`}>휴대폰을 허리에 고정해주세요</h3>
               
               <div className="space-y-4 text-left">
-                <div className="bg-gray-700 p-3 rounded">
-                  <h4 className="font-bold text-green-400">✅ 추천 방법:</h4>
-                  <ul className="text-sm text-gray-300 mt-2 space-y-1">
+                <div className="bg-[#F5F5F5] p-3 rounded">
+                  <ul className="text-sm text-[#767676] mt-2 space-y-1">
                     <li>• 벨트에 휴대폰 끼우기</li>
                     <li>• 바지 뒷주머니 (단단히 고정)</li>
                     <li>• 운동용 허리밴드 사용</li>
                     <li>• 탄력밴드로 허리에 고정</li>
                   </ul>
                 </div>
-                
-                <div className="bg-gray-700 p-3 rounded">
-                  <h4 className="font-bold text-blue-400">📍 고정 위치:</h4>
-                  <ul className="text-sm text-gray-300 mt-2 space-y-1">
-                    <li>• 허리 중앙 또는 옆구리</li>
-                    <li>• 화면이 몸쪽을 향하게</li>
-                    <li>• 움직여도 흔들리지 않게</li>
-                  </ul>
-                </div>
               </div>
             </div>
 
-            <button
+            <FloatingButton
               onClick={async () => {
                 const hasPermission = await requestAccelerometerPermission();
                 if (hasPermission && initializeAccelerometer()) {
@@ -827,18 +787,16 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
                   alert('가속도계 권한이 필요합니다.');
                 }
               }}
-              className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg"
+              className="py-3 px-6 h-12"
             >
-              다음 단계
-            </button>
+              다음 
+            </FloatingButton>
           </div>
         )}
 
         {phase === 'stability-check' && (
-          <div className="text-center max-w-md">
-            <h2 className="text-3xl font-bold mb-6">고정 상태 확인</h2>
-            
-            <div className="bg-gray-800 p-6 rounded-lg mb-8">
+          <div className="text-center w-full">            
+            <div className="bg-[#F5F5F5] p-6 rounded-[20px] mb-8">
               <div className="mb-4">
                 <div className="text-4xl font-bold text-blue-400 mb-2">
                   {stabilityScore}%
@@ -846,9 +804,9 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
                 <div className="text-gray-400">안정성 점수</div>
               </div>
               
-              <div className="w-full bg-gray-700 rounded-full h-4 mb-4">
+              <div className="w-full bg-gray-700 rounded-[20px] h-4 mb-4">
                 <div 
-                  className={`h-4 rounded-full transition-all duration-300 ${
+                  className={`h-4 rounded-[20px] transition-all duration-300 ${
                     stabilityScore >= 80 ? 'bg-green-500' : 
                     stabilityScore >= 60 ? 'bg-yellow-500' : 'bg-red-500'
                   }`}
@@ -856,7 +814,7 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
                 ></div>
               </div>
               
-              <p className="text-sm text-gray-300 mb-4">
+              <p className="text-sm text-[#767676] mb-4">
                 {(() => {
                   const now = Date.now();
                   const timeSinceLastCancel = now - lastCancelTimeRef.current;
@@ -922,13 +880,13 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
               )}
               
               {/* 디버그 정보 */}
-              <div className="bg-gray-700 p-3 rounded text-xs text-gray-400">
+              {/* <div className="bg-gray-700 p-3 rounded text-xs text-gray-400">
                 <div>가속도계 지원: {hasAccelerometer ? '✅' : '❌'}</div>
                 <div>권한 상태: {accelerometerPermission}</div>
                 <div className="mt-2 text-yellow-300">
                   💡 팁: 휴대폰을 허리에 단단히 고정하고 움직이지 마세요
                 </div>
-              </div>
+              </div> */}
             </div>
 
             {stabilityScore >= 60 && (
@@ -946,15 +904,9 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
             )}
             
             <div className="space-y-2">
-              <button
-                onClick={() => setPhase('setup-guide')}
-                className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg"
-              >
-                다시 고정하기
-              </button>
-              
+    
               {stabilityScore === 0 && (
-                <button
+                <FloatingButton
                   onClick={() => {
                     // 가속도계 재시작
                     stopAccelerometer();
@@ -962,10 +914,10 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
                       startAccelerometer();
                     }, 1000);
                   }}
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg ml-2"
+                  className="bg-[#BDB2DD] text-white py-2 px-6 h-12"
                 >
                   센서 재시작
-                </button>
+                </FloatingButton>
               )}
             </div>
           </div>
@@ -986,12 +938,12 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
               </div>
             </div>
 
-            <button
+            <FloatingButton
               onClick={startRandomSignal}
-              className="bg-red-500 hover:bg-red-600 text-white font-bold py-4 px-8 rounded-full text-xl transition-transform transform hover:scale-105"
+              className=" py-4 px-8 "
             >
-              🎯 측정 시작
-            </button>
+              측정 시작
+            </FloatingButton>
           </div>
         )}
 
@@ -999,13 +951,13 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
           <div className="text-center max-w-md">
             <h2 className="text-3xl font-bold mb-6">신호음 대기 중...</h2>
             
-            <div className="bg-gray-800 p-8 rounded-lg mb-8">
+            <div className="bg-[#F5F5F5] p-8 rounded-lg mb-8">
               <div className="animate-pulse">
                 <div className="text-6xl mb-4">👂</div>
-                <p className="text-gray-300">
+                <p className="text-[#767676]">
                   신호음을 기다리세요
                   <br />
-                  <span className="text-yellow-400">움직이지 마세요!</span>
+                  <span className="text-[#767676]">움직이지 마세요!</span>
                 </p>
               </div>
             </div>
@@ -1027,18 +979,16 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
         )}
 
         {phase === 'measuring' && (
-          <div className="text-center max-w-md">
-            <h2 className="text-3xl font-bold mb-6">측정 중...</h2>
-            
-            <div className="bg-gray-800 p-8 rounded-lg mb-8">
+          <div className="text-center max-w-md">            
+            <div className="bg-[#F5F5F5] p-8 rounded-lg mb-8">
               <div className="animate-bounce mb-4">
-                <div className="text-6xl mb-4 text-green-400">🔊</div>
-                <p className="text-green-400 font-bold text-xl">
+                <div className="text-6xl mb-4 ">🔊</div>
+                <p className="text-[#767676] font-bold text-xl">
                   지금 발을 벌리세요!
                 </p>
               </div>
               
-              {/* 실시간 감지 정보 */}
+              {/* TODO : 디버깅 정보 주석처리 */}
               <div className="bg-gray-700 p-3 rounded text-xs text-gray-400 mt-4">
                 <div className="mb-3 font-bold text-yellow-300">🎯 발 벌리기 감지 상태:</div>
                 {baselineAcceleration && currentAccelerationData && (
@@ -1109,51 +1059,33 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
               </div>
             </div>
             
-            {/* 수동 완료 버튼 */}
-            <div className="space-y-2">
-              <button
-                onClick={() => {
-                  // 현재 시점 반응시간 측정
-                  if (signalTime) {
-                    const reactionTime = performance.now() - signalTime;
-                    console.log('수동 측정, 반응시간:', reactionTime);
-                    recordReaction(reactionTime);
-                  } else {
-                    console.warn('신호시간이 설정되지 않음');
-                  }
-                }}
-                className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg"
-              >
-                지금 측정하기
-              </button>
-              
-              <button
+            {/* 건너뛰기 버튼 */}
+              <FloatingButton
                 onClick={() => {
                   // 측정 건너뛰기 (무효 처리)
                   console.log('측정 건너뛰기');
                   const invalidReactionTime = 9999; // 무효한 시간으로 설정
                   recordReaction(invalidReactionTime);
                 }}
-                className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg"
+                className="h-12"
               >
                 건너뛰기
-              </button>
+              </FloatingButton>
             </div>
-          </div>
         )}
 
         {phase === 'result' && records[currentAttempt - 1] && (
-          <div className="text-center max-w-md">
+          <div className="text-center w-full">
             <h2 className="text-3xl font-bold mb-6">{currentAttempt}회차 결과</h2>
             
-            <div className="bg-gray-800 p-6 rounded-lg mb-8">
+            <div className="bg-[#F5F5F5] p-6 rounded-[20px] w-full">
               <div className={`text-4xl font-bold mb-4 ${
                 records[currentAttempt - 1].valid ? 'text-green-400' : 'text-red-400'
               }`}>
                 {formatTime(records[currentAttempt - 1].reactionTime)}
               </div>
               <div className="text-gray-400 text-sm">
-                {records[currentAttempt - 1].valid ? '✅ 유효한 측정' : '❌ 무효 측정'}
+                {records[currentAttempt - 1].valid ? '유효한 측정' : '무효 측정'}
               </div>
             </div>
 
@@ -1176,29 +1108,26 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
                 </button>
               </div>
             ) : (
-              <button
+              <FloatingButton
                 onClick={() => setPhase('final-result')}
-                className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg"
+                className=" py-3 px-6 h-12"
               >
                 최종 결과 보기
-              </button>
+              </FloatingButton>
             )}
           </div>
         )}
 
         {phase === 'final-result' && (
-          <div className="text-center max-w-md">
-            <h2 className="text-3xl font-bold mb-8">측정 완료</h2>
-            
-            <div className="bg-gray-800 p-6 rounded-lg mb-8">
-              <div className="text-gray-400 text-sm mb-4">측정 결과</div>
+          <div className="text-center max-w-md">            
+            <div className="bg-[#F5F5F5] p-6 rounded-[20px] w-full">
               
               {/* 개별 결과 */}
               <div className="space-y-2 mb-6">
                 {records.map((record, index) => (
                   <div key={index} className="flex justify-between items-center">
-                    <span className="text-gray-300">{record.attempt}회차:</span>
-                    <span className={`font-mono text-lg ${record.valid ? 'text-white' : 'text-red-400'}`}>
+                    <span className="text-[#767676]">{record.attempt}회차:</span>
+                    <span className={`font-mono text-lg ${record.valid ? 'text-black' : 'text-red-400'}`}>
                       {formatTime(record.reactionTime)} {!record.valid && '(무효)'}
                     </span>
                   </div>
@@ -1206,9 +1135,9 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
               </div>
               
               {/* 최고 기록 */}
-              <div className="border-t border-gray-600 pt-4">
-                <div className="text-gray-400 text-sm">최고 기록</div>
-                <div className="text-3xl font-bold text-green-400">
+              <div className="border-t border-[#767676] pt-4">
+                <div className="text-sm">최고 기록</div>
+                <div className="text-3xl font-bold text-green-500">
                   {(() => {
                     const validRecords = records.filter(r => r.valid);
                     if (validRecords.length === 0) return '측정 실패';
@@ -1218,26 +1147,13 @@ export function ReactionTime({ onBack }: ReactionTimeProps) {
               </div>
             </div>
             
-            <div className="space-y-4">
-              <button
-                onClick={() => {
-                  // 다시 측정
-                  setCurrentAttempt(1);
-                  setRecords([]);
-                  setPhase('ready');
-                }}
-                className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg mr-4"
-              >
-                다시 측정
-              </button>
-              <button
+              <FloatingButton
                 onClick={onBack}
-                className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg"
+                className="py-3 px-6 h-12"
               >
                 완료
-              </button>
+              </FloatingButton>
             </div>
-          </div>
         )}
       </div>
     </div>
