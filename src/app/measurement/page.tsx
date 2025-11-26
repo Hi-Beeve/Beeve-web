@@ -80,7 +80,7 @@ export default function Home() {
           </Link>
 
           <Link
-            href="/measurement/sit-and-reach-test"
+            href="/measurement/description?type=sit-and-reach"
             className="bg-gray-800 hover:bg-gray-700 p-6 rounded-lg text-center transition-colors border border-gray-700"
           >
             <div className="text-4xl mb-3">🧘‍♀️</div>

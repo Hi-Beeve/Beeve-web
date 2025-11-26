@@ -28,15 +28,17 @@ export default function DescriptionView() {
     if (exerciseKey) {
       if (exerciseKey.startsWith('pushup')) {
         const subtype = exerciseKey.split('-')[1];
-        router.push(`/pushup-counter?type=${subtype}`);
+        router.push(`/measurement/pushup-counter?type=${subtype}`);
       } else if (exerciseKey === 'step') {
-        router.push('/step-test');
+        router.push('/measurement/step-test');
       } else if (exerciseKey === 'standing-jump') {
-        router.push('/standing-jump');
+        router.push('/measurement/standing-jump');
       } else if (exerciseKey === 'reaction-time') {
-        router.push('/reaction-time');
+        router.push('/measurement/reaction-time');
+      } else if (exerciseKey === 'sit-and-reach') {
+        router.push('/measurement/sit-and-reach-test');
       } else {
-        router.push(`/${exerciseKey}-counter`);
+        router.push(`/measurement/${exerciseKey}-counter`);
       }
     }
   };
