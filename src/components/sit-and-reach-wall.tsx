@@ -589,6 +589,7 @@ export function SitAndReachWall() {
       ) : (
         <MeasurementUI
           videoRef={videoRef}
+          isPortrait={true}
           timerStatus={phase === MeasurementPhase.SITTING_MEASUREMENT ? 'measuring' : 'idle'}
           preparingTime={preparingTime}
           remainingTime={remainingTime}

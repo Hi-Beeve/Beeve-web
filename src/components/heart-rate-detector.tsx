@@ -335,6 +335,7 @@ export function HeartRateDetector({ title, instruction, onComplete, onCancel }: 
         <video
           ref={videoRef}
           className="w-full h-full object-cover"
+          style={{ aspectRatio: '4/3' }}
           autoPlay
           playsInline
           muted

@@ -6,6 +6,7 @@ import { TimerStatus } from './measurement-timer';
 interface MeasurementUIProps {
   // 카메라 관련
   videoRef: React.RefObject<HTMLVideoElement | null>;
+  isPortrait?: boolean; // 세로 카메라 비율 여부
   
   // 타이머 관련
   timerStatus: TimerStatus;
@@ -48,6 +49,7 @@ interface MeasurementUIProps {
 
 export function MeasurementUI({
   videoRef,
+  isPortrait = false,
   timerStatus,
   preparingTime,
   remainingTime,
@@ -80,7 +82,7 @@ export function MeasurementUI({
       <div className="flex-1 overflow-y-auto p-4">
         <div className="w-full max-w-2xl mx-auto">
           {/* 카메라 화면 */}
-          <div className="relative mb-4 bg-gray-800 rounded-lg overflow-hidden border-4 border-blue-500" style={{ aspectRatio: '3/4' }}>
+          <div className="relative mb-4 bg-gray-800 rounded-lg overflow-hidden border-4 border-blue-500" style={{ aspectRatio: isPortrait ? '3/4' : '4/3' }}>
             <video
               ref={videoRef}
               className={`absolute inset-0 w-full h-full ${onVideoClick ? 'cursor-pointer' : ''}`}

@@ -48,8 +48,8 @@ export function StandingJump({ onBack }: StandingJumpProps) {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: 'user', // 전면 카메라 (사용자가 자신을 보면서 점프)
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
+          width: { ideal: 480 },
+          height: { ideal: 640 },
           frameRate: { ideal: 60, min: 30 } // 고프레임레이트로 정확도 향상
         },
         audio: false
@@ -303,6 +303,7 @@ export function StandingJump({ onBack }: StandingJumpProps) {
                 playsInline
                 muted
                 className="w-full max-w-sm rounded-lg bg-black"
+                style={{ aspectRatio: '3/4' }}
               />
               
               {/* 카운트다운 오버레이 */}

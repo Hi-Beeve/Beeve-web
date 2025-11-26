@@ -100,7 +100,7 @@ export function SitupDetector({ onBack }: SitupDetectorProps) {
     if (typeof window === 'undefined' || !videoRef.current) return;
 
     try {
-      await startCameraStream(videoRef.current);
+      await startCameraStream(videoRef.current, false); // 가로 비율 사용
       detectPose();
     } catch (error) {
       console.error('카메라 접근 실패:', error);
@@ -380,6 +380,7 @@ export function SitupDetector({ onBack }: SitupDetectorProps) {
       ) : (
         <MeasurementUI
           videoRef={videoRef}
+          isPortrait={false}
           timerStatus={timerStatus}
           preparingTime={preparingTime}
           remainingTime={remainingTime}
