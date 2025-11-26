@@ -1,3 +1,7 @@
+import gymIcon from "../../public/place_gym.svg"
+import homeIcon from "../../public/place_home.svg"
+import outdoorIcon from "../../public/place_outside.svg"
+
 export interface ExerciseGuide {
   title: string;
   youtubeVideoId: string;
@@ -9,6 +13,19 @@ export type Precaution = {
   text: string;
   indented?: boolean;
 };
+
+export type EXERCISE_PLACE = "집" | "야외" | "헬스장"
+export const EXERCISE_PLACE_WITH_ICON : {key:EXERCISE_PLACE, icon: string}[] = [
+  {key: "집", icon: homeIcon},
+  {key: "야외", icon: outdoorIcon},
+  {key: "헬스장", icon: gymIcon}
+]
+
+export const CHECK_LIST =[
+  "1. 측정환경 주변 물건을 정리하고 안전한 공간을 만들어주세요",
+  "2. 카메라를 점검해주세요",
+  "3. 소리를 점검해주세요",
+]
 
 export const EXERCISE_GUIDES: { [key: string]: ExerciseGuide } = {
   situp: {
