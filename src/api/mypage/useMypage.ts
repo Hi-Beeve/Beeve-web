@@ -1,6 +1,6 @@
 import { useProfileQuery, useUpdateProfileQuery } from "./queries";
 
-export const useMypage = () => {
+export const useMember = () => {
   const query = useProfileQuery();
 
   // 개발용 mock 데이터

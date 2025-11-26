@@ -1,11 +1,15 @@
+'use client';
+import { BackHeader } from '@/components/common/BackHeader';
 import { SitAndReachWall } from '@/components/sit-and-reach-wall';
 
 export default function SitAndReachTestPage() {
+  const onBack = () => {
+    window.history.back();
+  }
   return (
     <div className="min-h-screen">
-      <div className="max-w-4xl mx-auto">
+      <BackHeader handleClickBack={onBack}  />
         <SitAndReachWall />
-      </div>
     </div>
   );
 }

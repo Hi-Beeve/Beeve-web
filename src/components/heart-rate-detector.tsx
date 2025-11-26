@@ -322,7 +322,7 @@ export function HeartRateDetector({ title, instruction, onComplete, onCancel }: 
   return (
     <div className="text-center max-w-md mx-auto">
       <h2 className="text-3xl font-bold mb-6">{title}</h2>
-      <p className="text-gray-300 mb-8">{instruction}</p>
+      <p className="text-[#767676] mb-8">{instruction}</p>
       
       {error && (
         <div className="bg-red-900 text-red-300 p-4 rounded-lg mb-6">
@@ -335,6 +335,7 @@ export function HeartRateDetector({ title, instruction, onComplete, onCancel }: 
         <video
           ref={videoRef}
           className="w-full h-full object-cover"
+          style={{ aspectRatio: '4/3' }}
           autoPlay
           playsInline
           muted

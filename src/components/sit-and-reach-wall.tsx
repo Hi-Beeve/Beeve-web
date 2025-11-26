@@ -3,6 +3,10 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { PoseLandmarker, FilesetResolver } from '@mediapipe/tasks-vision';
 import { MeasurementUI } from './measurement-ui';
+import { CameraPermissionModal } from './camera-permission-modal';
+import { EXERCISE_GUIDES } from '@/config/exercise-guides';
+import { FONT_STYLES } from '@/styles/fontStyles';
+import { useMember } from '@/api/mypage/useMypage';
 
 interface WallMeasurement {
   wallPosition: number;
@@ -44,16 +48,25 @@ const POSE_LANDMARKS = {
 export function SitAndReachWall() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [poseLandmarker, setPoseLandmarker] = useState<PoseLandmarker | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
+  const [showCameraPermission, setShowCameraPermission] = useState(true);
+  const [cameraPermissionGranted, setCameraPermissionGranted] = useState(false);
   const [, setError] = useState<string | null>(null);
   const [isActive, setIsActive] = useState(false);
   const [phase, setPhase] = useState<MeasurementPhase>(MeasurementPhase.SETUP);
   const [measurement, setMeasurement] = useState<WallMeasurement | null>(null);
   const [pixelToRealRatio, setPixelToRealRatio] = useState<number>(0.1); // 기본값: 1픽셀 = 0.1cm
   const [wallPosition, setWallPosition] = useState<number>(100); // 화면에서 벽의 x 좌표
-  const [userHeight] = useState<number>(170); // 사용자 키 (cm) - 기본값 또는 프로필에서 가져옴
+  const [userHeight,setHeight] = useState<number>(170); // 사용자 키 (cm) - 기본값 또는 프로필에서 가져옴
   const [isHeightCalibrated, setIsHeightCalibrated] = useState<boolean>(false);
   const [voiceGuidanceTimer, setVoiceGuidanceTimer] = useState<number>(0);
   const [isUserSitting, setIsUserSitting] = useState<boolean>(false);
+  
+  const {data} = useMember();
+  useEffect(()=>{
+    setHeight(data?.height)
+  },[data])
   
   const [holdStartTime, setHoldStartTime] = useState<number | null>(null);
   const [currentHoldTime, setCurrentHoldTime] = useState<number>(0);
@@ -93,6 +106,28 @@ export function SitAndReachWall() {
       return false;
     }
   };
+
+  // 카메라 권한 처리
+  const handleCameraPermissionGranted = () => {
+    setShowCameraPermission(false);
+    setCameraPermissionGranted(true);
+    // 카메라 시작은 useEffect에서 처리
+  };
+
+  const handleCameraPermissionDenied = () => {
+    setShowCameraPermission(false);
+    // 뒤로 가기 또는 홈으로 이동하는 로직 추가 가능
+  };
+
+  // 카메라 권한 허용 후 자동 시작
+  useEffect(() => {
+    if (cameraPermissionGranted && videoRef.current && poseLandmarker) {
+      console.log('Auto-starting camera after permission granted');
+      startCamera();
+      setIsActive(true);
+      startMeasurement();
+    }
+  }, [cameraPermissionGranted, poseLandmarker]);
 
   const startCamera = useCallback(async () => {
     try {
@@ -581,14 +616,28 @@ export function SitAndReachWall() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div className="flex flex-col h-screen bg-gray-900 text-white">
+    <div className="flex flex-col pb-20">
+      {/* 카메라 권한 요청 모달 */}
+      <CameraPermissionModal
+        isOpen={showCameraPermission}
+        onPermissionGranted={handleCameraPermissionGranted}
+        onPermissionDenied={handleCameraPermissionDenied}
+        exerciseTitle="유연성 측정"
+      />
+
       {isLoading ? (
         <div className="flex items-center justify-center flex-1">
           <div className="text-xl">MediaPipe 로딩 중...</div>
         </div>
+      ) : !cameraPermissionGranted ? (
+        <div className="flex items-center justify-center flex-1">
+          <div className="text-xl">카메라 권한을 허용해주세요</div>
+        </div>
       ) : (
         <MeasurementUI
+          exerciseName="앉아윗몸앞으로굽히기"
           videoRef={videoRef}
+          isPortrait={true}
           timerStatus={phase === MeasurementPhase.SITTING_MEASUREMENT ? 'measuring' : 'idle'}
           preparingTime={preparingTime}
           remainingTime={remainingTime}
@@ -598,6 +647,12 @@ export function SitAndReachWall() {
           state={phase}
           showCount={false}
           showTimer={false}
+          instructions={
+             <div className="bg-[#F5F5F5] p-4 rounded-[20px] flex flex-col gap-2">
+                                   <p className={`${FONT_STYLES.body9} text-[#767676]`}>사용방법</p>
+                                   <div className={`${FONT_STYLES.body10} text-[#767676] flex flex-col gap-1`}>{EXERCISE_GUIDES[`sit-and-reach`]?.instructions.map((instruction, index) => <p key={index}>{instruction}</p>)}</div>
+                                  </div>
+          }
           additionalInfo={
             <>
               {/* Height Calibration Status */}
@@ -627,7 +682,7 @@ export function SitAndReachWall() {
                         }}
                         className="w-full mt-3 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-bold transition"
                       >
-                        🔧 수동으로 캘리브레이션 완료
+                        🔧 수동으로 캘리브레이션
                       </button>
                     )}
                     {isHeightCalibrated && (
@@ -636,17 +691,6 @@ export function SitAndReachWall() {
                         <span className="text-green-400 font-bold">{pixelToRealRatio.toFixed(4)} cm/픽셀</span>
                       </div>
                     )}
-                  </div>
-                </div>
-              )}
-
-              {/* Results */}
-              {measurement && phase === MeasurementPhase.RESULT && (
-                <div className="bg-green-800 p-4 rounded-lg mb-4">
-                  <h3 className="font-semibold text-green-200 mb-2">🎉 측정 완료!</h3>
-                  <div className="space-y-1 text-green-100">
-                    <p>벽에서 발뒤꿈치까지의 거리: <strong className="text-white">{measurement.distanceInCm.toFixed(1)}cm</strong></p>
-                    <p>유지 시간: <strong className="text-white">{measurement.holdDuration.toFixed(1)}초</strong></p>
                   </div>
                 </div>
               )}

@@ -1,12 +1,12 @@
 "use client"
 
-import { useMypage } from '@/api/mypage/useMypage';
+import { useMember } from '@/api/mypage/useMypage';
 import { AppInfoCard, MemberLogout, ProfileCard } from '@/components/mypage/ProfileCard';
 import { FONT_STYLES } from '@/styles/fontStyles';
 import Image from 'next/image'
 
 const Mypage = () => {
-    const { data } = useMypage();
+    const { data } = useMember();
     return (
         <div className="flex flex-col items-center py-10 px-5 gap-6">
             <div className="flex flex-col items-center gap-2">

@@ -27,10 +27,15 @@ export const calculateAngle = (a: Landmark, b: Landmark, c: Landmark): number =>
  * 카메라 스트림 시작
  */
 export const startCameraStream = async (
-  videoRef: HTMLVideoElement
+  videoRef: HTMLVideoElement,
+  isPortrait: boolean = false
 ): Promise<MediaStream> => {
+  const videoConfig = isPortrait 
+    ? { facingMode: 'user', width: 480, height: 640 } // 세로 비율 (3:4)
+    : { facingMode: 'user', width: 640, height: 480 }; // 가로 비율 (4:3)
+    
   const stream = await navigator.mediaDevices.getUserMedia({
-    video: { facingMode: 'user', width: 640, height: 480 }
+    video: videoConfig
   });
   
   videoRef.srcObject = stream;

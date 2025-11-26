@@ -7,6 +7,7 @@ import { useSignUp } from '@/api/auth/useAuth';
 import { ClientOAuthInfo, ClientAdditionalInfo } from '@/types/auth';
 import { FONT_STYLES } from '@/styles/fontStyles';
 import { GenderSelect, BirthDateSelect, PhysicalInfoInput } from '@/components/common/FormComponents';
+import { ProgressBar } from '@/components/progress_bar';
 
 type FunnelStep = 'gender' | 'birthDate' | 'physicalInfo';
 
@@ -168,19 +169,7 @@ function AdditionalInfoContent() {
     <div className="min-h-screen flex items-start justify-center p-5">
       <div className="rounded-lg max-w-md w-full">
         {/* 진행 상황 표시 */}
-        <div className="mb-8">
-          <div className="flex justify-between items-center mb-4">
-            <span className="text-sm text-gray-600">
-              {stepInfo.step} / {stepInfo.total}
-            </span>
-          </div>
-          <div className="w-full bg-[#F5F5F5] rounded-full h-1">
-            <div 
-              className="bg-[#BDB2DD] h-1 rounded-[5px] transition-all duration-300"
-              style={{ width: `${(stepInfo.step / stepInfo.total) * 100}%` }}
-            />
-          </div>
-        </div>
+        <ProgressBar stepInfo={stepInfo} />
 
         {/* 헤더 */}
         <div className="flex flex-col items-start pt-15 pb-10">

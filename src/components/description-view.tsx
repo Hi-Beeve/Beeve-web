@@ -2,7 +2,9 @@
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { EXERCISE_GUIDES, ExerciseGuide, Precaution } from '@/config/exercise-guides';
+import { EXERCISE_GUIDES, ExerciseGuide } from '@/config/exercise-guides';
+import { FONT_STYLES } from '@/styles/fontStyles';
+import Image from 'next/image';
 
 export default function DescriptionView() {
   const router = useRouter();
@@ -28,32 +30,41 @@ export default function DescriptionView() {
     if (exerciseKey) {
       if (exerciseKey.startsWith('pushup')) {
         const subtype = exerciseKey.split('-')[1];
-        router.push(`/pushup-counter?type=${subtype}`);
+        router.push(`/measurement/pushup-counter?type=${subtype}`);
       } else if (exerciseKey === 'step') {
-        router.push('/step-test');
+        router.push('/measurement/step-test');
       } else if (exerciseKey === 'standing-jump') {
-        router.push('/standing-jump');
+        router.push('/measurement/standing-jump');
       } else if (exerciseKey === 'reaction-time') {
-        router.push('/reaction-time');
+        router.push('/measurement/reaction-time');
+      } else if (exerciseKey === 'sit-and-reach') {
+        router.push('/measurement/sit-and-reach-test');
       } else {
-        router.push(`/${exerciseKey}-counter`);
+        router.push(`/measurement/${exerciseKey}-counter`);
       }
     }
   };
 
   if (!guide) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gray-900 text-white">
+      <div className="flex items-center justify-center h-screen">
         <p>운동 정보를 불러오는 중...</p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col items-center h-screen bg-gray-900 text-white p-8 overflow-y-auto">
+    <div className="flex flex-col items-center h-screen p-8 overflow-y-auto">
       <div className="w-full max-w-4xl mx-auto">
-        <h1 className="text-4xl font-bold mb-6 text-center text-yellow-400">{guide.title} 측정 안내</h1>
+        <div className='w-full flex flex-col justify-center items-center py-12 px-7 gap-2'>
+
+       <div className='bg-[#BDB2DD] w-[100px] h-[100px] rounded-full flex justify-center items-center'>
+        {/* 운동별 아이콘 */}
+        <Image src={guide.icon} alt="exercise-icon" width={50} height={50} />
+       </div>
+       <h1 className={FONT_STYLES.heading32}>{guide.title}</h1>
         
+        </div>
         <div className="w-full max-w-2xl mx-auto mb-8 rounded-lg overflow-hidden shadow-lg aspect-video">
           <iframe
             src={`https://www.youtube.com/embed/${guide.youtubeVideoId}`}
@@ -67,37 +78,22 @@ export default function DescriptionView() {
         </div>
 
         <div className="grid md:grid-cols-2 gap-8">
-          <div className="bg-gray-800 p-6 rounded-lg">
-            <h2 className="text-xs font-semibold mb-4 border-b-2 border-gray-700 pb-2">측정 방법</h2>
+          <div className="bg-[#F5F5F5] p-6 rounded-lg">
+            <h2 className="text-xs mb-4 pb-2 text-[#767676]">측정 방법</h2>
             <ul className="list-decimal list-inside space-y-3">
               {guide.instructions.map((desc, index) => (
-                <li key={index}>{desc}</li>
+                <div key={index} className='flex gap-2 text-[14px] text-black'><div className="bg-[#BDB2DD] h-6 min-w-6 text-[12px] rounded-full flex justify-center items-center">{index + 1}</div>{desc}</div>
               ))}
-            </ul>
-          </div>
-          <div className="bg-gray-800 p-6 rounded-lg">
-            <h2 className="text-xs font-semibold mb-4 border-b-2 border-gray-700 pb-2 text-red-400">유의사항</h2>
-            <ul className="list-disc list-inside space-y-3 text-red-300">
-              {guide.precautions.map((item, index) => {
-                if (typeof item === 'string') {
-                  return <li key={index}>{item}</li>;
-                }
-                if (typeof item === 'object' && 'text' in item) {
-                  const precaution = item as Precaution;
-                  return <li key={index} className={precaution.indented ? 'ml-6' : ''}>{precaution.text}</li>;
-                }
-                return null;
-              })}
             </ul>
           </div>
         </div>
 
-        <div className="text-center mt-10">
+        <div className="text-center mt-10 fixed bottom-6 left-6 right-6">
           <button 
             onClick={handleStart}
-            className="bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-8 rounded-full text-xl transition-transform transform hover:scale-105 shadow-lg"
+            className={`w-full bg-[#BDB2DD] text-white py-4 px-8 rounded-[20px] transition-transform transform ${FONT_STYLES.body5}`}
           >
-            측정 시작하기
+            시작하기
           </button>
         </div>
       </div>

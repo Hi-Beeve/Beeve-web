@@ -8,6 +8,9 @@ import { PUSHUP_CONFIGS } from '@/config/pushup-types';
 import { playPushupCountSound } from '@/lib/sound-effects';
 import { useMeasurementTimer, TimerStatus } from './measurement-timer';
 import { MeasurementUI } from './measurement-ui';
+import { CameraPermissionModal } from './camera-permission-modal';
+import { EXERCISE_GUIDES } from '@/config/exercise-guides';
+import { FONT_STYLES } from '@/styles/fontStyles';
 
 interface PushupDetectorProps {
   type: PushupType;
@@ -20,6 +23,8 @@ export function PushupDetector({ type, onBack }: PushupDetectorProps) {
   const [poseLandmarker, setPoseLandmarker] = useState<PoseLandmarker | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isMounted, setIsMounted] = useState(false);
+  const [showCameraPermission, setShowCameraPermission] = useState(true);
+  const [cameraPermissionGranted, setCameraPermissionGranted] = useState(false);
   const [count, setCount] = useState(0);
   const [state, setState] = useState<PushupState>('ready');
   const [feedback, setFeedback] = useState('');
@@ -100,12 +105,37 @@ export function PushupDetector({ type, onBack }: PushupDetectorProps) {
     initializePoseLandmarker();
   }, [isMounted]);
 
+  // 카메라 권한 허용 후 자동 시작
+  useEffect(() => {
+    if (cameraPermissionGranted && videoRef.current && poseLandmarker) {
+      console.log('Auto-starting camera after permission granted');
+      startCamera();
+    }
+  }, [cameraPermissionGranted, poseLandmarker]);
+
+  // 카메라 권한 처리
+  const handleCameraPermissionGranted = () => {
+    setShowCameraPermission(false);
+    setCameraPermissionGranted(true);
+    // 카메라 시작은 useEffect에서 처리
+  };
+
+  const handleCameraPermissionDenied = () => {
+    setShowCameraPermission(false);
+    if (onBack) {
+      onBack();
+    }
+  };
+
   // 카메라 시작
   const startCamera = async () => {
+    console.log("window ", window)
+    console.log("videoRef.current ", videoRef.current)
     if (typeof window === 'undefined' || !videoRef.current) return;
 
     try {
-      await startCameraStream(videoRef.current);
+      console.log("start camera gogo")
+      await startCameraStream(videoRef.current, false); // 가로 비율 사용
       detectPose();
     } catch (error) {
       console.error('카메라 접근 실패:', error);
@@ -334,14 +364,28 @@ export function PushupDetector({ type, onBack }: PushupDetectorProps) {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-gray-900 text-white">
+    <div className="flex flex-col h-[calc(100vh-50px)]">
+      {/* 카메라 권한 요청 모달 */}
+      <CameraPermissionModal
+        isOpen={showCameraPermission}
+        onPermissionGranted={handleCameraPermissionGranted}
+        onPermissionDenied={handleCameraPermissionDenied}
+        exerciseTitle={`${config.nameKo} 측정`}
+      />
+
       {isLoading ? (
         <div className="flex items-center justify-center flex-1">
           <div className="text-xl">MediaPipe 로딩 중...</div>
         </div>
+      ) : !cameraPermissionGranted ? (
+        <div className="flex items-center justify-center flex-1">
+          <div className="text-xl">카메라 권한을 허용해주세요</div>
+        </div>
       ) : (
         <MeasurementUI
+          exerciseName={config.nameKo}
           videoRef={videoRef}
+          isPortrait={false}
           timerStatus={timerStatus}
           preparingTime={preparingTime}
           remainingTime={remainingTime}
@@ -349,27 +393,11 @@ export function PushupDetector({ type, onBack }: PushupDetectorProps) {
           isFullBodyDetected={isFullBodyDetected}
           feedback={feedback}
           state={state}
-          additionalInfo={
-            <div className="bg-gray-800 p-4 rounded-lg mb-4">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm text-gray-400">팔꿈치 각도</span>
-                <span className="text-2xl font-bold text-green-400">{Math.round((leftElbowAngle + rightElbowAngle) / 2)}°</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-400">몸통 각도</span>
-                <span className="text-2xl font-bold text-yellow-400">{Math.round(bodyAngle)}°</span>
-              </div>
-            </div>
-          }
           instructions={
-            <div className="bg-gray-800 p-4 rounded-lg">
-              <div className="font-semibold text-white mb-2">💡 사용 방법:</div>
-              <ul className="list-disc list-inside space-y-1 text-sm text-gray-400">
-                <li><strong className="text-white">옆모습</strong>이 보이도록 카메라를 설치하세요</li>
-                <li>팔꿈치 각도가 <strong className="text-white">{ELBOW_DOWN_THRESHOLD}도 이하</strong>로 내려가면 DOWN</li>
-                <li>팔꿈치 각도가 <strong className="text-white">{ELBOW_UP_THRESHOLD}도 이상</strong>으로 올라가면 카운트!</li>
-                <li>{config.description}</li>
-              </ul>
+            <div className="bg-[#F5F5F5] p-4 rounded-[20px] flex flex-col gap-2">
+             {/* TODO : EXERCISE_GUIDES.푸시업타입.precautions 추가*/}
+             <p className={`${FONT_STYLES.body9} text-[#767676]`}>사용방법</p>
+             <div className={`${FONT_STYLES.body10} text-[#767676] flex flex-col gap-1`}>{EXERCISE_GUIDES[`pushup-${type}`]?.instructions.map((instruction, index) => <p key={index}>{instruction}</p>)}</div>
             </div>
           }
           onStartCamera={startCamera}

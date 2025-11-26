@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useMypage, useUpdateProfile } from "@/api/mypage/useMypage";
+import { useMember, useUpdateProfile } from "@/api/mypage/useMypage";
 import { FONT_STYLES } from '@/styles/fontStyles';
 import { 
   NameInput, 
@@ -15,7 +15,7 @@ import Image from 'next/image';
 
 const EditPage = () => {
     const router = useRouter();
-    const { data } = useMypage();
+    const { data } = useMember();
     
     const { updateProfile } = useUpdateProfile();
     // 폼 데이터 상태

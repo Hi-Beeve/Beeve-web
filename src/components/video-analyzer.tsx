@@ -150,7 +150,6 @@ export function VideoAnalyzer({ videoBlob, onAnalysisComplete, onCancel }: Video
 
   return (
     <div className="w-full max-w-4xl mx-auto">
-      <h3 className="text-2xl font-bold mb-6 text-center">영상 분석</h3>
       
       {/* 비디오 플레이어 */}
       <div className="relative mb-6">
