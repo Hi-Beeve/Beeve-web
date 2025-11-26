@@ -12,7 +12,7 @@ import Image from "next/image";
 
 const STEPS = ["Body Information","Measurement Place","Check List"];
 
-export const PreServeyPage = () => {
+const PreServeyPage = () => {
     const {data } = useMember();
     const [step, setStep] = useState<number>(0);
     const [place, setPlace] = useState <EXERCISE_PLACE | null>(null);
