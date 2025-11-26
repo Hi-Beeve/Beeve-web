@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { VideoAnalyzer } from './video-analyzer';
+import { CameraPermissionModal } from './camera-permission-modal';
 
 // 제자리 높이뛰기 단계 정의
 type StandingJumpPhase = 
@@ -30,6 +31,8 @@ export function StandingJump({ onBack }: StandingJumpProps) {
   const [recordingTime, setRecordingTime] = useState(0);
   const [countdown, setCountdown] = useState<number | null>(null);
   const [showJumpMessage, setShowJumpMessage] = useState(false);
+  const [showCameraPermission, setShowCameraPermission] = useState(true);
+  const [cameraPermissionGranted, setCameraPermissionGranted] = useState(false);
   
   // 비디오 관련 refs
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -41,6 +44,28 @@ export function StandingJump({ onBack }: StandingJumpProps) {
   // 타이머 관련 refs
   const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
   const countdownTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // 카메라 권한 처리
+  const handleCameraPermissionGranted = () => {
+    setShowCameraPermission(false);
+    setCameraPermissionGranted(true);
+    // 카메라 시작은 useEffect에서 처리
+  };
+
+  const handleCameraPermissionDenied = () => {
+    setShowCameraPermission(false);
+    if (onBack) {
+      onBack();
+    }
+  };
+
+  // 카메라 권한 허용 후 자동 시작
+  useEffect(() => {
+    if (cameraPermissionGranted && videoRef.current) {
+      console.log('Auto-starting camera after permission granted');
+      startCamera();
+    }
+  }, [cameraPermissionGranted]);
 
   // 카메라 시작
   const startCamera = async (): Promise<boolean> => {
@@ -236,8 +261,22 @@ export function StandingJump({ onBack }: StandingJumpProps) {
 
   return (
     <div className="flex flex-col h-screen bg-gray-900 text-white">
-      {/* 헤더 */}
-      <div className="bg-gray-800 flex items-center justify-between px-4 py-3 border-b border-gray-700">
+      {/* 카메라 권한 요청 모달 */}
+      <CameraPermissionModal
+        isOpen={showCameraPermission}
+        onPermissionGranted={handleCameraPermissionGranted}
+        onPermissionDenied={handleCameraPermissionDenied}
+        exerciseTitle="제자리 높이뛰기 측정"
+      />
+
+      {!cameraPermissionGranted ? (
+        <div className="flex items-center justify-center h-screen">
+          <div className="text-xl">카메라 권한을 허용해주세요</div>
+        </div>
+      ) : (
+        <>
+          {/* 헤더 */}
+          <div className="bg-gray-800 flex items-center justify-between px-4 py-3 border-b border-gray-700">
         {onBack && (
           <button
             onClick={onBack}
@@ -493,6 +532,8 @@ export function StandingJump({ onBack }: StandingJumpProps) {
           </div>
         )}
       </div>
+        </>
+      )}
     </div>
   );
 }

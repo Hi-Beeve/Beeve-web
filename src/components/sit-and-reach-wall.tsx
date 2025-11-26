@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { PoseLandmarker, FilesetResolver } from '@mediapipe/tasks-vision';
 import { MeasurementUI } from './measurement-ui';
+import { CameraPermissionModal } from './camera-permission-modal';
 
 interface WallMeasurement {
   wallPosition: number;
@@ -44,6 +45,10 @@ const POSE_LANDMARKS = {
 export function SitAndReachWall() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [poseLandmarker, setPoseLandmarker] = useState<PoseLandmarker | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
+  const [showCameraPermission, setShowCameraPermission] = useState(true);
+  const [cameraPermissionGranted, setCameraPermissionGranted] = useState(false);
   const [, setError] = useState<string | null>(null);
   const [isActive, setIsActive] = useState(false);
   const [phase, setPhase] = useState<MeasurementPhase>(MeasurementPhase.SETUP);
@@ -93,6 +98,28 @@ export function SitAndReachWall() {
       return false;
     }
   };
+
+  // 카메라 권한 처리
+  const handleCameraPermissionGranted = () => {
+    setShowCameraPermission(false);
+    setCameraPermissionGranted(true);
+    // 카메라 시작은 useEffect에서 처리
+  };
+
+  const handleCameraPermissionDenied = () => {
+    setShowCameraPermission(false);
+    // 뒤로 가기 또는 홈으로 이동하는 로직 추가 가능
+  };
+
+  // 카메라 권한 허용 후 자동 시작
+  useEffect(() => {
+    if (cameraPermissionGranted && videoRef.current && poseLandmarker) {
+      console.log('Auto-starting camera after permission granted');
+      startCamera();
+      setIsActive(true);
+      startMeasurement();
+    }
+  }, [cameraPermissionGranted, poseLandmarker]);
 
   const startCamera = useCallback(async () => {
     try {
@@ -582,9 +609,21 @@ export function SitAndReachWall() {
 
   return (
     <div className="flex flex-col h-screen bg-gray-900 text-white">
+      {/* 카메라 권한 요청 모달 */}
+      <CameraPermissionModal
+        isOpen={showCameraPermission}
+        onPermissionGranted={handleCameraPermissionGranted}
+        onPermissionDenied={handleCameraPermissionDenied}
+        exerciseTitle="유연성 측정"
+      />
+
       {isLoading ? (
         <div className="flex items-center justify-center flex-1">
           <div className="text-xl">MediaPipe 로딩 중...</div>
+        </div>
+      ) : !cameraPermissionGranted ? (
+        <div className="flex items-center justify-center flex-1">
+          <div className="text-xl">카메라 권한을 허용해주세요</div>
         </div>
       ) : (
         <MeasurementUI

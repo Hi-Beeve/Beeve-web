@@ -7,6 +7,7 @@ import { calculateAngle, startCameraStream, stopCameraStream } from '@/lib/pose-
 import { playPushupCountSound } from '@/lib/sound-effects';
 import { useMeasurementTimer, TimerStatus } from './measurement-timer';
 import { MeasurementUI } from './measurement-ui';
+import { CameraPermissionModal } from './camera-permission-modal';
 
 interface SitupDetectorProps {
   onBack?: () => void;
@@ -18,6 +19,8 @@ export function SitupDetector({ onBack }: SitupDetectorProps) {
   const [poseLandmarker, setPoseLandmarker] = useState<PoseLandmarker | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isMounted, setIsMounted] = useState(false);
+  const [showCameraPermission, setShowCameraPermission] = useState(true);
+  const [cameraPermissionGranted, setCameraPermissionGranted] = useState(false);
   const [count, setCount] = useState(0);
   const [state, setState] = useState<SitupState>('ready');
   const [feedback, setFeedback] = useState('');
@@ -94,6 +97,28 @@ export function SitupDetector({ onBack }: SitupDetectorProps) {
 
     initializePoseLandmarker();
   }, [isMounted]);
+
+  // 카메라 권한 허용 후 자동 시작
+  useEffect(() => {
+    if (cameraPermissionGranted && videoRef.current && poseLandmarker) {
+      console.log('Auto-starting camera after permission granted');
+      startCamera();
+    }
+  }, [cameraPermissionGranted, poseLandmarker]);
+
+  // 카메라 권한 처리
+  const handleCameraPermissionGranted = () => {
+    setShowCameraPermission(false);
+    setCameraPermissionGranted(true);
+    // 카메라 시작은 useEffect에서 처리
+  };
+
+  const handleCameraPermissionDenied = () => {
+    setShowCameraPermission(false);
+    if (onBack) {
+      onBack();
+    }
+  };
 
   // 카메라 시작
   const startCamera = async () => {
@@ -373,9 +398,21 @@ export function SitupDetector({ onBack }: SitupDetectorProps) {
 
   return (
     <div className="flex flex-col h-screen bg-gray-900 text-white">
+      {/* 카메라 권한 요청 모달 */}
+      <CameraPermissionModal
+        isOpen={showCameraPermission}
+        onPermissionGranted={handleCameraPermissionGranted}
+        onPermissionDenied={handleCameraPermissionDenied}
+        exerciseTitle="윗몸일으키기 측정"
+      />
+
       {isLoading ? (
         <div className="flex items-center justify-center flex-1">
           <div className="text-xl">MediaPipe 로딩 중...</div>
+        </div>
+      ) : !cameraPermissionGranted ? (
+        <div className="flex items-center justify-center flex-1">
+          <div className="text-xl">카메라 권한을 허용해주세요</div>
         </div>
       ) : (
         <MeasurementUI
