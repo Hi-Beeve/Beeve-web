@@ -4,12 +4,20 @@ import outdoorIcon from "../../public/place_outside.svg"
 import gymIconWhite from "../../public/place_gym_white.svg"
 import homeIconWhite from "../../public/place_home_white.svg"
 import outdoorIconWhite from "../../public/place_outside_white.svg"
+import strengthIcon from "../../public/STRENGTH.svg"
+import agilityIcon from "../../public/AGILITY.svg"
+import quicknessIcon from "../../public/QUICKNESS.svg"
+import enduranceIcon from "../../public/ENDURANCE.svg"
+import flexibilityIcon from "../../public/FLEXIBILITY.svg"
+import cardioIcon from "../../public/CARDIO.svg"
 
 export interface ExerciseGuide {
   title: string;
   youtubeVideoId: string;
   instructions: string[];
   precautions: Precaution[];
+  fitnessType: string;
+  icon: string;
 }
 
 export type Precaution = {
@@ -32,7 +40,7 @@ export const CHECK_LIST =[
 
 export const EXERCISE_GUIDES: { [key: string]: ExerciseGuide } = {
   situp: {
-    title: '윗몸일으키기',
+    title: '교차윗몸일으키기',
     youtubeVideoId: 'CY4ayUED7sI', // 예시: 국방부 싯업 영상
     instructions: [
       '양발을 고정하고 등과 어깨를 대고 눕는다.',
@@ -48,6 +56,9 @@ export const EXERCISE_GUIDES: { [key: string]: ExerciseGuide } = {
       { text: '양쪽 어깨가 바닥에 닿지 않은 경우', indented: true },
       { text: '옷이나 어깨가 아닌 다른 신체를 잡고 일어나는 경우', indented: true },
     ],
+    fitnessType: "Endurance",
+    icon: strengthIcon,
+    
   },
   'pushup-wall': {
     title: '벽 대고 팔굽혀펴기',
@@ -64,6 +75,8 @@ export const EXERCISE_GUIDES: { [key: string]: ExerciseGuide } = {
       { text: '팔꿈치만 구부리고 상체는 움직이지 않는 경우', indented: true },
       { text: '어깨에 과도한 힘이 들어가는 경우', indented: true },
     ],
+    fitnessType: "Strength",
+    icon: strengthIcon,
   },
   'pushup-knee': {
     title: '무릎 대고 팔굽혀펴기',
@@ -80,6 +93,8 @@ export const EXERCISE_GUIDES: { [key: string]: ExerciseGuide } = {
       { text: '허리가 아래로 푹 꺼지는 경우', indented: true },
       { text: '팔을 완전히 펴거나, 충분히 내려가지 않는 경우', indented: true },
     ],
+    fitnessType: "Strength",
+    icon: strengthIcon,
   },
   'pushup-standard': {
     title: '정자세 팔굽혀펴기',
@@ -97,6 +112,8 @@ export const EXERCISE_GUIDES: { [key: string]: ExerciseGuide } = {
       { text: '몸이 바닥까지 충분히 내려가지 않은 경우', indented: true },
       { text: '무릎이 바닥에 닿는 경우', indented: true },
     ],
+    fitnessType: "Strength",
+    icon: strengthIcon,
   },
   step: {
     title: '스텝검사',
@@ -111,6 +128,8 @@ export const EXERCISE_GUIDES: { [key: string]: ExerciseGuide } = {
       { text: '박자에 맞춰 연습하고 측정을 실시한다.' },
       { text: '측정 중 박자를 놓치지 않는 범위 내에서 올라가는 발의 순서를 바꿀 수 있다.' },
     ],
+    fitnessType: "Cardio",
+    icon: cardioIcon,
   },
   'sit-and-reach': {
     title: '윗몸앉아앞으로굽히기',
@@ -126,6 +145,8 @@ export const EXERCISE_GUIDES: { [key: string]: ExerciseGuide } = {
       { text: '손에서 손 끝 외에 다른 부위에 측정기에 닿지 않는다' },
       { text: '무릎이 구부러지지 않도록 한다' },
     ],
+    fitnessType: "Flexibility",
+    icon: flexibilityIcon,
   },
   'standing-jump': {
     title: '제자리 높이뛰기',
@@ -140,6 +161,8 @@ export const EXERCISE_GUIDES: { [key: string]: ExerciseGuide } = {
       { text: '이중도약이나 발이 움직인 후에 뛰면 안된다.' },
       { text: '두발을 동시에 점프한다.' },
     ],
+    fitnessType: "Agility",
+    icon: agilityIcon,
   },
   'reaction-time': {
     title: '반응 시간 검사',
@@ -152,5 +175,7 @@ export const EXERCISE_GUIDES: { [key: string]: ExerciseGuide } = {
       { text: '신호를 예측하여 움직이지 않도록 한다.' },
       { text: '양 발을 모두 바닥에서 떨어지도록 한다.' },
     ],
+    fitnessType: "Quickness",
+    icon: quicknessIcon,
   },
 };

@@ -2,7 +2,9 @@
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { EXERCISE_GUIDES, ExerciseGuide, Precaution } from '@/config/exercise-guides';
+import { EXERCISE_GUIDES, ExerciseGuide } from '@/config/exercise-guides';
+import { FONT_STYLES } from '@/styles/fontStyles';
+import Image from 'next/image';
 
 export default function DescriptionView() {
   const router = useRouter();
@@ -45,48 +47,51 @@ export default function DescriptionView() {
 
   if (!guide) {
     return (
-      <div className="flex items-center justify-center h-screen bg-white text-gray-900">
+      <div className="flex items-center justify-center h-screen">
         <p>운동 정보를 불러오는 중...</p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col items-center min-h-screen bg-white text-gray-900 p-6 overflow-y-auto">
-      <div className="w-full max-w-md mx-auto">
-        {/* Header with icon and title */}
-        <div className="flex flex-col items-center mb-8 mt-8">
-          <div className="w-20 h-20 bg-purple-200 rounded-full flex items-center justify-center mb-4">
-            <svg className="w-10 h-10 text-gray-700" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2M21 9V7L15 7.5V9M15 11.5V9.5L21 9V11L15 11.5M3 7V9L9 8.5V7M9 11V9L3 9V11L9 11M12 7.5C11.2 7.5 10.5 7.26 10 6.76L8.5 8.26C9.24 8.95 10.11 9.5 11.06 9.81L10.5 11.5C10.5 11.5 10.5 11.5 10.5 11.5L12 12L13.5 11.5C13.5 11.5 13.5 11.5 13.5 11.5L12.94 9.81C13.89 9.5 14.76 8.95 15.5 8.26L14 6.76C13.5 7.26 12.8 7.5 12 7.5Z"/>
-            </svg>
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-1">{guide.title}</h1>
-          <p className="text-gray-500 text-sm">상대악력(kg)</p>
+    <div className="flex flex-col items-center h-screen p-8 overflow-y-auto">
+      <div className="w-full max-w-4xl mx-auto">
+        <div className='w-full flex flex-col justify-center items-center py-12 px-7 gap-2'>
+
+       <div className='bg-[#BDB2DD] w-[100px] h-[100px] rounded-full flex justify-center items-center'>
+        {/* 운동별 아이콘 */}
+        <Image src={guide.icon} alt="exercise-icon" width={50} height={50} />
+       </div>
+       <h1 className={FONT_STYLES.heading32}>{guide.title}</h1>
+        
+        </div>
+        <div className="w-full max-w-2xl mx-auto mb-8 rounded-lg overflow-hidden shadow-lg aspect-video">
+          <iframe
+            src={`https://www.youtube.com/embed/${guide.youtubeVideoId}`}
+            title="YouTube video player"
+            frameBorder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            className="w-full h-full"
+            style={{ aspectRatio: '16/9' }}
+          ></iframe>
         </div>
 
-        {/* Instructions section */}
-        <div className="bg-gray-50 rounded-2xl p-6 mb-8">
-          <h2 className="text-lg font-semibold mb-6 text-gray-900">측정방법</h2>
-          <div className="space-y-4">
-            {guide.instructions.map((instruction, index) => (
-              <div key={index} className="flex items-start space-x-4">
-                <div className="w-8 h-8 bg-purple-500 text-white rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0 mt-0.5">
-                  {index + 1}
-                </div>
-                <p className="text-gray-700 text-sm leading-relaxed flex-1 pt-1">
-                  {instruction}
-                </p>
-              </div>
-            ))}
+        <div className="grid md:grid-cols-2 gap-8">
+          <div className="bg-[#F5F5F5] p-6 rounded-lg">
+            <h2 className="text-xs mb-4 pb-2 text-[#767676]">측정 방법</h2>
+            <ul className="list-decimal list-inside space-y-3">
+              {guide.instructions.map((desc, index) => (
+                <div key={index} className='flex gap-2 text-[14px] text-black'><div className="bg-[#BDB2DD] h-6 min-w-6 text-[12px] rounded-full flex justify-center items-center">{index + 1}</div>{desc}</div>
+              ))}
+            </ul>
           </div>
         </div>
 
-        {/* Start button */}
-        <div className="text-center">
+        <div className="text-center mt-10 fixed bottom-6 left-6 right-6">
           <button 
             onClick={handleStart}
-            className="w-full bg-purple-500 hover:bg-purple-600 text-white font-semibold py-4 px-8 rounded-2xl text-lg transition-all transform hover:scale-105 shadow-lg"
+            className={`w-full bg-[#BDB2DD] text-white py-4 px-8 rounded-[20px] transition-transform transform ${FONT_STYLES.body5}`}
           >
             시작하기
           </button>
