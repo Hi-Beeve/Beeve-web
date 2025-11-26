@@ -9,6 +9,8 @@ import { playPushupCountSound } from '@/lib/sound-effects';
 import { useMeasurementTimer, TimerStatus } from './measurement-timer';
 import { MeasurementUI } from './measurement-ui';
 import { CameraPermissionModal } from './camera-permission-modal';
+import { EXERCISE_GUIDES } from '@/config/exercise-guides';
+import { FONT_STYLES } from '@/styles/fontStyles';
 
 interface PushupDetectorProps {
   type: PushupType;
@@ -362,7 +364,7 @@ export function PushupDetector({ type, onBack }: PushupDetectorProps) {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-gray-900 text-white">
+    <div className="flex flex-col h-[calc(100vh-50px)]">
       {/* 카메라 권한 요청 모달 */}
       <CameraPermissionModal
         isOpen={showCameraPermission}
@@ -381,6 +383,7 @@ export function PushupDetector({ type, onBack }: PushupDetectorProps) {
         </div>
       ) : (
         <MeasurementUI
+          exerciseName={config.nameKo}
           videoRef={videoRef}
           isPortrait={false}
           timerStatus={timerStatus}
@@ -391,8 +394,10 @@ export function PushupDetector({ type, onBack }: PushupDetectorProps) {
           feedback={feedback}
           state={state}
           instructions={
-            <div className="bg-gray-800 p-4 rounded-lg">
+            <div className="bg-[#F5F5F5] p-4 rounded-[20px] flex flex-col gap-2">
              {/* TODO : EXERCISE_GUIDES.푸시업타입.precautions 추가*/}
+             <p className={`${FONT_STYLES.body9} text-[#767676]`}>사용방법</p>
+             <div className={`${FONT_STYLES.body10} text-[#767676] flex flex-col gap-1`}>{EXERCISE_GUIDES[`pushup-${type}`]?.instructions.map((instruction, index) => <p key={index}>{instruction}</p>)}</div>
             </div>
           }
           onStartCamera={startCamera}

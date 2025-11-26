@@ -2,8 +2,12 @@
 
 import { ReactNode } from 'react';
 import { TimerStatus } from './measurement-timer';
+import { FONT_STYLES } from '@/styles/fontStyles';
 
 interface MeasurementUIProps {
+  // 측정항목 
+  exerciseName: string;
+
   // 카메라 관련
   videoRef: React.RefObject<HTMLVideoElement | null>;
   isPortrait?: boolean; // 세로 카메라 비율 여부
@@ -48,6 +52,7 @@ interface MeasurementUIProps {
 }
 
 export function MeasurementUI({
+  exerciseName,
   videoRef,
   isPortrait = false,
   timerStatus,
@@ -69,20 +74,18 @@ export function MeasurementUI({
   showCount = true,
   showTimer = true,
 }: MeasurementUIProps) {
-  // 타이머 포맷 (MM:SS)
+  // 타이머 포맷 (SS) 
   const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    return `${secs.toString().padStart(2, '0')}`;
   };
 
   return (
     <>
       {/* 스크롤 가능한 컨텐츠 영역 */}
-      <div className="flex-1 overflow-y-auto p-4">
-        <div className="w-full max-w-2xl mx-auto">
+      <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 ">
           {/* 카메라 화면 */}
-          <div className="relative mb-4 bg-gray-800 rounded-lg overflow-hidden border-4 border-blue-500" style={{ aspectRatio: isPortrait ? '3/4' : '4/3' }}>
+          <div className="relative mb-4 bg-[#656565] rounded-lg overflow-hidden border-1 border-[#D3C6E6]" style={{ aspectRatio: isPortrait ? '3/4' : '4/3' }}>
             <video
               ref={videoRef}
               className={`absolute inset-0 w-full h-full ${onVideoClick ? 'cursor-pointer' : ''}`}
@@ -106,7 +109,7 @@ export function MeasurementUI({
             )}
             
             
-            {/* 준비 중 카운트다운 오버레이 */}
+            {/* 준비 중 카운트다운 영상 위에 오버레이 */}
             {timerStatus === 'preparing' && (
               <div className="absolute inset-0 bg-black bg-opacity-70 flex items-center justify-center">
                 <div className="text-center">
@@ -124,8 +127,12 @@ export function MeasurementUI({
             )}
           </div>
 
-          {/* 카운트 & 남은 시간 */}
-          {(showCount || showTimer) && (
+          {/* 측정항목명 */}
+          <div>
+            <h1 className={FONT_STYLES.heading32}>{exerciseName}</h1>
+          </div>
+          {/* TODO : 카운트 표출 UI 미정으로 주석처리*/}
+          {/* {(showCount || showTimer) && (
             <div className={`grid gap-4 mb-4 ${showCount && showTimer ? 'grid-cols-2' : 'grid-cols-1'}`}>
               {showCount && (
                 <div className="bg-gray-800 p-6 rounded-lg text-center">
@@ -134,71 +141,96 @@ export function MeasurementUI({
                 </div>
               )}
               
-              {showTimer && (
-                <div className="bg-gray-800 p-6 rounded-lg text-center">
-                  <div className="text-5xl font-bold text-green-400">
-                    {formatTime(remainingTime)}
-                  </div>
-                  <div className="text-lg text-gray-300 mt-2">{timeLabel}</div>
-                </div>
-              )}
             </div>
-          )}
+          )} */}
 
           {/* 추가 정보 (각도 등) */}
           {additionalInfo}
-
+          
           {/* 피드백 */}
-          {feedback && (
-            <div className="bg-gray-800 p-4 rounded-lg shadow-lg text-center mb-4">
-              <div className="text-xl font-semibold text-yellow-300">{feedback}</div>
+          {/* {feedback && (
+            <div className="bg-[#656565] p-4 rounded-[20px]">
+              <div className={`${FONT_STYLES.body5} text-[#D1EF2F]`}>{feedback}</div>
               {state && (
-                <div className="text-sm text-gray-400 mt-2">
-                  상태: <span className="text-blue-300 font-semibold">{state.toUpperCase()}</span>
+                <div >
+                  <span className="text-[#7CE0EF] font-semibold">{state.toUpperCase()}</span>
                 </div>
               )}
             </div>
-          )}
+          )} */}
 
           {/* 사용방법 */}
           {instructions}
-        </div>
       </div>
 
       {/* 하단 고정 버튼 */}
-      <div className="p-4 bg-gray-900 border-t border-gray-700 min-h-[130px]">
-        <div className="w-full max-w-2xl mx-auto">
+      <div className='flex justify-between fixed bottom-8 left-8 right-8'>
+{showTimer && (
+                <div className="relative h-[140px] w-[140px]">
+                  {/* SVG 원형 프로그레스 바 */}
+                  <svg className="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                    {/* 배경 원 */}
+                    <circle
+                      cx="50"
+                      cy="50"
+                      r="45"
+                      fill="none"
+                      stroke="#D9D9D9"
+                      strokeWidth="4"
+                    />
+                    {/* 프로그레스 원 */}
+                    <circle
+                      cx="50"
+                      cy="50"
+                      r="45"
+                      fill="none"
+                      stroke="#9B8EC2"
+                      strokeWidth="4"
+                      strokeLinecap="round"
+                      strokeDasharray={`${2 * Math.PI * 45}`}
+                      strokeDashoffset={`${2 * Math.PI * 45 * (1 - (remainingTime / 60))}`}
+                      style={{
+                        transition: 'stroke-dashoffset 1s linear'
+                      }}
+                    />
+                  </svg>
+                  {/* 중앙 텍스트 */}
+                  <div className={`absolute inset-0 flex items-center justify-center text-[#767676] ${FONT_STYLES.heading32}`}>
+                    {formatTime(remainingTime)}
+                  </div>
+                </div>
+              )}
+      <div >
           {!videoRef.current?.srcObject ? (
-            <button
-              onClick={onStartCamera}
-              className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold text-lg transition"
-            >
-              📹 카메라 시작
-            </button>
+            <CircleButton
+            onClick={() => onStartCamera?.()}
+            >카메라 시작</CircleButton>
           ) : timerStatus === 'idle' ? (
-            <button
-              onClick={onStartMeasurement}
-              className="w-full py-4 bg-green-600 hover:bg-green-700 text-white rounded-lg font-bold text-lg transition"
-            >
-              측정 시작
-            </button>
+            <CircleButton
+            onClick={() => onStartMeasurement?.()}
+            >시작</CircleButton>
           ) : timerStatus === 'finished' ? (
-            <button
-              onClick={onReset}
-              className="w-full py-4 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-bold text-lg transition"
-            >
-              🔄 다시 측정
-            </button>
+            <CircleButton 
+            onClick={() => onReset?.()}
+            >재측정</CircleButton>
           ) : (
-            <button
-              onClick={onStopMeasurement}
-              className="w-full py-4 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold text-lg transition"
-            >
-              ⏹ 측정 중지
-            </button>
+            <CircleButton
+            onClick={() => onStopMeasurement?.()}
+            >중단</CircleButton>
           )}
-        </div>
       </div>
+          </div>
     </>
   );
 }
+
+const CircleButton = ({ onClick, children }: { onClick: () => void; children: ReactNode }) => {
+  return (
+    <button
+      onClick={onClick}
+      className={`p-4 bg-[#BDB2DD] h-[140px] w-[140px] text-white rounded-full flex items-center justify-center ${FONT_STYLES.heading32}`}
+    >
+      {children}
+    </button>
+  );
+};

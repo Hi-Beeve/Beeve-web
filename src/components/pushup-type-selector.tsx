@@ -19,14 +19,13 @@ export function PushupTypeSelector() {
               className="bg-[#F5F5F5] rounded-[20px] p-8 "
             >
               <h2 className="text-2xl font-bold mb-2">{config.nameKo}</h2>
-              <p className="text-sm text-gray-500 mb-4">{config.name}</p>
               <p className="text-sm text-gray-500 leading-relaxed">
                 {config.description}
               </p>
               
-              <div className="mt-6 pt-4 border-t border-gray-700">
+              <div className="mt-6 pt-2">
                 <div className="text-xs text-gray-500 space-y-1">
-                  <div className="text-yellow-400 font-semibold mt-2">
+                  <div className="text-yellow-400 font-semibold">
                     {type === 'wall' && '난이도: ⭐'}
                     {type === 'knee' && '난이도: ⭐⭐'}
                     {type === 'standard' && '난이도: ⭐⭐⭐'}
