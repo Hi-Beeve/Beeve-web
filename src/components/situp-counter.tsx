@@ -8,6 +8,8 @@ import { playPushupCountSound } from '@/lib/sound-effects';
 import { useMeasurementTimer, TimerStatus } from './measurement-timer';
 import { MeasurementUI } from './measurement-ui';
 import { CameraPermissionModal } from './camera-permission-modal';
+import { FONT_STYLES } from '@/styles/fontStyles';
+import { EXERCISE_GUIDES } from '@/config/exercise-guides';
 
 interface SitupDetectorProps {
   onBack?: () => void;
@@ -397,7 +399,7 @@ export function SitupDetector({ onBack }: SitupDetectorProps) {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-gray-900 text-white">
+    <div className="flex flex-col">
       {/* 카메라 권한 요청 모달 */}
       <CameraPermissionModal
         isOpen={showCameraPermission}
@@ -416,6 +418,7 @@ export function SitupDetector({ onBack }: SitupDetectorProps) {
         </div>
       ) : (
         <MeasurementUI
+          exerciseName="교차윗몸일으키기"
           videoRef={videoRef}
           isPortrait={false}
           timerStatus={timerStatus}
@@ -425,49 +428,13 @@ export function SitupDetector({ onBack }: SitupDetectorProps) {
           isFullBodyDetected={isFullBodyDetected}
           feedback={feedback}
           state={state}
-          additionalInfo={
-            <>
-              <div className="bg-gray-800 p-4 rounded-lg mb-4">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm text-gray-400">상체 각도</span>
-                  <span className="text-2xl font-bold text-green-400">{Math.round(bodyAngle)}°</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-400">팔꿈치-무릎 거리</span>
-                  <span className="text-2xl font-bold text-yellow-400">{Math.round(kneeElbowDistance)}px</span>
-                </div>
-              </div>
-              
-              {/* 디버깅 로그 박스 */}
-              <div className="bg-gray-800 p-4 rounded-lg mb-4">
-                <div className="font-semibold text-white mb-2">🔍 디버깅 로그</div>
-                <div className="bg-gray-900 p-3 rounded max-h-32 overflow-y-auto">
-                  {debugLogs.length === 0 ? (
-                    <div className="text-gray-500 text-sm">로그가 없습니다</div>
-                  ) : (
-                    debugLogs.map((log, index) => (
-                      <div key={index} className="text-xs text-gray-300 mb-1 font-mono">
-                        {log}
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            </>
-          }
+
           instructions={
-            <div className="bg-gray-800 p-4 rounded-lg">
-              <div className="font-semibold text-white mb-2">💡 사용 방법:</div>
-              <ul className="list-disc list-inside space-y-1 text-sm text-gray-400">
-                <li><strong className="text-white">옆모습</strong>이 보이도록 카메라를 옆에 설치하세요</li>
-                <li><strong className="text-white">측정 시작 전</strong> 양손을 뻗어 전신을 인식시키세요</li>
-                <li><strong className="text-white">바닥에 누워서</strong> 무릎을 세우고 시작하세요</li>
-                <li>상체를 올려 <strong className="text-white">팔꿈치가 무릎에 닿도록</strong> 하세요</li>
-                <li>한쪽 팔다리만 보여도 측정 가능합니다</li>
-                <li><strong className="text-white">측면 자세</strong> + 상체 각도 <strong className="text-white">{BODY_ANGLE_THRESHOLD}도 이하</strong> + 팔꿈치-무릎 거리 <strong className="text-white">{KNEE_ELBOW_DISTANCE_THRESHOLD}px 이하</strong>면 카운트!</li>
-              </ul>
-            </div>
-          }
+                      <div className="bg-[#F5F5F5] p-4 rounded-[20px] flex flex-col gap-2">
+                       <p className={`${FONT_STYLES.body9} text-[#767676]`}>사용방법</p>
+                       <div className={`${FONT_STYLES.body10} text-[#767676] flex flex-col gap-1`}>{EXERCISE_GUIDES[`situp`]?.instructions.map((instruction, index) => <p key={index}>{instruction}</p>)}</div>
+                      </div>
+                    }
           onStartCamera={startCamera}
           onStartMeasurement={handleStartMeasurement}
           onStopMeasurement={handleReset}

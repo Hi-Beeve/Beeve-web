@@ -627,6 +627,7 @@ export function SitAndReachWall() {
         </div>
       ) : (
         <MeasurementUI
+          exerciseName="앉아윗몸앞으로굽히기"
           videoRef={videoRef}
           isPortrait={true}
           timerStatus={phase === MeasurementPhase.SITTING_MEASUREMENT ? 'measuring' : 'idle'}
