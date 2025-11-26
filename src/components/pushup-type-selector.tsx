@@ -15,7 +15,7 @@ export function PushupTypeSelector() {
           return (
             <a
               key={type}
-              href={`/description?type=pushup&subtype=${type}`}
+              href={`/measurement/description?type=pushup&subtype=${type}`}
               className="bg-gray-800 hover:bg-gray-700 rounded-xl p-8 transition-all transform hover:scale-105 hover:shadow-xl border-2 border-gray-700 hover:border-blue-500 block"
             >
               <div className="text-6xl mb-4">{config.icon}</div>

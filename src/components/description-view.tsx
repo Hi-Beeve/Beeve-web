@@ -45,61 +45,50 @@ export default function DescriptionView() {
 
   if (!guide) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gray-900 text-white">
+      <div className="flex items-center justify-center h-screen bg-white text-gray-900">
         <p>운동 정보를 불러오는 중...</p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col items-center h-screen bg-gray-900 text-white p-8 overflow-y-auto">
-      <div className="w-full max-w-4xl mx-auto">
-        <h1 className="text-4xl font-bold mb-6 text-center text-yellow-400">{guide.title} 측정 안내</h1>
-        
-        <div className="w-full max-w-2xl mx-auto mb-8 rounded-lg overflow-hidden shadow-lg aspect-video">
-          <iframe
-            src={`https://www.youtube.com/embed/${guide.youtubeVideoId}`}
-            title="YouTube video player"
-            frameBorder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-            className="w-full h-full"
-            style={{ aspectRatio: '16/9' }}
-          ></iframe>
+    <div className="flex flex-col items-center min-h-screen bg-white text-gray-900 p-6 overflow-y-auto">
+      <div className="w-full max-w-md mx-auto">
+        {/* Header with icon and title */}
+        <div className="flex flex-col items-center mb-8 mt-8">
+          <div className="w-20 h-20 bg-purple-200 rounded-full flex items-center justify-center mb-4">
+            <svg className="w-10 h-10 text-gray-700" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2M21 9V7L15 7.5V9M15 11.5V9.5L21 9V11L15 11.5M3 7V9L9 8.5V7M9 11V9L3 9V11L9 11M12 7.5C11.2 7.5 10.5 7.26 10 6.76L8.5 8.26C9.24 8.95 10.11 9.5 11.06 9.81L10.5 11.5C10.5 11.5 10.5 11.5 10.5 11.5L12 12L13.5 11.5C13.5 11.5 13.5 11.5 13.5 11.5L12.94 9.81C13.89 9.5 14.76 8.95 15.5 8.26L14 6.76C13.5 7.26 12.8 7.5 12 7.5Z"/>
+            </svg>
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-1">{guide.title}</h1>
+          <p className="text-gray-500 text-sm">상대악력(kg)</p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8">
-          <div className="bg-gray-800 p-6 rounded-lg">
-            <h2 className="text-xs font-semibold mb-4 border-b-2 border-gray-700 pb-2">측정 방법</h2>
-            <ul className="list-decimal list-inside space-y-3">
-              {guide.instructions.map((desc, index) => (
-                <li key={index}>{desc}</li>
-              ))}
-            </ul>
-          </div>
-          <div className="bg-gray-800 p-6 rounded-lg">
-            <h2 className="text-xs font-semibold mb-4 border-b-2 border-gray-700 pb-2 text-red-400">유의사항</h2>
-            <ul className="list-disc list-inside space-y-3 text-red-300">
-              {guide.precautions.map((item, index) => {
-                if (typeof item === 'string') {
-                  return <li key={index}>{item}</li>;
-                }
-                if (typeof item === 'object' && 'text' in item) {
-                  const precaution = item as Precaution;
-                  return <li key={index} className={precaution.indented ? 'ml-6' : ''}>{precaution.text}</li>;
-                }
-                return null;
-              })}
-            </ul>
+        {/* Instructions section */}
+        <div className="bg-gray-50 rounded-2xl p-6 mb-8">
+          <h2 className="text-lg font-semibold mb-6 text-gray-900">측정방법</h2>
+          <div className="space-y-4">
+            {guide.instructions.map((instruction, index) => (
+              <div key={index} className="flex items-start space-x-4">
+                <div className="w-8 h-8 bg-purple-500 text-white rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0 mt-0.5">
+                  {index + 1}
+                </div>
+                <p className="text-gray-700 text-sm leading-relaxed flex-1 pt-1">
+                  {instruction}
+                </p>
+              </div>
+            ))}
           </div>
         </div>
 
-        <div className="text-center mt-10">
+        {/* Start button */}
+        <div className="text-center">
           <button 
             onClick={handleStart}
-            className="bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-8 rounded-full text-xl transition-transform transform hover:scale-105 shadow-lg"
+            className="w-full bg-purple-500 hover:bg-purple-600 text-white font-semibold py-4 px-8 rounded-2xl text-lg transition-all transform hover:scale-105 shadow-lg"
           >
-            측정 시작하기
+            시작하기
           </button>
         </div>
       </div>
