@@ -4,10 +4,11 @@ import { useMember } from "@/api/mypage/useMypage";
 import { CHECK_LIST, EXERCISE_PLACE, EXERCISE_PLACE_WITH_ICON } from "@/config/exercise-guides";
 import checkWhite from '../../../public/check_white.svg';
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ProgressBar } from "@/components/progress_bar";
 import { FONT_STYLES } from "@/styles/fontStyles";
 import { InfoCard } from "@/components/info-card";
+import Image from "next/image";
 
 const STEPS = ["Body Information","Measurement Place","Check List"];
 
@@ -16,11 +17,27 @@ export const PreServeyPage = () => {
     const [step, setStep] = useState<number>(0);
     const [place, setPlace] = useState <EXERCISE_PLACE | null>(null);
     const router = useRouter();
+    const [isChecked, setIsChecked] = useState<boolean[]>(CHECK_LIST.map(() => false));
+    const [isAllChecked, setIsAllChecked] = useState<boolean>(step===0);
+
     const onClickPlace = (place: EXERCISE_PLACE) => {
         // place 저장
         setPlace(place);
     };
+    useEffect(()=>{
+        if(step===1 && !place){
+                setIsAllChecked(false);
+            } else if(step===2 && !isChecked.every((checked) => checked)){
+                setIsAllChecked(false);
+            } else {
+                setIsAllChecked(true);
+            }
+    },[step,place, isChecked])
+
     const onClickNext = () => {
+        if(!isAllChecked){
+            return;
+        }
         if(step===STEPS.length-1){
             // 유저 데이터 및 place 데이터 로컬 스토리지에 저장 
             localStorage.setItem('preSurvey', JSON.stringify({data,place}));
@@ -28,6 +45,7 @@ export const PreServeyPage = () => {
             router.push('/measurement');
         } else {
             setStep(step+1);
+            
         }
     };
 
@@ -45,8 +63,8 @@ export const PreServeyPage = () => {
             <PageTitle title={stepInfo.title} />
            {step === 0 && <BodyInformation data={data} />}
            {step === 1 && <MeasurementPlace place={place} onClickPlace={onClickPlace}/>}
-           {step === 2 && <CheckList />}
-           <button className="bg-[#BDB2DD] text-white h-14 rounded-[20px] py-2 fixed bottom-6 right-6 left-6" onClick={onClickNext}>다음</button>
+           {step === 2 && <CheckList isChecked={isChecked} setIsChecked={setIsChecked} />}
+           <button disabled={!isAllChecked} className={`h-14 rounded-[20px] py-2 fixed bottom-6 right-6 left-6 ${isAllChecked? 'bg-[#BDB2DD] text-white' : 'bg-[#F5F5F5] text-[#767676]'}`} onClick={onClickNext}>다음</button>
         </div>
     );
 };
@@ -108,19 +126,20 @@ const BodyInformation = ({ data }: { data: any }) => {
 
 const MeasurementPlace = ({ place, onClickPlace }: { place: EXERCISE_PLACE | null, onClickPlace: (place: EXERCISE_PLACE) => void }) => {
     return (
-        <div>
+        <div className="flex flex-col gap-3 pt-4">
+            <p className="text-gray-600 text-sm ">측정 장소를 선택해주세요.</p>
             {EXERCISE_PLACE_WITH_ICON.map((item) => (
-                <div key={item.key} onClick={() => onClickPlace(item.key)} className={`${place === item.key && 'bg-[#656565]'}`}>
-                    <img src={item.icon} alt={item.key} />
-                    <p>{item.key}</p>
+                <div key={item.key} onClick={() => onClickPlace(item.key)} className={`${place === item.key? 'bg-[#656565] text-white' : 'bg-[#F5F5F5] text-[#767676]'} flex items-center h-22 gap-4 py-2 px-3 rounded-[20px]`}>
+                    <Image src={place === item.key? item.iconWhite : item.icon} alt={item.key} width={24} height={24}/>
+                    <p className={FONT_STYLES.body6}>{item.key}</p>
                 </div>
             ))}
         </div>
     );
 };
 
-const CheckList = () => {
-    const [isChecked, setIsChecked] = useState<boolean[]>(CHECK_LIST.map(() => false));
+const CheckList = ({isChecked, setIsChecked}: {isChecked: boolean[], setIsChecked: React.Dispatch<React.SetStateAction<boolean[]>>}) => {
+    
     const onClick = (index: number) => {
         setIsChecked((prev) => {
             const newChecked = [...prev];
@@ -129,7 +148,7 @@ const CheckList = () => {
         });
     };
     return (
-        <div>
+        <div className="flex flex-col gap-4 pt-10">
             {
                 CHECK_LIST.map((item,index) => (
                     <CheckListCard key={item} text={item} isChecked={isChecked[index]} onClick={()=>onClick(index)} />
@@ -141,9 +160,9 @@ const CheckList = () => {
 
 const CheckListCard = ({text, isChecked, onClick}: {text: string, isChecked: boolean, onClick: () => void}) => {
     return (
-        <div onClick={onClick} className={`${isChecked && 'bg-[#656565]'} rounded-[20px] flex justify-between`}>
+        <div onClick={onClick} className={`${isChecked? 'bg-[#656565] text-white' : 'bg-[#F5F5F5] text-[#767676]'} rounded-[20px] flex h-22 items-center py-2 px-5 justify-between whitespace-pre-line`}>
             <div>{text}</div>
-            {isChecked&&<img src={checkWhite} alt="" />}
+            {isChecked&&<Image src={checkWhite} alt=""  width={24} height={24}/>}
         </div>
     );
 };

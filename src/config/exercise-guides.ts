@@ -1,6 +1,9 @@
 import gymIcon from "../../public/place_gym.svg"
 import homeIcon from "../../public/place_home.svg"
 import outdoorIcon from "../../public/place_outside.svg"
+import gymIconWhite from "../../public/place_gym_white.svg"
+import homeIconWhite from "../../public/place_home_white.svg"
+import outdoorIconWhite from "../../public/place_outside_white.svg"
 
 export interface ExerciseGuide {
   title: string;
@@ -15,14 +18,14 @@ export type Precaution = {
 };
 
 export type EXERCISE_PLACE = "집" | "야외" | "헬스장"
-export const EXERCISE_PLACE_WITH_ICON : {key:EXERCISE_PLACE, icon: string}[] = [
-  {key: "집", icon: homeIcon},
-  {key: "야외", icon: outdoorIcon},
-  {key: "헬스장", icon: gymIcon}
+export const EXERCISE_PLACE_WITH_ICON : {key:EXERCISE_PLACE, icon: string, iconWhite: string}[] = [
+  {key: "집", icon: homeIcon, iconWhite: homeIconWhite},
+  {key: "야외", icon: outdoorIcon, iconWhite: outdoorIconWhite},
+  {key: "헬스장", icon: gymIcon, iconWhite: gymIconWhite}
 ]
 
 export const CHECK_LIST =[
-  "1. 측정환경 주변 물건을 정리하고 안전한 공간을 만들어주세요",
+  "1. 측정환경 주변 물건을 정리하고\n안전한 공간을 만들어주세요",
   "2. 카메라를 점검해주세요",
   "3. 소리를 점검해주세요",
 ]
