@@ -5,6 +5,9 @@ import { CHECK_LIST, EXERCISE_PLACE, EXERCISE_PLACE_WITH_ICON } from "@/config/e
 import checkWhite from '../../../public/check_white.svg';
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { ProgressBar } from "@/components/progress_bar";
+import { FONT_STYLES } from "@/styles/fontStyles";
+import { InfoCard } from "@/components/info-card";
 
 const STEPS = ["Body Information","Measurement Place","Check List"];
 
@@ -27,25 +30,78 @@ export const PreServeyPage = () => {
             setStep(step+1);
         }
     };
+
+    const stepTitle = [`${data.name}님의\n신체정보`, '어디서\n측정하시나요?',  '점검사항']
+
+    const stepInfo = {
+        step: step+1,
+        total: STEPS.length,
+        title: stepTitle[step]
+    };
+
     return (
-        <div>
+        <div className="flex flex-col w-full py-5 px-4">
+            <ProgressBar stepInfo={stepInfo} />
+            <PageTitle title={stepInfo.title} />
            {step === 0 && <BodyInformation data={data} />}
            {step === 1 && <MeasurementPlace place={place} onClickPlace={onClickPlace}/>}
            {step === 2 && <CheckList />}
-           <button onClick={onClickNext}>Next</button>
+           <button className="bg-[#BDB2DD] text-white h-14 rounded-[20px] py-2 fixed bottom-6 right-6 left-6" onClick={onClickNext}>다음</button>
         </div>
     );
 };
 
 const BodyInformation = ({ data }: { data: any }) => {
+    // 나이 계산 함수
+    const calculateAge = (birthDate: string) => {
+        const today = new Date();
+        const birth = new Date(birthDate);
+        let age = today.getFullYear() - birth.getFullYear();
+        const monthDiff = today.getMonth() - birth.getMonth();
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+            age--;
+        }
+        return age;
+    };
+
+    const formatGender = (gender: string) => {
+        return gender === 'male' ? '남성' : '여성';
+    };
+
     return (
-        <div>
-            <h1>Body Information</h1>
-            <p>{data.name}</p>
-            <p>{data.birthDate}</p>
-            <p>{data.gender}</p>
-            <p>{data.height}</p>
-            <p>{data.weight}</p>
+        <div className="flex flex-col gap-2 mt-8">
+            <p className="text-gray-600 text-sm ">기존의 입력하신 신체정보를 확인해주세요.</p>
+            
+            <div className="bg-[#F5F5F5] rounded-[20px] p-6 space-y-4">
+                <div className="text-center pb-4 border-b border-gray-200 border-dashed">
+                <InfoCard 
+                    label="이름" 
+                    value={data.name}
+                />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-2">
+                    <InfoCard 
+                        label="성별" 
+                        value={formatGender(data.gender)}
+                    />
+                    <InfoCard 
+                        label="나이(만)" 
+                        value={`${calculateAge(data.birthDate)}세`}
+                    />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-2">
+                    <InfoCard 
+                        label="키" 
+                        value={`${data.height}cm`}
+                    />
+                    <InfoCard 
+                        label="체중" 
+                        value={`${data.weight}kg`}
+                    />
+                </div>
+            </div>
         </div>
     );
 };
@@ -88,6 +144,14 @@ const CheckListCard = ({text, isChecked, onClick}: {text: string, isChecked: boo
         <div onClick={onClick} className={`${isChecked && 'bg-[#656565]'} rounded-[20px] flex justify-between`}>
             <div>{text}</div>
             {isChecked&&<img src={checkWhite} alt="" />}
+        </div>
+    );
+};
+
+const PageTitle = ({title}: {title: string}) => {
+    return (
+        <div className="whitespace-pre-line pt-10">
+            <h1 className={FONT_STYLES.heading32}>{title}</h1>
         </div>
     );
 };
