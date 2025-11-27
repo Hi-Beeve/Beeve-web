@@ -1,10 +1,11 @@
-import { useQuery } from '@tanstack/react-query';
-import { getHexDateListApi, hexWithDateApi } from './hex.api';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { getHexDateListApi, hexWithDateApi, postTestDataApi } from './hex.api';
 import { HexWithDateRequest } from '@/types/hex';
 
 export const hexQueryKeys = {
   all: ['hex'] as const,
   withDate: (params: HexWithDateRequest) => ['hex', 'withDate', params] as const,
+  postTestData: () => ['hex', 'postTestData'] as const,
 };
 
 export const useHexWithDateQuery = (params: HexWithDateRequest) => {
@@ -18,5 +19,12 @@ export const useHexDateListQuery = () => {
   return useQuery({
     queryKey: ['hex', 'dateList'],
     queryFn: getHexDateListApi,
+  });
+};
+
+export const usePostTestDataMutation = () => {
+  return useMutation({
+    mutationKey: hexQueryKeys.postTestData(),
+    mutationFn: postTestDataApi,
   });
 };

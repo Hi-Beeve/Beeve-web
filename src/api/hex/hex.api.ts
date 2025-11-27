@@ -1,5 +1,5 @@
 import instance from '@/api/instance';
-import { HexWithDateRequest, HexWithDateResponse } from '@/types/hex';
+import { HexWithDateRequest, HexWithDateResponse, TestDataRequest } from '@/types/hex';
 
 export const hexWithDateApi = async (params: HexWithDateRequest): Promise<HexWithDateResponse> => {
   // const response = await instance.get<HexWithDateResponse>('/hex/data', {
@@ -21,6 +21,12 @@ export const getHexDateListApi = async (): Promise<string[]> => {
   // TODO : MOCK
   return ['2025-11-17', '2025-02-12', '2024-03-08','2024-11-17', '2023-02-12', '2022-03-08','2022-11-17', '2021-02-12', '2020-03-08'];
 };
+
+export const postTestDataApi = async (params: TestDataRequest) => {
+  const response = await instance.post<HexWithDateResponse>('/fitness', params);
+  return response;
+
+}; 
 
 
 const mockHexData: HexWithDateResponse = {

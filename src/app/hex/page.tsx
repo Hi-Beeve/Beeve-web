@@ -5,12 +5,27 @@ import HexCardList from "@/components/hex-card-list";
 import { useHex } from "@/api/hex/useHex";
 import { useHexDateListQuery } from "@/api/hex/queries";
 import BottomSheetDatePicker from "@/components/bottom-sheet-date-picker";
-import { useState } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { BottomSheet } from "@/components/common/BottomSheet";
+import { useSearchParams } from "next/navigation";
 
-export default function HexPage() {
+function HexPageContent() {
   const [selectedDate, setSelectedDate] = useState<string | undefined>(undefined);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const searchParams = useSearchParams();
+
+  // 오늘 날짜를 YYYY-MM-DD 형식으로 가져오는 함수
+  const getTodayDate = () => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  };
+
+  useEffect(() => {
+    // URL 파라미터에서 date를 확인하거나 오늘 날짜를 기본값으로 설정
+    const dateParam = searchParams.get('date');
+    const defaultDate = dateParam || getTodayDate();
+    setSelectedDate(defaultDate);
+  }, [searchParams]);
 
   const { data, isLoading, error } = useHex({ date: selectedDate });
   const { data: dateList } = useHexDateListQuery();
@@ -61,5 +76,13 @@ export default function HexPage() {
       </BottomSheet>
     </div>
     </main>
+  );
+}
+
+export default function HexPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <HexPageContent />
+    </Suspense>
   );
 }

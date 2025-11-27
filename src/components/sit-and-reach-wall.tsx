@@ -7,6 +7,7 @@ import { CameraPermissionModal } from './camera-permission-modal';
 import { EXERCISE_GUIDES } from '@/config/exercise-guides';
 import { FONT_STYLES } from '@/styles/fontStyles';
 import { useMember } from '@/api/mypage/useMypage';
+import { addMeasurementCompletion } from '@/utils/measurement-storage';
 
 interface WallMeasurement {
   wallPosition: number;
@@ -405,6 +406,13 @@ export function SitAndReachWall() {
                   if (elapsed >= 3) {
                     setPhase(MeasurementPhase.RESULT);
                     setHoldStartTime(null);
+                    
+                    // 측정 결과를 localStorage에 저장
+                    if (currentMeasurement) {
+                      localStorage.setItem('measurement_flexibility', currentMeasurement.distanceInCm.toString());
+                      addMeasurementCompletion('flexibility');
+                    }
+                    
                     setFeedback('측정 완료!');
                     playVoiceGuidance('측정이 완료되었습니다');
                   } else {

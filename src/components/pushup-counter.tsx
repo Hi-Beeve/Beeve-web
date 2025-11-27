@@ -11,6 +11,7 @@ import { MeasurementUI } from './measurement-ui';
 import { CameraPermissionModal } from './camera-permission-modal';
 import { EXERCISE_GUIDES } from '@/config/exercise-guides';
 import { FONT_STYLES } from '@/styles/fontStyles';
+import { addMeasurementCompletion } from '@/utils/measurement-storage';
 
 interface PushupDetectorProps {
   type: PushupType;
@@ -43,6 +44,18 @@ export function PushupDetector({ type, onBack }: PushupDetectorProps) {
   const fullBodyLostFramesRef = useRef(0);
   const FULL_BODY_LOST_THRESHOLD = 30;
   
+  // 측정 완료 시 결과 저장
+  const handleMeasurementComplete = () => {
+    // 측정 결과를 localStorage에 저장
+    const storageKey = `measurement_pushup_${type}`;
+    localStorage.setItem(storageKey, count.toString());
+    
+    // 측정 완료 상태 저장
+    addMeasurementCompletion('muscle');
+    
+    setFeedback(`측정 완료! ${count}개`);
+  };
+
   // 타이머 hook 사용
   const { startMeasurement, resetTimer } = useMeasurementTimer({
     timerStatus,
@@ -52,7 +65,7 @@ export function PushupDetector({ type, onBack }: PushupDetectorProps) {
     remainingTime,
     setRemainingTime,
     isFullBodyDetected,
-    onTimerComplete: () => setFeedback('측정 완료!'),
+    onTimerComplete: handleMeasurementComplete,
     prepareDuration: 10,
     measureDuration: 60,
   });
