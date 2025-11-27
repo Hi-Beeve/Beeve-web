@@ -5,11 +5,11 @@ import HexCardList from "@/components/hex-card-list";
 import { useHex } from "@/api/hex/useHex";
 import { useHexDateListQuery } from "@/api/hex/queries";
 import BottomSheetDatePicker from "@/components/bottom-sheet-date-picker";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { BottomSheet } from "@/components/common/BottomSheet";
 import { useSearchParams } from "next/navigation";
 
-export default function HexPage() {
+function HexPageContent() {
   const [selectedDate, setSelectedDate] = useState<string | undefined>(undefined);
   const [sheetOpen, setSheetOpen] = useState(false);
   const searchParams = useSearchParams();
@@ -76,5 +76,13 @@ export default function HexPage() {
       </BottomSheet>
     </div>
     </main>
+  );
+}
+
+export default function HexPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <HexPageContent />
+    </Suspense>
   );
 }
