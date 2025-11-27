@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import { EXERCISE_GUIDES } from '@/config/exercise-guides';
 import { FONT_STYLES } from '@/styles/fontStyles';
 import FloatingButton from './common/FloatingButton';
+import { addMeasurementCompletion } from '@/utils/measurement-storage';
 
 // 제자리 높이뛰기 단계 정의
 type StandingJumpPhase = 
@@ -459,7 +460,16 @@ const router = useRouter()
               </FloatingButton>
             ) : (
               <button
-                onClick={() => setPhase('final-result')}
+                onClick={() => {
+                  // 측정 결과를 localStorage에 저장
+                  const validRecords = records.filter(r => r.airTime !== null);
+                  if (validRecords.length > 0) {
+                    const bestTime = Math.max(...validRecords.map(r => r.airTime!));
+                    localStorage.setItem('measurement_quickness', bestTime.toString());
+                    addMeasurementCompletion('quickness');
+                  }
+                  setPhase('final-result');
+                }}
                 className="bg-green-500 text-white font-bold py-3 px-6 rounded-[16px] w-[50%] h-12"
               >
                 결과 보기

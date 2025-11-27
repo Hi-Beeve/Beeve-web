@@ -10,6 +10,7 @@ import { useMember } from '@/api/mypage/useMypage';
 import { getAge } from '@/utils/getAge';
 import { Router } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { addMeasurementCompletion } from '@/utils/measurement-storage';
 
 // 스텝검사 단계 정의
 type StepTestPhase = 
@@ -92,6 +93,13 @@ export function StepTest() {
 
   const handleRecoveryHeartRateComplete = (heartRate: number) => {
     setRecoveryHeartRate(heartRate);
+    
+    // 측정 결과를 localStorage에 저장
+    localStorage.setItem('measurement_cardio', heartRate.toString());
+    
+    // 측정 완료 상태 저장
+    addMeasurementCompletion('cardio');
+    
     setPhase('result');
   };
 

@@ -5,6 +5,7 @@ import { BackHeader } from './common/BackHeader';
 import { FONT_STYLES } from '@/styles/fontStyles';
 import FloatingButton from './common/FloatingButton';
 import { useRouter } from 'next/navigation';
+import { addMeasurementCompletion } from '@/utils/measurement-storage';
 
 // 민첩성 측정 단계 정의
 type ReactionTimePhase = 
@@ -1109,7 +1110,16 @@ export function ReactionTime() {
               </div>
             ) : (
               <FloatingButton
-                onClick={() => setPhase('final-result')}
+                onClick={() => {
+                  // 측정 결과를 localStorage에 저장
+                  const validRecords = records.filter(r => r.valid);
+                  if (validRecords.length > 0) {
+                    const bestTime = Math.min(...validRecords.map(r => r.reactionTime));
+                    localStorage.setItem('measurement_agility', (bestTime / 1000).toString()); // 초 단위로 저장
+                    addMeasurementCompletion('agility');
+                  }
+                  setPhase('final-result');
+                }}
                 className=" py-3 px-6 h-12"
               >
                 최종 결과 보기

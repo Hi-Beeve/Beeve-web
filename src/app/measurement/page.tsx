@@ -4,6 +4,9 @@ import { useState, useEffect } from "react";
 import { CheckListCard } from "@/components/check-list-card";
 import { getMeasurementCompletions } from "@/utils/measurement-storage";
 import { FitnessIconType } from "@/components/fitness-icon";
+import { usePostTestDataMutation } from "@/api/hex/queries";
+import { TestDataRequest } from "@/types/hex";
+import { useRouter } from "next/navigation";
 
 interface MeasurementItem {
   id: string;
@@ -60,6 +63,9 @@ const MEASUREMENT_ITEMS: MeasurementItem[] = [
 
 export default function MeasurementPage() {
   const [completedItems, setCompletedItems] = useState<string[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const router = useRouter();
+  const postTestDataMutation = usePostTestDataMutation();
 
   useEffect(() => {
     // 로컬 스토리지에서 완료된 측정 항목들을 불러옴
@@ -73,6 +79,51 @@ export default function MeasurementPage() {
 
   const isCompleted = (itemId: string) => {
     return completedItems.includes(itemId);
+  };
+
+  const collectMeasurementData = (): TestDataRequest => {
+    // 로컬 스토리지에서 측정 데이터 수집
+    const preSurvey = JSON.parse(localStorage.getItem('preSurvey') || '{}');
+    
+    const testData = {
+      measurePlace: preSurvey.place || 'HOME',
+      wallPushUpReps: parseInt(localStorage.getItem('measurement_pushup_wall') || '0'),
+      kneePushUpReps: parseInt(localStorage.getItem('measurement_pushup_knee') || '0'),
+      standardPushUpReps: parseInt(localStorage.getItem('measurement_pushup_standard') || '0'),
+      stepTestRecoveryBpm: parseInt(localStorage.getItem('measurement_cardio') || '0'),
+      crossCrunchReps: parseInt(localStorage.getItem('measurement_endurance') || '0'),
+      sitAndReach: parseFloat(localStorage.getItem('measurement_flexibility') || '0'),
+      reactionTime: parseFloat(localStorage.getItem('measurement_agility') || '0'),
+      flightTime: parseFloat(localStorage.getItem('measurement_quickness') || '0'),
+    };
+    
+    console.log('📊 수집된 측정 데이터:', testData);
+    return testData;
+  };
+
+  const handleSubmitResults = async () => {
+    if (completedItems.length !== MEASUREMENT_ITEMS.length) {
+      alert('모든 측정을 완료해주세요.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    
+    try {
+      const testData = collectMeasurementData();
+      await postTestDataMutation.mutateAsync(testData);
+      
+      // 성공 시 hex 페이지로 이동 (오늘 날짜 파라미터 포함)
+      const today = new Date().toISOString().split('T')[0];
+      router.push(`/hex?date=${today}`);
+    } catch (error) {
+      console.error('측정 데이터 전송 실패:', error);
+      if (confirm('데이터 전송에 실패했습니다. 다시 시도하시겠습니까?')) {
+        handleSubmitResults(); // 재시도
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -117,21 +168,23 @@ export default function MeasurementPage() {
         </div>
       </div>
 
-      {/* 다음 버튼 */}
+      {/* 결과 확인 버튼 */}
       <div className="fixed bottom-6 left-6 right-6">
         <button 
-          className="w-full h-14 bg-[#BDB2DD] text-white rounded-[20px] font-medium"
-          onClick={() => {
-            // 모든 측정이 완료되었는지 확인하고 다음 단계로 이동
-            if (completedItems.length === MEASUREMENT_ITEMS.length) {
-              // 결과 페이지로 이동
-              window.location.href = '/results';
-            } else {
-              alert('모든 측정을 완료해주세요.');
-            }
-          }}
+          className={`w-full h-14 rounded-[20px] font-medium ${
+            completedItems.length === MEASUREMENT_ITEMS.length 
+              ? 'bg-[#BDB2DD] text-white' 
+              : 'bg-gray-300 text-gray-500'
+          }`}
+          onClick={handleSubmitResults}
+          disabled={isSubmitting || completedItems.length !== MEASUREMENT_ITEMS.length}
         >
-          다음
+          {isSubmitting 
+            ? '데이터 전송 중...' 
+            : completedItems.length === MEASUREMENT_ITEMS.length 
+              ? '6각형 체력 결과 확인하기'
+              : '다음'
+          }
         </button>
       </div>
     </div>
