@@ -4,14 +4,12 @@ export type AuthLoginRequest = {
 }
 
 export type AuthResponse = {
-    isSuccess: boolean;
-    code: string;
-    data: {
-        accessToken: string;
-        refreshToken: string;
-        name: string;
-        profileUrl: string;
-    }
+    access_token: string;
+    token_type: string;
+    refresh_token: string;
+    expires_in: number;
+    scope: string;
+    refresh_token_expires_in: number;
 }
 
 export type AuthSignUpRequest = {

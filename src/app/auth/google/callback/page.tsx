@@ -4,11 +4,13 @@ import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth, convertGoogleUserToUser } from '@/contexts/auth-context';
 import { getGoogleAccessToken, getGoogleUserInfo } from '@/lib/google-auth';
+import { useSocialLogin } from '@/api/auth/useAuth';
 
 function GoogleCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { login } = useAuth();
+  const { socialLogin, isLoading: isServerLoginLoading, data, isSuccess } = useSocialLogin();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [errorMessage, setErrorMessage] = useState<string>('');
 
@@ -71,8 +73,42 @@ function GoogleCallbackContent() {
         // 3. 사용자 정보를 내부 형식으로 변환
         const user = convertGoogleUserToUser(googleUser, tokenResponse.access_token);
         
-        // 4. 로그인 처리
-        login(user);
+        // 4. 우리 서버로 로그인 요청 보내기
+        console.log('🔄 Sending login request to our server...');
+        const serverLoginData = {
+          id: user.id,
+          nickname: user.nickname,
+          email: user.email,
+          profileImage: user.profileImage,
+          provider: 'google' as const
+        };
+        
+        socialLogin(serverLoginData);
+        
+        // React Query의 data를 사용하여 결과 확인
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        console.log('🔍 Server login result:', { data, isSuccess });
+        
+        // 5. 회원 상태에 따른 분기 처리
+        if (data?.needsSignUp) {
+          console.log('🆕 New user - redirecting to additional info page');
+          // 신규 회원: OAuth 정보를 임시 저장하고 추가 정보 입력 페이지로 이동
+          sessionStorage.setItem('pendingOAuthUser', JSON.stringify(serverLoginData));
+          setStatus('success');
+          setTimeout(() => {
+            router.push('/auth/additional-info');
+          }, 1000);
+        } else {
+          console.log('✅ Existing user - login successful');
+          // 기존 회원: 바로 로그인 완료
+          login(user);
+          
+          setStatus('success');
+          setTimeout(() => {
+            router.push('/');
+          }, 2000);
+        }
         
         // 5. 처리된 코드 저장 (1시간 후 자동 삭제)
         localStorage.setItem('google_processed_code', code);
