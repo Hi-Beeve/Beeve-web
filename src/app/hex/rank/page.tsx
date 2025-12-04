@@ -5,8 +5,11 @@ import { FONT_COLORS, FONT_STYLES } from "@/styles/fontStyles"
 import { HexLineGraph } from "@/components/hex/hex_line_graph"
 import { FitnessIconMap, FitnessNameMap } from "@/components/common/Fitness"
 import { HexData } from "@/types/hex"
+import { getRankApi } from "@/api/rank/useRank";
 
 export default function RankPage() {
+  const rankData = getRankApi();
+  
     return (
     <div className="w-full pt-10 px-5 pb-10 flex flex-col gap-3">
         <Title ageRange={MockData.ageRange}/>
