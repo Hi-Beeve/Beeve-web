@@ -3,13 +3,13 @@ import instance from "../instance";
 
 // 통합 소셜 인증 API - 로그인 시도 후 회원 상태 확인
 export const socialAuthApi = async (params: AuthLoginRequest): Promise<{
-  authData?: AuthResponse['data'];
+  authData?: AuthResponse;
   needsSignUp?: boolean;
 }> => {
   try {
     const response = await instance.post('/auth/login', params);
     return {
-      authData: response.data.data,
+      authData: response.data,
       needsSignUp: false
     };
   } catch (error: any) {

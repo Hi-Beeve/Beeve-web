@@ -3,6 +3,10 @@ import { useProfileQuery, useUpdateProfileQuery } from "./queries";
 export const useMember = () => {
   const query = useProfileQuery();
 
+  return {
+    ...query,
+    data: query.data,
+  }
   // 개발용 mock 데이터
   const mockData = {
     name: "김개발",

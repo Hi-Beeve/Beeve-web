@@ -29,51 +29,48 @@ function AdditionalInfoContent() {
 
 
   // 소셜 로그인 후 리다이렉트된 경우 임시 사용자 정보 가져오기
-  const tempUserData = searchParams.get('tempUser');
   const [tempUser, setTempUser] = useState<ClientOAuthInfo | null>(null);
 
   useEffect(() => {
-    if (tempUserData) {
+    // sessionStorage에서 OAuth 정보 가져오기
+    const pendingOAuthUser = sessionStorage.getItem('pendingOAuthUser');
+    
+    if (pendingOAuthUser) {
       try {
-        const parsed = JSON.parse(decodeURIComponent(tempUserData));
+        const parsed = JSON.parse(pendingOAuthUser);
+        console.log('🔍 Retrieved pending OAuth user:', parsed);
         setTempUser(parsed);
+        // 사용 후 제거
+        sessionStorage.removeItem('pendingOAuthUser');
       } catch (error) {
         console.error('임시 사용자 데이터 파싱 실패:', error);
         router.push('/auth/login');
       }
     } else {
+      console.log('⚠️ No pending OAuth user found, redirecting to login');
       // 임시 사용자 데이터가 없으면 로그인 페이지로
       router.push('/auth/login'); 
-      
-      // 개발용 임시 사용자 데이터 설정
-    //   setTempUser({
-    //     id: 'dev_user_123',
-    //     nickname: '개발자',
-    //     email: 'dev@example.com',
-    //     profileImage: '',
-    //     provider: 'kakao'
-    //   });
     }
-  }, [tempUserData, router]);
+  }, [router]);
 
   // 회원가입 성공 시 로그인 처리
   useEffect(() => {
     if (isSuccess && signUpData && tempUser) {
+      console.log('🎉 회원가입 완료!', signUpData);
+      
+      // 회원가입 성공 시 토큰이 이미 localStorage에 저장되었으므로
+      // 클라이언트 상태만 업데이트
       login({
         id: tempUser.id,
-        nickname: signUpData.data.name,
+        nickname: tempUser.nickname,
         email: tempUser.email,
-        profileImage: signUpData.data.profileUrl,
+        profileImage: tempUser.profileImage,
         provider: tempUser.provider,
-        accessToken: signUpData.data.accessToken
+        accessToken: signUpData.access_token
       });
-      router.push('/hex');
       
-      // 개발용 - 콘솔에만 로그 출력
-    //   console.log('🎉 회원가입 완료!', {
-    //     user: tempUser,
-    //     signUpData: signUpData
-    //   });
+      // 메인 페이지로 이동
+      router.push('/');
     }
   }, [isSuccess, signUpData, tempUser, router, login]);
 
