@@ -13,13 +13,17 @@ function GoogleCallbackContent() {
   const { socialLogin, isLoading: isServerLoginLoading, data, isSuccess } = useSocialLogin();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [errorMessage, setErrorMessage] = useState<string>('');
+  const [isProcessing, setIsProcessing] = useState(false); // 중복 실행 방지를 state로 관리
 
   useEffect(() => {
-    let isProcessing = false; // 중복 실행 방지
 
     const handleGoogleCallback = async () => {
-      if (isProcessing) return; // 이미 처리 중이면 리턴
-      isProcessing = true;
+      if (isProcessing) {
+        console.log('⚠️ Already processing, skipping...');
+        return; // 이미 처리 중이면 리턴
+      }
+      console.log('🚀 Starting Google callback processing...');
+      setIsProcessing(true);
       
       try {
         // URL에서 인증 코드 또는 에러 확인
@@ -96,6 +100,7 @@ function GoogleCallbackContent() {
           // 신규 회원: OAuth 정보를 임시 저장하고 추가 정보 입력 페이지로 이동
           sessionStorage.setItem('pendingOAuthUser', JSON.stringify(serverLoginData));
           setStatus('success');
+          setIsProcessing(false); // 처리 완료
           setTimeout(() => {
             router.push('/auth/additional-info');
           }, 1000);
@@ -105,40 +110,38 @@ function GoogleCallbackContent() {
           login(user);
           
           setStatus('success');
+          setIsProcessing(false); // 처리 완료
           setTimeout(() => {
             router.push('/');
           }, 2000);
         }
         
-        // 5. 처리된 코드 저장 (1시간 후 자동 삭제)
+        // 6. 처리된 코드 저장 (1시간 후 자동 삭제)
         localStorage.setItem('google_processed_code', code);
         localStorage.setItem('google_processed_time', Date.now().toString());
         
-        setStatus('success');
-        
-        // 6. URL에서 코드 제거 (중복 사용 방지)
+        // 7. URL에서 코드 제거 (중복 사용 방지)
         window.history.replaceState({}, '', '/auth/google/callback');
-        
-        // 7. 메인 페이지로 리다이렉트
-        setTimeout(() => {
-          router.push('/');
-        }, 2000);
 
       } catch (error) {
         console.error('구글 로그인 콜백 처리 실패:', error);
         const message = error instanceof Error ? error.message : '로그인 처리 중 오류가 발생했습니다.';
         setErrorMessage(message);
         setStatus('error');
+        setIsProcessing(false); // 에러 발생 시 처리 상태 해제
         
-        // 5초 후 로그인 페이지로 리다이렉트
+        // 5초 후 메인 페이지로 리다이렉트
         setTimeout(() => {
-          router.push('/auth/login');
+          router.push('/');
         }, 5000);
       }
     };
 
-    handleGoogleCallback();
-  }, [searchParams, login, router]);
+    // 이미 처리 중이거나 완료된 경우 실행하지 않음
+    if (!isProcessing && status === 'loading') {
+      handleGoogleCallback();
+    }
+  }, [searchParams, login, router, isProcessing, status]);
 
   return (
     <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">

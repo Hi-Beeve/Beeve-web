@@ -8,7 +8,7 @@ export const useSocialLogin = () => {
   const socialLogin = (clientUserInfo: ClientOAuthInfo) => {
     // 클라이언트 데이터를 서버 API 형식으로 정제
     const serverData: AuthLoginRequest = {
-      provider: clientUserInfo.provider,
+      provider: clientUserInfo.provider.toUpperCase(), // 서버에서 대문자를 기대하므로 변환
       providerUserId: clientUserInfo.id
     };
 
@@ -32,7 +32,7 @@ export const useSignUp = () => {
   const signUp = (clientUserInfo: ClientOAuthInfo, additionalInfo: ClientAdditionalInfo) => {
     // 클라이언트 데이터를 서버 API 형식으로 정제
     const serverData: AuthSignUpRequest = {
-      provider: clientUserInfo.provider,
+      provider: clientUserInfo.provider.toUpperCase(), // 서버에서 대문자를 기대하므로 변환
       providerUserId: clientUserInfo.id,
       name: clientUserInfo.nickname,
       email: clientUserInfo.email || '',

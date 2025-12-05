@@ -13,13 +13,17 @@ function KakaoCallbackContent() {
   const { socialLogin, isLoading: isServerLoginLoading, data, isSuccess } = useSocialLogin();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [errorMessage, setErrorMessage] = useState<string>('');
+  const [isProcessing, setIsProcessing] = useState(false); // 중복 실행 방지를 state로 관리
 
   useEffect(() => {
-    let isProcessing = false; // 중복 실행 방지
 
     const handleKakaoCallback = async () => {
-      if (isProcessing) return; // 이미 처리 중이면 리턴
-      isProcessing = true;
+      if (isProcessing) {
+        console.log('⚠️ Already processing, skipping...');
+        return; // 이미 처리 중이면 리턴
+      }
+      console.log('🚀 Starting Kakao callback processing...');
+      setIsProcessing(true);
       
       try {
         // URL에서 인증 코드 또는 에러 확인
@@ -97,6 +101,7 @@ function KakaoCallbackContent() {
           // 신규 회원: OAuth 정보를 임시 저장하고 추가 정보 입력 페이지로 이동
           sessionStorage.setItem('pendingOAuthUser', JSON.stringify(serverLoginData));
           setStatus('success');
+          setIsProcessing(false); // 처리 완료
           setTimeout(() => {
             router.push('/auth/additional-info');
           }, 1000);
@@ -106,6 +111,7 @@ function KakaoCallbackContent() {
           login(user);
           
           setStatus('success');
+          setIsProcessing(false); // 처리 완료
           setTimeout(() => {
             router.push('/');
           }, 2000);
@@ -123,6 +129,7 @@ function KakaoCallbackContent() {
         const message = error instanceof Error ? error.message : '로그인 처리 중 오류가 발생했습니다.';
         setErrorMessage(message);
         setStatus('error');
+        setIsProcessing(false); // 에러 발생 시 처리 상태 해제
         
         // 5초 후 메인 페이지로 리다이렉트
         setTimeout(() => {
@@ -131,8 +138,11 @@ function KakaoCallbackContent() {
       }
     };
 
-    handleKakaoCallback();
-  }, [searchParams, login, router]);
+    // 이미 처리 중이거나 완료된 경우 실행하지 않음
+    if (!isProcessing && status === 'loading') {
+      handleKakaoCallback();
+    }
+  }, [searchParams, login, router, isProcessing, status]);
 
   return (
     <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
