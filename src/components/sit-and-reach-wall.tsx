@@ -66,7 +66,7 @@ export function SitAndReachWall() {
   
   const {data} = useMember();
   useEffect(()=>{
-    setHeight(data?.height)
+    setHeight(data?.height || 170) // 기본값 170cm 제공
   },[data])
   
   const [holdStartTime, setHoldStartTime] = useState<number | null>(null);

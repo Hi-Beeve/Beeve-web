@@ -49,7 +49,7 @@ const PreServeyPage = () => {
         }
     };
 
-    const stepTitle = [`${data.name}님의\n신체정보`, '어디서\n측정하시나요?',  '점검사항']
+    const stepTitle = [`${data?.name || '사용자'}님의\n신체정보`, '어디서\n측정하시나요?',  '점검사항']
 
     const stepInfo = {
         step: step+1,
@@ -70,6 +70,15 @@ const PreServeyPage = () => {
 };
 
 const BodyInformation = ({ data }: { data: any }) => {
+    // 데이터가 없으면 로딩 표시
+    if (!data) {
+        return (
+            <div className="flex flex-col gap-2 mt-8">
+                <p className="text-gray-600 text-sm">사용자 정보를 불러오는 중...</p>
+            </div>
+        );
+    }
+
     // 나이 계산 함수
     const calculateAge = (birthDate: string) => {
         const today = new Date();
