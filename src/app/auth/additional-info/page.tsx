@@ -65,7 +65,7 @@ function AdditionalInfoContent() {
         // 파싱 실패 시에만 제거
         sessionStorage.removeItem('pendingOAuthUser');
         localStorage.removeItem('pendingOAuthUser');
-        router.push('/auth/login');
+        router.push('/');
       }
     } else {
       console.log('⚠️ No pending OAuth user found in any storage');
@@ -73,7 +73,7 @@ function AdditionalInfoContent() {
       console.log('🔍 LocalStorage keys:', Object.keys(localStorage));
       console.log('❌ Redirecting to login page');
       // 임시 사용자 데이터가 없으면 로그인 페이지로
-      router.push('/auth/login'); 
+      router.push('/'); 
     }
   }, [router]);
 

@@ -19,7 +19,7 @@ export default function RecommendLayout({ children }: { children: React.ReactNod
     return (
         <div className="min-h-screen w-full px-5">
             <HexProfileHeader user={userData} />
-            <main className="flex flex-col items-center pt-10 pb-20 min-h-screen w-full max-w-screen bg-gradient-to-b from-[#F5F5F5] to-[#D9D4E8]">
+            <main className="flex flex-col items-center pt-10 pb-20 min-h-screen w-full max-w-screen ">
             {children}
             </main>
             <AppBar />

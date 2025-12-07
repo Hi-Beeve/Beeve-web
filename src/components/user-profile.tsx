@@ -26,7 +26,7 @@ export function UserProfile({ className = '' }: UserProfileProps) {
   if (!isAuthenticated || !user) {
     return (
       <a
-        href="/auth/login"
+        href="/"
         className={`
           flex items-center gap-2 px-4 py-2 
           bg-yellow-400 hover:bg-yellow-500 

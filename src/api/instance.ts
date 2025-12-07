@@ -64,7 +64,7 @@ instance.interceptors.response.use(
         console.log('✅ Token refreshed successfully');
         
         // 원래 요청에 새 토큰을 추가하여 재시도
-        originalRequest.headers.Authorization = `${accessToken}`;
+        originalRequest.headers.Authorization = `${data.accessToken}`;
         return instance(originalRequest);
         
       } catch (refreshError) {
@@ -76,7 +76,7 @@ instance.interceptors.response.use(
         localStorage.removeItem('userData');
         
         // 로그인 페이지로 리다이렉트
-        window.location.href = '/auth/login';
+        window.location.href = '/';
         
         return Promise.reject(refreshError);
       }
