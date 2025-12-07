@@ -53,28 +53,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = (userData: User) => {
     setUser(userData);
+    console.log('🔍 AuthContext login called with:', userData);
     
-    // 토큰과 사용자 정보를 분리하여 저장
-    const { accessToken, ...userWithoutToken } = userData;
-    
-    // 쿠키에 저장 (7일간 유지)
-    Cookies.set(AUTH_COOKIE_KEY, JSON.stringify(userWithoutToken), { 
-      expires: 7,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict'
-    });
-    
-    Cookies.set(TOKEN_COOKIE_KEY, accessToken, { 
-      expires: 7,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict'
-    });
+    // 토큰은 이미 localStorage에 저장되어 있으므로 여기서는 사용자 상태만 업데이트
+    console.log('✅ User state updated in AuthContext');
   };
 
   const logout = () => {
     setUser(null);
+    
+    // localStorage에서 토큰 제거
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('refreshToken');
+    console.log('🗑️ Tokens removed from localStorage');
+    
+    // 기존 쿠키도 정리 (혹시 남아있을 수 있으므로)
     Cookies.remove(AUTH_COOKIE_KEY);
     Cookies.remove(TOKEN_COOKIE_KEY);
+    console.log('🧹 Cookies cleared');
   };
 
   const value: AuthContextType = {

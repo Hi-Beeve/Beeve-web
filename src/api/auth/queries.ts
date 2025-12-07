@@ -12,16 +12,33 @@ export const useLoginQuery = () => {
     return useMutation({
         mutationKey: authQueryKeys.login(),
         mutationFn: (params: AuthLoginRequest) => socialAuthApi(params),
-        onSuccess: (data) => {
+        onSuccess: (data: any) => {
             // 로그인 성공 시 토큰을 localStorage에 저장
             console.log('🔍 Login response data:', data);
-            if (data.authData?.access_token) {
-                localStorage.setItem('authToken', data.authData.access_token);
-                console.log('✅ Access token saved to localStorage as "authToken"');
+            console.log('🔍 Login response data.authData:', data.authData);
+            console.log('🔍 Full authData structure:', JSON.stringify(data.authData, null, 2));
+            
+            console.log("data ::::: ", data)
+            if (data.authData?.accessToken) {
+                localStorage.setItem('authToken', data.authData.accessToken);
+                console.log('✅ Access token saved to localStorage:', data.authData.accessToken.substring(0, 20) + '...');
+                
+                // 저장 확인
+                const saved = localStorage.getItem('authToken');
+                console.log('🔍 Verification - authToken in localStorage:', saved ? 'EXISTS' : 'NOT FOUND');
+            } else {
+                console.log('⚠️ No accessToken in response data');
             }
-            if (data.authData?.refresh_token) {
-                localStorage.setItem('refreshToken', data.authData.refresh_token);
-                console.log('✅ Refresh token saved to localStorage as "refreshToken"');
+            
+            if (data.authData?.refreshToken) {
+                localStorage.setItem('refreshToken', data.authData.refreshToken);
+                console.log('✅ Refresh token saved to localStorage:', data.authData.refreshToken.substring(0, 20) + '...');
+                
+                // 저장 확인
+                const saved = localStorage.getItem('refreshToken');
+                console.log('🔍 Verification - refreshToken in localStorage:', saved ? 'EXISTS' : 'NOT FOUND');
+            } else {
+                console.log('⚠️ No refreshToken in response data');
             }
             
             // 기존 쿠키 제거 (있다면)
@@ -29,6 +46,8 @@ export const useLoginQuery = () => {
             document.cookie = 'beeve_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
             console.log('🧹 Cleared old cookies (beeve_auth, beeve_token)');
             
+            // localStorage 전체 상태 확인
+            console.log('📦 Current localStorage keys:', Object.keys(localStorage));
             console.log('✅ Login successful, tokens saved to localStorage');
         },
         onError: (error) => {
@@ -41,16 +60,30 @@ export const useSignUpQuery = () => {
     return useMutation({
         mutationKey: authQueryKeys.signUp(),
         mutationFn: (params: AuthSignUpRequest) => signUpApi(params),
-        onSuccess: (data) => {
+        onSuccess: (data: any) => {
             // 회원가입 성공 시 토큰을 localStorage에 저장
             console.log('🔍 SignUp response data:', data);
-            if (data.access_token) {
-                localStorage.setItem('authToken', data.access_token);
-                console.log('✅ Access token saved to localStorage as "authToken"');
+            
+            if (data.accessToken) {
+                localStorage.setItem('authToken', data.accessToken);
+                console.log('✅ Access token saved to localStorage:', data.accessToken.substring(0, 20) + '...');
+                
+                // 저장 확인
+                const saved = localStorage.getItem('authToken');
+                console.log('🔍 Verification - authToken in localStorage:', saved ? 'EXISTS' : 'NOT FOUND');
+            } else {
+                console.log('⚠️ No accessToken in signup response data');
             }
-            if (data.refresh_token) {
-                localStorage.setItem('refreshToken', data.refresh_token);
-                console.log('✅ Refresh token saved to localStorage as "refreshToken"');
+            
+            if (data.refreshToken) {
+                localStorage.setItem('refreshToken', data.refreshToken);
+                console.log('✅ Refresh token saved to localStorage:', data.refreshToken.substring(0, 20) + '...');
+                
+                // 저장 확인
+                const saved = localStorage.getItem('refreshToken');
+                console.log('🔍 Verification - refreshToken in localStorage:', saved ? 'EXISTS' : 'NOT FOUND');
+            } else {
+                console.log('⚠️ No refreshToken in signup response data');
             }
             
             // 기존 쿠키 제거 (있다면)
@@ -58,6 +91,8 @@ export const useSignUpQuery = () => {
             document.cookie = 'beeve_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
             console.log('🧹 Cleared old cookies (beeve_auth, beeve_token)');
             
+            // localStorage 전체 상태 확인
+            console.log('📦 Current localStorage keys:', Object.keys(localStorage));
             console.log('✅ SignUp successful, tokens saved to localStorage');
         },
         onError: (error) => {

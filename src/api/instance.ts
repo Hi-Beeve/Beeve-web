@@ -14,7 +14,7 @@ instance.interceptors.request.use(
     // Add auth token if available
     const token = localStorage.getItem('authToken');
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+      config.headers.Authorization = `${token}`;
       console.log('🔑 Token attached to request:', token.substring(0, 20) + '...');
     } else {
       console.log('⚠️ No authToken found in localStorage');

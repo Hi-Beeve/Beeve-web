@@ -1,8 +1,11 @@
 import { useLoginQuery, useSignUpQuery, useRefreshTokenQuery } from './queries';
-import { AuthLoginRequest, AuthSignUpRequest, ClientAdditionalInfo, ClientOAuthInfo } from '@/types/auth';
+import { AuthLoginRequest, AuthSignUpRequest, ClientAdditionalInfo, ClientOAuthInfo, AuthResponse } from '@/types/auth';
 
 // 통합 소셜 로그인 커스텀 훅
-export const useSocialLogin = () => {
+export const useSocialLogin = (callbacks?: {
+  onSuccess?: (data: { authData?: AuthResponse; needsSignUp?: boolean }) => void;
+  onError?: (error: any) => void;
+}) => {
   const mutation = useLoginQuery();
 
   const socialLogin = (clientUserInfo: ClientOAuthInfo) => {
@@ -12,7 +15,16 @@ export const useSocialLogin = () => {
       providerUserId: clientUserInfo.id
     };
 
-    return mutation.mutate(serverData);
+    return mutation.mutate(serverData, {
+      onSuccess: (data) => {
+        console.log('🔍 Social login success:', data);
+        callbacks?.onSuccess?.(data);
+      },
+      onError: (error) => {
+        console.error('❌ Social login error:', error);
+        callbacks?.onError?.(error);
+      }
+    });
   };
 
   return {
@@ -30,14 +42,26 @@ export const useSignUp = () => {
   const mutation = useSignUpQuery();
 
   const signUp = (clientUserInfo: ClientOAuthInfo, additionalInfo: ClientAdditionalInfo) => {
+    // Gender 값 변환 함수
+    const convertGender = (gender: string): string => {
+      switch (gender.toLowerCase()) {
+        case 'female': return 'F';
+        case 'male': return 'M';
+        default: return gender;
+      }
+    };
+
     // 클라이언트 데이터를 서버 API 형식으로 정제
+    const convertedGender = convertGender(additionalInfo.gender);
+    console.log(`🔄 Gender conversion: ${additionalInfo.gender} → ${convertedGender}`);
+    
     const serverData: AuthSignUpRequest = {
       provider: clientUserInfo.provider.toUpperCase(), // 서버에서 대문자를 기대하므로 변환
       providerUserId: clientUserInfo.id,
       name: clientUserInfo.nickname,
       email: clientUserInfo.email || '',
       profileUrl: clientUserInfo.profileImage || '',
-      gender: additionalInfo.gender,
+      gender: convertedGender, // female → F, male → M 변환
       birthDate: additionalInfo.birthDate,
       height: additionalInfo.height,
       weight: additionalInfo.weight

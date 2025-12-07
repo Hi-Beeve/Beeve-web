@@ -4,12 +4,12 @@ export type AuthLoginRequest = {
 }
 
 export type AuthResponse = {
-    access_token: string;
-    token_type: string;
-    refresh_token: string;
-    expires_in: number;
+    accessToken: string;
+    tokenType: string;
+    refreshToken: string;
+    expiresIn: number;
     scope: string;
-    refresh_token_expires_in: number;
+    refreshTokenExpiresIn: number;
 }
 
 export type AuthSignUpRequest = {

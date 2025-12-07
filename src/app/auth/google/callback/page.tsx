@@ -10,7 +10,61 @@ function GoogleCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { login } = useAuth();
-  const { socialLogin, isLoading: isServerLoginLoading, data, isSuccess } = useSocialLogin();
+  const [currentUser, setCurrentUser] = useState<any>(null);
+
+  // 로그인 결과 처리 함수
+  const handleLoginResult = (loginResult: { authData?: any; needsSignUp?: boolean }, user: any) => {
+    if (loginResult?.needsSignUp) {
+      console.log('🆕 New user - redirecting to additional info page');
+      const serverLoginData = {
+        id: user.id,
+        nickname: user.nickname,
+        email: user.email,
+        profileImage: user.profileImage,
+        provider: 'google' as const
+      };
+      // sessionStorage와 localStorage 둘 다 저장 (보험용)
+      sessionStorage.setItem('pendingOAuthUser', JSON.stringify(serverLoginData));
+      localStorage.setItem('pendingOAuthUser', JSON.stringify(serverLoginData));
+      console.log('💾 Stored in both storages:', serverLoginData);
+      
+      setStatus('success');
+      setIsProcessing(false);
+      
+      // 즉시 리다이렉트
+      router.push('/auth/additional-info');
+    } else {
+      console.log('✅ Existing user - login successful');
+      login(user);
+      setStatus('success');
+      setIsProcessing(false);
+      setTimeout(() => {
+        router.push('/');
+      }, 2000);
+    }
+  };
+
+  const { socialLogin, isLoading: isServerLoginLoading, data, isSuccess } = useSocialLogin({
+    onSuccess: (loginResult) => {
+      console.log('🔍 Login result received:', loginResult);
+      const user = (window as any).tempUserData || currentUser;
+      console.log('🔍 User data:', user);
+      if (user) {
+        console.log('✅ Calling handleLoginResult...');
+        handleLoginResult(loginResult, user);
+        // 임시 데이터 정리
+        delete (window as any).tempUserData;
+      } else {
+        console.log('❌ No user data available, cannot proceed');
+      }
+    },
+    onError: (error) => {
+      console.error('❌ Login failed:', error);
+      setErrorMessage(error.message || '로그인 처리 중 오류가 발생했습니다.');
+      setStatus('error');
+      setIsProcessing(false);
+    }
+  });
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState(false); // 중복 실행 방지를 state로 관리
@@ -76,6 +130,7 @@ function GoogleCallbackContent() {
         
         // 3. 사용자 정보를 내부 형식으로 변환
         const user = convertGoogleUserToUser(googleUser, tokenResponse.access_token);
+        setCurrentUser(user); // 사용자 정보 저장
         
         // 4. 우리 서버로 로그인 요청 보내기
         console.log('🔄 Sending login request to our server...');
@@ -87,41 +142,19 @@ function GoogleCallbackContent() {
           provider: 'google' as const
         };
         
+        // 사용자 정보를 콜백에서 사용할 수 있도록 저장
+        (window as any).tempUserData = user;
+        
         socialLogin(serverLoginData);
         
-        // React Query의 data를 사용하여 결과 확인
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        console.log('🔍 Server login result:', { data, isSuccess });
-        
-        // 5. 회원 상태에 따른 분기 처리
-        if (data?.needsSignUp) {
-          console.log('🆕 New user - redirecting to additional info page');
-          // 신규 회원: OAuth 정보를 임시 저장하고 추가 정보 입력 페이지로 이동
-          sessionStorage.setItem('pendingOAuthUser', JSON.stringify(serverLoginData));
-          setStatus('success');
-          setIsProcessing(false); // 처리 완료
-          setTimeout(() => {
-            router.push('/auth/additional-info');
-          }, 1000);
-        } else {
-          console.log('✅ Existing user - login successful');
-          // 기존 회원: 바로 로그인 완료
-          login(user);
-          
-          setStatus('success');
-          setIsProcessing(false); // 처리 완료
-          setTimeout(() => {
-            router.push('/');
-          }, 2000);
-        }
-        
-        // 6. 처리된 코드 저장 (1시간 후 자동 삭제)
+        // 5. 처리된 코드 저장 (1시간 후 자동 삭제)
         localStorage.setItem('google_processed_code', code);
         localStorage.setItem('google_processed_time', Date.now().toString());
         
-        // 7. URL에서 코드 제거 (중복 사용 방지)
+        // 6. URL에서 코드 제거 (중복 사용 방지)
         window.history.replaceState({}, '', '/auth/google/callback');
+        
+        // 결과는 onSuccess/onError 콜백에서 처리됨
 
       } catch (error) {
         console.error('구글 로그인 콜백 처리 실패:', error);

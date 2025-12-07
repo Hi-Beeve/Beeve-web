@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
 import { useSignUp } from '@/api/auth/useAuth';
@@ -30,24 +30,48 @@ function AdditionalInfoContent() {
 
   // 소셜 로그인 후 리다이렉트된 경우 임시 사용자 정보 가져오기
   const [tempUser, setTempUser] = useState<ClientOAuthInfo | null>(null);
+  const initializeRef = useRef(false);
+  const loginProcessedRef = useRef(false);
 
   useEffect(() => {
-    // sessionStorage에서 OAuth 정보 가져오기
-    const pendingOAuthUser = sessionStorage.getItem('pendingOAuthUser');
+    // React Strict Mode 중복 실행 방지
+    if (initializeRef.current) {
+      console.log('🔄 useEffect already executed, skipping...');
+      return;
+    }
+    initializeRef.current = true;
+    console.log('🔍 Additional info page mounted, checking storage...');
+    
+    // sessionStorage에서 먼저 시도
+    let pendingOAuthUser = sessionStorage.getItem('pendingOAuthUser');
+    console.log('📦 SessionStorage pendingOAuthUser:', pendingOAuthUser);
+    
+    // sessionStorage에 없으면 localStorage에서 시도
+    if (!pendingOAuthUser) {
+      pendingOAuthUser = localStorage.getItem('pendingOAuthUser');
+      console.log('📦 LocalStorage pendingOAuthUser:', pendingOAuthUser);
+    }
     
     if (pendingOAuthUser) {
       try {
         const parsed = JSON.parse(pendingOAuthUser);
-        console.log('🔍 Retrieved pending OAuth user:', parsed);
+        console.log('✅ Successfully parsed pending OAuth user:', parsed);
         setTempUser(parsed);
-        // 사용 후 제거
-        sessionStorage.removeItem('pendingOAuthUser');
+        
+        // 데이터 제거는 나중에 (회원가입 완료 시에만)
+        console.log('📝 TempUser set, keeping data in storage for now');
       } catch (error) {
-        console.error('임시 사용자 데이터 파싱 실패:', error);
+        console.error('❌ 임시 사용자 데이터 파싱 실패:', error);
+        // 파싱 실패 시에만 제거
+        sessionStorage.removeItem('pendingOAuthUser');
+        localStorage.removeItem('pendingOAuthUser');
         router.push('/auth/login');
       }
     } else {
-      console.log('⚠️ No pending OAuth user found, redirecting to login');
+      console.log('⚠️ No pending OAuth user found in any storage');
+      console.log('🔍 SessionStorage keys:', Object.keys(sessionStorage));
+      console.log('🔍 LocalStorage keys:', Object.keys(localStorage));
+      console.log('❌ Redirecting to login page');
       // 임시 사용자 데이터가 없으면 로그인 페이지로
       router.push('/auth/login'); 
     }
@@ -55,8 +79,21 @@ function AdditionalInfoContent() {
 
   // 회원가입 성공 시 로그인 처리
   useEffect(() => {
-    if (isSuccess && signUpData && tempUser) {
+    if (isSuccess && signUpData && tempUser && !loginProcessedRef.current) {
       console.log('🎉 회원가입 완료!', signUpData);
+      loginProcessedRef.current = true; // 중복 실행 방지
+      
+      // localStorage에 토큰이 저장되었는지 확인
+      const authToken = localStorage.getItem('authToken');
+      const refreshToken = localStorage.getItem('refreshToken');
+      console.log('🔍 localStorage check after signup:');
+      console.log('  - authToken:', authToken ? 'EXISTS (' + authToken.substring(0, 20) + '...)' : 'NOT FOUND');
+      console.log('  - refreshToken:', refreshToken ? 'EXISTS (' + refreshToken.substring(0, 20) + '...)' : 'NOT FOUND');
+      
+      // 임시 데이터 정리 (회원가입 완료 시에만)
+      sessionStorage.removeItem('pendingOAuthUser');
+      localStorage.removeItem('pendingOAuthUser');
+      console.log('🗑️ Cleaned up pending OAuth data after successful signup');
       
       // 회원가입 성공 시 토큰이 이미 localStorage에 저장되었으므로
       // 클라이언트 상태만 업데이트
@@ -66,13 +103,13 @@ function AdditionalInfoContent() {
         email: tempUser.email,
         profileImage: tempUser.profileImage,
         provider: tempUser.provider,
-        accessToken: signUpData.access_token
+        accessToken: signUpData.accessToken
       });
       
       // 메인 페이지로 이동
       router.push('/');
     }
-  }, [isSuccess, signUpData, tempUser, router, login]);
+  }, [isSuccess, signUpData, tempUser, router]);
 
 
   // 단계별 검증 함수들
