@@ -36,7 +36,7 @@ export const useRecommend = () => {
     isLoading: mutation.isPending,
     error: mutation.error,
     isSuccess: mutation.isSuccess,
-    data: mutation.data.data as RecommendResponseData | undefined,
+    data: mutation.data?.data as RecommendResponseData | undefined,
   };
 };
 
