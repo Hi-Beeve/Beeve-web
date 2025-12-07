@@ -17,7 +17,7 @@ export default function HexProfileHeader({ user }: HexProfileHeaderProps) {
         <span className={FONT_STYLES.body1} style={{ color: '#9B8EC2' }}>Hello! <span className="text-black">{user.name}</span></span>
       </div>
       <div className="flex gap-12">
-        <img src="/share.svg" alt="share" />
+        {/* <img src="/share.svg" alt="share" /> */}
       </div>
        </div>
     </header>

@@ -1,3 +1,5 @@
+'use client';
+
 import { CardBackground, CardTitleWithIcon, CardValue } from "@/components/hex-card-list"
 import gradeIcon from "../../../../public/grade.svg"
 import Image from "next/image"
@@ -5,18 +7,42 @@ import { FONT_COLORS, FONT_STYLES } from "@/styles/fontStyles"
 import { HexLineGraph } from "@/components/hex/hex_line_graph"
 import { FitnessIconMap, FitnessNameMap } from "@/components/common/Fitness"
 import { HexData } from "@/types/hex"
-import { getRankApi } from "@/api/rank/useRank";
+import { useRank } from "@/api/rank/useRank"
+import { calculateAge, getAgeRange } from "@/utils/ageRange"
 
 export default function RankPage() {
-  const rankData = getRankApi();
+  const { data: rankData } = useRank();
   
-    return (
+  // 사용자의 생년월일을 기반으로 연령대 계산
+  const getUserAgeRange = (): string => {
+    // localStorage에서 사용자 추가 정보 확인 (회원가입 시 저장된 정보)
+    if (typeof window !== 'undefined') {
+      const storedUserInfo = localStorage.getItem('userAdditionalInfo');
+      if (storedUserInfo) {
+        try {
+          const userInfo = JSON.parse(storedUserInfo);
+          if (userInfo.birthDate) {
+            const age = calculateAge(userInfo.birthDate);
+            return getAgeRange(age);
+          }
+        } catch (error) {
+          console.log('Failed to parse user additional info:', error);
+        }
+      }
+    }
+    
+    return "20~24"; // 기본값
+  };
+  
+  const ageRange = getUserAgeRange();
+  
+  return (
     <div className="w-full pt-10 px-5 pb-10 flex flex-col gap-3">
-        <Title ageRange={MockData.ageRange}/>
-        <RankCard rank={MockData.rank} />
-        <HexLineGraph title="" data={MockData.data} minValue={1} maxValue={100} stepSize={25} />
+        <Title ageRange={ageRange}/>
+        <RankCard rank={rankData?.rankHistoryList?.[0]?.rank || 0} />
+        <HexLineGraph title="" data={rankData?.chartData || {labels: [], values: [], icon: ""}} minValue={1} maxValue={100} stepSize={25} />
         <DetailTitle />
-        <FitnessCardList fitness={MockData.fitness}/>
+        <FitnessCardList fitness={rankData?.fitnessData || []}/>
     </div>
     )
 }
@@ -66,54 +92,5 @@ const FitnessCardList = ({fitness}: {fitness: HexData[]}) => {
             )}
         </div>
     )
-}
-
-const MockData:{rank:number, ageRange:string, data:{labels:string[], values:number[], icon:string}, fitness:HexData[]} = {
-    rank: 1,
-    ageRange: "25~29",
-    data: {
-        labels: ["2025-01-01", "2025-01-02", "2025-01-03", "2025-01-04", "2025-01-05", "2025-01-06", "2025-01-07", "2025-01-08", "2025-01-09", "2025-01-10"],
-        values: [100, 90, 80, 70, 60, 55, 40, 32, 20, 14],
-        icon: ""
-    },
-    fitness: [
-    {
-      fitnessType: "STRENGTH",
-      program: "WALL_PUSH_UP",
-      value: 22,
-      rawValue: 30,
-      grade: 1
-    },
-    {
-      fitnessType: "CARDIO",
-      program: "VO2MAX",
-      value: 50,
-      grade: 1
-    },
-    {
-      fitnessType: "ENDURANCE",
-      program: "CROSS_CRUNCH",
-      value: 20,
-      grade: 2
-    },
-    {
-      fitnessType: "FLEXIBILITY",
-      program: "SIT_AND_REACH",
-      value: 17,
-      grade: 3
-    },
-    {
-      fitnessType: "AGILITY",
-      program: "REACTION_TIME",
-      value: 0.223,
-      grade: 2
-    },
-    {
-      fitnessType: "QUICKNESS",
-      program: "FLIGHT_TIME",
-      value: 0.941,
-      grade: 2
-    }
-  ],
 }
 

@@ -59,15 +59,29 @@ function AdditionalInfoContent() {
   // 회원가입 성공 시 로그인 처리
   useEffect(() => {
     if (isSuccess && signUpData && tempUser) {
+      // 사용자 추가 정보를 localStorage에 저장 (나이 계산용)
+      const userAdditionalInfo = {
+        birthDate: formData.birthDate,
+        gender: formData.gender,
+        height: formData.height,
+        weight: formData.weight
+      };
+      localStorage.setItem('userAdditionalInfo', JSON.stringify(userAdditionalInfo));
+      console.log('💾 User additional info saved to localStorage:', userAdditionalInfo);
+      
+      // 회원가입 성공 시 토큰이 이미 localStorage에 저장되었으므로
+      // 클라이언트 상태만 업데이트
       login({
         id: tempUser.id,
-        nickname: signUpData.data.name,
+        nickname: tempUser.nickname,
         email: tempUser.email,
-        profileImage: signUpData.data.profileUrl,
+        profileImage: tempUser.profileImage,
         provider: tempUser.provider,
-        accessToken: signUpData.data.accessToken
+        accessToken: (signUpData as any).accessToken
       });
-      router.push('/hex');
+      
+      // 메인 페이지로 이동
+      router.push('/');
       
       // 개발용 - 콘솔에만 로그 출력
     //   console.log('🎉 회원가입 완료!', {
