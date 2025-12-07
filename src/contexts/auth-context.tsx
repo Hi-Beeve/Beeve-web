@@ -31,21 +31,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // 쿠키에서 사용자 정보 복원
+  // localStorage에서 사용자 정보 복원
   useEffect(() => {
     try {
-      const savedUser = Cookies.get(AUTH_COOKIE_KEY);
-      const savedToken = Cookies.get(TOKEN_COOKIE_KEY);
+      const savedUser = localStorage.getItem('userData');
+      const savedToken = localStorage.getItem('authToken');
       
       if (savedUser && savedToken) {
         const parsedUser = JSON.parse(savedUser);
         setUser({ ...parsedUser, accessToken: savedToken });
+        console.log('✅ User restored from localStorage:', parsedUser.nickname);
+      } else {
+        console.log('ℹ️ No saved user data found in localStorage');
       }
     } catch (error) {
       console.error('사용자 정보 복원 실패:', error);
-      // 손상된 쿠키 제거
-      Cookies.remove(AUTH_COOKIE_KEY);
-      Cookies.remove(TOKEN_COOKIE_KEY);
+      // 손상된 데이터 제거
+      localStorage.removeItem('userData');
+      localStorage.removeItem('authToken');
     } finally {
       setIsLoading(false);
     }
@@ -55,17 +58,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(userData);
     console.log('🔍 AuthContext login called with:', userData);
     
-    // 토큰은 이미 localStorage에 저장되어 있으므로 여기서는 사용자 상태만 업데이트
-    console.log('✅ User state updated in AuthContext');
+    // 사용자 정보를 localStorage에 저장 (토큰 제외)
+    const userDataToSave = {
+      id: userData.id,
+      nickname: userData.nickname,
+      email: userData.email,
+      profileImage: userData.profileImage,
+      provider: userData.provider
+    };
+    localStorage.setItem('userData', JSON.stringify(userDataToSave));
+    console.log('✅ User data saved to localStorage:', userDataToSave);
   };
 
   const logout = () => {
     setUser(null);
     
-    // localStorage에서 토큰 제거
+    // localStorage에서 모든 사용자 관련 데이터 제거
+    localStorage.removeItem('userData');
     localStorage.removeItem('authToken');
     localStorage.removeItem('refreshToken');
-    console.log('🗑️ Tokens removed from localStorage');
+    console.log('🗑️ User data and tokens removed from localStorage');
     
     // 기존 쿠키도 정리 (혹시 남아있을 수 있으므로)
     Cookies.remove(AUTH_COOKIE_KEY);
