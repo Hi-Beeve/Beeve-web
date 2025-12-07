@@ -35,3 +35,9 @@ export const refreshTokenApi = async ({refreshToken}: {refreshToken: string}) =>
     const response = await instance.post('/auth/refresh', {refreshToken});
     return response.data;
 };
+
+// 로그아웃 
+export const logoutApi = async () => {
+    const response = await instance.post('/auth/logout');
+    return response.data;
+};
