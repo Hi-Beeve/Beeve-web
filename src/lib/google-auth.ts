@@ -28,7 +28,7 @@ export interface GoogleAuthResponse {
  * 구글 로그인 URL 생성
  */
 export const getGoogleLoginUrl = (): string => {
-  const clientId = process.env.NEXT_PUBLIC_PUBLIC_GOOGLE_CLIENT_ID;
+  const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
   const redirectUri = process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_URI;
   
   if (!clientId || !redirectUri) {
