@@ -42,14 +42,20 @@ function AdditionalInfoContent() {
     initializeRef.current = true;
     console.log('🔍 Additional info page mounted, checking storage...');
     
-    // sessionStorage에서 먼저 시도
-    let pendingOAuthUser = sessionStorage.getItem('pendingOAuthUser');
-    console.log('📦 SessionStorage pendingOAuthUser:', pendingOAuthUser);
+    // sessionStorage에서 먼저 시도 (pendingUserInfo 키 사용)
+    let pendingOAuthUser = sessionStorage.getItem('pendingUserInfo');
+    console.log('📦 SessionStorage pendingUserInfo:', pendingOAuthUser);
     
     // sessionStorage에 없으면 localStorage에서 시도
     if (!pendingOAuthUser) {
-      pendingOAuthUser = localStorage.getItem('pendingOAuthUser');
-      console.log('📦 LocalStorage pendingOAuthUser:', pendingOAuthUser);
+      pendingOAuthUser = localStorage.getItem('pendingUserInfo');
+      console.log('📦 LocalStorage pendingUserInfo:', pendingOAuthUser);
+    }
+    
+    // 이전 키명도 확인 (하위 호환성)
+    if (!pendingOAuthUser) {
+      pendingOAuthUser = sessionStorage.getItem('pendingOAuthUser') || localStorage.getItem('pendingOAuthUser');
+      console.log('📦 Fallback pendingOAuthUser:', pendingOAuthUser);
     }
     
     if (pendingOAuthUser) {
@@ -63,6 +69,8 @@ function AdditionalInfoContent() {
       } catch (error) {
         console.error('❌ 임시 사용자 데이터 파싱 실패:', error);
         // 파싱 실패 시에만 제거
+        sessionStorage.removeItem('pendingUserInfo');
+        localStorage.removeItem('pendingUserInfo');
         sessionStorage.removeItem('pendingOAuthUser');
         localStorage.removeItem('pendingOAuthUser');
         router.push('/');
@@ -92,6 +100,8 @@ function AdditionalInfoContent() {
       console.log('  - refreshToken:', refreshToken ? 'EXISTS (' + refreshToken.substring(0, 20) + '...)' : 'NOT FOUND');
       
       // 임시 데이터 정리 (회원가입 완료 시에만)
+      sessionStorage.removeItem('pendingUserInfo');
+      localStorage.removeItem('pendingUserInfo');
       sessionStorage.removeItem('pendingOAuthUser');
       localStorage.removeItem('pendingOAuthUser');
       console.log('🗑️ Cleaned up pending OAuth data after successful signup');

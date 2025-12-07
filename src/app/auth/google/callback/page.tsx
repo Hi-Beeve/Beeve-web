@@ -52,10 +52,13 @@ function GoogleCallbackContent() {
             if (data.needsSignUp) {
               // 신규 회원인 경우 사용자 정보를 저장하고 추가 정보 입력 페이지로 이동
               localStorage.setItem('pendingUserInfo', JSON.stringify({
+                id: userInfo.id,
                 provider: 'GOOGLE',
                 providerUserId: userInfo.id,
+                nickname: userInfo.name,
                 name: userInfo.name,
                 email: userInfo.email,
+                profileImage: userInfo.picture,
                 profileUrl: userInfo.picture,
               }));
               router.push('/auth/additional-info');
