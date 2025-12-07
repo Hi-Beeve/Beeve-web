@@ -64,12 +64,15 @@ import { useState, useEffect } from "react";
 
 interface HexagonChartProps {
   hexDataArray: number[];
+  width?: number;
+  height?: number;
+  innerFull?: boolean;
 }
 
 // 등급을 실제 값으로 변환: 1=80(가장 바깥), 2=63, 3=36, 4=0(중심)
 const GRADE_TO_VALUE = [0, 2.6, 2, 1.2, 0]; // index 0은 사용하지 않음
 
-export default function HexagonChart({ hexDataArray }: HexagonChartProps) {
+export default function HexagonChart({ hexDataArray, width = 300, height = 300, innerFull=false }: HexagonChartProps) {
   // 등급 배열을 실제 값 배열로 변환
   const VALUE_DATA = hexDataArray.map(grade => GRADE_TO_VALUE[grade] ?? 0);
   const [animatedValue, setAnimatedValue] = useState(Array(6).fill(0));
@@ -110,9 +113,27 @@ export default function HexagonChart({ hexDataArray }: HexagonChartProps) {
   };
 
   return (
-    <div className="relative w-[300px] h-[300px] rounded-6 flex items-center justify-center">
-      <img src="/hex.svg" alt="hex-bg" className="absolute w-full h-full" style={{ left: '4px', top: '2px', zIndex: 1 }} />
-      <div className="absolute w-[80%] h-[80%]" style={{ left: '10%', top: '10%', zIndex: 2, pointerEvents: 'none' }}>
+    <div 
+      className="relative rounded-6 flex items-center justify-center"
+      style={{ width: `${width}px`, height: `${height}px` }}
+    >
+      <img 
+        src="/hex.svg" 
+        alt="hex-bg" 
+        className="absolute w-full h-full" 
+        style={{ left: '4px', top: '2px', zIndex: 1 }} 
+      />
+      <div 
+        className="absolute" 
+        style={{ 
+          width: innerFull?'90%':'80%', 
+          height: innerFull?'90%':'80%', 
+          left: innerFull?'5%':'10%', 
+          top:  innerFull?'5%':'10%', 
+          zIndex: 2, 
+          pointerEvents: 'none' 
+        }}
+      >
         {/* @ts-expect-error Chart.js Radar 타입 호환 문제 무시 */}
         <Radar data={data} options={options} />
       </div>
