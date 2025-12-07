@@ -59,9 +59,9 @@ export const HexLineGraph = ({ title, data, maxValue = 4, minValue = 1, stepSize
         borderWidth: 5,
         pointBackgroundColor: 'white',
         pointBorderColor: '#BDB2DD',
-        pointBorderWidth: 3,
-        pointRadius: 6,
-        pointHoverRadius: 8,
+        pointBorderWidth: 2,
+        pointRadius: 4,
+        pointHoverRadius: 6,
         tension: 0.3,
         fill: false,
       },
@@ -73,10 +73,9 @@ export const HexLineGraph = ({ title, data, maxValue = 4, minValue = 1, stepSize
     maintainAspectRatio: false,
     layout: {
       padding: {
-        top: 15,
-        bottom: 15,
-        left: 10,
-        right: 15, // 우측 여백 줄임
+
+        // top: 25,
+        // bottom: 25,
       },
     },
     plugins: {
@@ -109,8 +108,8 @@ export const HexLineGraph = ({ title, data, maxValue = 4, minValue = 1, stepSize
         position: 'right' as const,
         beginAtZero: false,
         reverse: true,
-        min: minValue - 0.2, // 최소값에서 0.2 여백 추가
-        max: maxValue + 0.2, // 최대값에서 0.2 여백 추가
+        min: minValue - 0.2,
+        max: maxValue -0.2,
         grid: {
           drawBorder: false,
           lineWidth: 1,
@@ -152,14 +151,14 @@ export const HexLineGraph = ({ title, data, maxValue = 4, minValue = 1, stepSize
       point: {
         hoverBackgroundColor: 'white',
         hoverBorderColor: '#BDB2DD',
-        hoverBorderWidth: 3,
+        hoverBorderWidth: 2,
       },
     },
   };
 
   return (
-    <div className="w-full h-52 bg-white rounded-lg relative overflow-visible">
-      <div className="w-full h-full p-4 pt-14 overflow-visible">
+    <div className="w-full h-52 bg-white rounded-lg relative">
+      <div className="w-full h-full p-4 pt-14">
       {title && (
         <div className="absolute flex top-5 left-4 z-20 gap-2 pl-2">
           {data.icon && (
