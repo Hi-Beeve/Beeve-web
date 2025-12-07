@@ -51,7 +51,7 @@ export function SitAndReachWall() {
   const [isLoading, setIsLoading] = useState(false);
   const [poseLandmarker, setPoseLandmarker] = useState<PoseLandmarker | null>(null);
   const [isMounted, setIsMounted] = useState(false);
-  const [showCameraPermission, setShowCameraPermission] = useState(true);
+  const [showCameraPermission, setShowCameraPermission] = useState(false);
   const [cameraPermissionGranted, setCameraPermissionGranted] = useState(false);
   const [, setError] = useState<string | null>(null);
   const [isActive, setIsActive] = useState(false);
@@ -120,15 +120,15 @@ export function SitAndReachWall() {
     // 뒤로 가기 또는 홈으로 이동하는 로직 추가 가능
   };
 
-  // 카메라 권한 허용 후 자동 시작
+  // 카메라 권한 모달에서 허용 후 자동 시작 (fallback)
   useEffect(() => {
-    if (cameraPermissionGranted && videoRef.current && poseLandmarker) {
-      console.log('Auto-starting camera after permission granted');
+    if (cameraPermissionGranted && videoRef.current && poseLandmarker && !isActive) {
+      console.log('Auto-starting camera after permission granted via modal');
       startCamera();
       setIsActive(true);
       startMeasurement();
     }
-  }, [cameraPermissionGranted, poseLandmarker]);
+  }, [cameraPermissionGranted, poseLandmarker, isActive]);
 
   const startCamera = useCallback(async () => {
     try {
@@ -615,15 +615,47 @@ export function SitAndReachWall() {
   }, [voiceGuidanceTimer]);
 
   useEffect(() => {
-    // 페이지 로드 시 자동으로 카메라 시작 및 측정 시작
+    // 페이지 로드 시 자동으로 카메라 권한 요청 및 시작
     const initializeOnMount = async () => {
       if (typeof window !== 'undefined') {
-        await initializePoseLandmarker();
-        // 자동으로 카메라 시작
-        setIsActive(true);
-        await startCamera();
-        // 자동으로 측정 시작
-        startMeasurement();
+        try {
+          // MediaPipe 초기화
+          await initializePoseLandmarker();
+          
+          // 카메라 권한 자동 요청
+          const stream = await navigator.mediaDevices.getUserMedia({ 
+            video: { facingMode: 'user' }, 
+            audio: false 
+          });
+          
+          // 권한이 허용되면 카메라 시작
+          setCameraPermissionGranted(true);
+          setIsActive(true);
+          
+          // 스트림을 비디오 엘리먼트에 연결
+          if (videoRef.current) {
+            videoRef.current.srcObject = stream;
+            await new Promise<void>((resolve) => {
+              if (videoRef.current) {
+                videoRef.current.onloadedmetadata = () => resolve();
+              }
+            });
+            await videoRef.current.play();
+          }
+          
+          // Pose detection 시작
+          const cleanup = detectPose();
+          cleanupDetectionRef.current = cleanup || null;
+          
+          // 측정 시작
+          startMeasurement();
+          setFeedback('카메라가 시작되었습니다. 측정 시작 버튼을 눌러주세요.');
+          
+        } catch (error) {
+          console.error('카메라 권한 요청 실패:', error);
+          // 권한이 거부되면 모달 표시
+          setShowCameraPermission(true);
+        }
       }
     };
     
@@ -718,7 +750,7 @@ export function SitAndReachWall() {
               )}
             </>
           }
-          onStartCamera={startCamera}
+          onStartCamera={!isActive ? startCamera : undefined}
           onStartMeasurement={() => {
             if (phase === MeasurementPhase.SETUP) {
               startMeasurement();
