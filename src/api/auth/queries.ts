@@ -86,6 +86,28 @@ export const useSignUpQuery = () => {
                 console.log('⚠️ No refreshToken in signup response data');
             }
             
+            // 회원가입 시 사용자 정보도 저장 (pendingUserInfo에서 가져와서 AuthContext 형식으로 저장)
+            const pendingUserInfo = localStorage.getItem('pendingUserInfo');
+            if (pendingUserInfo) {
+                try {
+                    const userInfo = JSON.parse(pendingUserInfo);
+                    const userData = {
+                        id: userInfo.providerUserId,
+                        nickname: userInfo.name,
+                        email: userInfo.email,
+                        profileImage: userInfo.profileUrl,
+                        provider: userInfo.provider.toLowerCase(), // 소문자로 변환
+                    };
+                    localStorage.setItem('userData', JSON.stringify(userData));
+                    console.log('✅ User data saved to localStorage after signup:', userData);
+                    
+                    // pendingUserInfo 정리
+                    localStorage.removeItem('pendingUserInfo');
+                } catch (error) {
+                    console.error('❌ Failed to parse pendingUserInfo:', error);
+                }
+            }
+            
             // 기존 쿠키 제거 (있다면)
             document.cookie = 'beeve_auth=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
             document.cookie = 'beeve_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';

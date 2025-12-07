@@ -10,8 +10,8 @@ import { getGoogleLoginUrl } from '@/lib/google-auth';
 
 export default function Home() {
   return (
-    <div className="flex flex-col items-center justify-center h-screen w-full py-5 px-4">
-      <Image src={splash} alt="splash" width={200} height={100} />
+    <div className="flex flex-col items-center justify-center h-screen w-full py-5 pb-20">
+      <Image src={splash} alt="splash" width={170} height={100} />
       <SignInGroup />
     </div>  );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import Cookies from 'js-cookie';
 import { KakaoUser } from '@/lib/kakao-auth';
 import { GoogleUser } from '@/lib/google-auth';
@@ -60,7 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const login = (userData: User) => {
+  const login = useCallback((userData: User) => {
     setUser(userData);
     console.log('🔍 AuthContext login called with:', userData);
     
@@ -74,9 +74,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
     localStorage.setItem('userData', JSON.stringify(userDataToSave));
     console.log('✅ User data saved to localStorage:', userDataToSave);
-  };
+  }, []);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     setUser(null);
     
     // localStorage에서 모든 사용자 관련 데이터 제거
@@ -89,12 +89,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     Cookies.remove(AUTH_COOKIE_KEY);
     Cookies.remove(TOKEN_COOKIE_KEY);
     console.log('🧹 Cookies cleared');
-  };
+  }, []);
 
-  const updateProfile = (profileData: Partial<User>) => {
-    if (user) {
-      const updatedUser = { ...user, ...profileData };
-      setUser(updatedUser);
+  const updateProfile = useCallback((profileData: Partial<User>) => {
+    setUser(currentUser => {
+      if (!currentUser) return currentUser;
+      
+      const updatedUser = { ...currentUser, ...profileData };
       
       // localStorage에 업데이트된 사용자 정보 저장 (토큰 제외)
       const userDataToSave = {
@@ -110,8 +111,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       };
       localStorage.setItem('userData', JSON.stringify(userDataToSave));
       console.log('✅ Profile updated in localStorage:', userDataToSave);
-    }
-  };
+      
+      return updatedUser;
+    });
+  }, []);
 
   const value: AuthContextType = {
     user,

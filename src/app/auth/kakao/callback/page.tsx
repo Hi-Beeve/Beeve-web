@@ -71,7 +71,17 @@ function KakaoCallbackContent() {
       router.push('/auth/additional-info');
     } else {
       console.log('✅ Existing user - login successful');
-      // 기존 회원: 바로 로그인 완료
+      // 기존 회원: 사용자 정보를 localStorage에 저장하고 로그인 완료 (AuthContext 형식에 맞춤)
+      const userData = {
+        id: user.id,
+        nickname: user.nickname,
+        email: user.email,
+        profileImage: user.profileImage,
+        provider: 'kakao',
+      };
+      localStorage.setItem('userData', JSON.stringify(userData));
+      console.log('✅ User data saved to localStorage:', userData);
+      
       login(user);
       setStatus('success');
       setIsProcessing(false);
