@@ -10,17 +10,27 @@ interface HexChartSectionProps {
 }
 
 export default function HexChartSection({ data, onDateClick }: HexChartSectionProps) {
-  const formattedDate = new Date(data.date).toLocaleDateString('ko-KR', {
+  const formattedDate = new Date(data.measureDay).toLocaleDateString('ko-KR', {
     month: '2-digit',
     day: '2-digit',
+  }) ;
+
+  // grade 값들을 안전하게 추출
+  const hexDataArray = data.fitness.map((item, index) => {
+    if (!item || typeof item.grade !== 'number') {
+      console.warn(`⚠️ fitness[${index}]의 grade가 유효하지 않습니다:`, item);
+      return 0; // 기본값
+    }
+    return item.grade;
   });
+
+  console.log('🔍 hexDataArray:', hexDataArray);
 
   return (
     <section className="w-full flex flex-col items-center py-8" >
-
       <HexTitle />
       <div className="my-0">
-        <HexagonChart hexDataArray={data.fitness.map((item) => item.grade)} />
+        <HexagonChart hexDataArray={hexDataArray} />
       </div>
       <DateSection date={formattedDate} onClick={onDateClick}/>
     </section>

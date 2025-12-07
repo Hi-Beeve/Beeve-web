@@ -1,8 +1,8 @@
 import instance from '@/api/instance';
 import { HexWithDateRequest, HexWithDateResponse, TestDataRequest } from '@/types/hex';
 
-export const hexWithDateApi = async (params: HexWithDateRequest): Promise<HexWithDateResponse> => {
-  const response = await instance.get<HexWithDateResponse>('/fitness', {
+export const hexWithDateApi = async (params: HexWithDateRequest): Promise<{data:HexWithDateResponse}> => {
+  const response = await instance.get('/fitness', {
     params: {
       measureDay: params.date,
     },

@@ -26,10 +26,9 @@ export interface HexWithDateResponse {
  height : number; // 키
  weight : number; // 체중
  age : number; // 나이
- gender : string; // 성별 >>>>> 추가 필요 
+ gender : string; // 성별 F/M
  fitness : HexData[]; // 헥데이터
-
- date : string; // 측정일 >>>>> 추가 필요 
+ measureDay : string; // 측정일 
 }
 
 export interface HexWithDateRequest {

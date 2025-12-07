@@ -86,7 +86,6 @@ const FitnessCardList = ({fitness, age, gender}: {fitness: HexData[], age: numbe
                 <CardBackground key={item.fitnessType} className="flex-col items-start gap-4">
                     <CardTitleWithIcon className="bg-[#BDB2DD]" icon={<Image src={FitnessIconMap[item.fitnessType]} alt="gradeIcon" width={size} height={size}/>} title={FitnessNameMap[item.fitnessType]}/>
                     <ResultData program={item.program} value={item.rawValue || item.value} fitnessType={item.fitnessType}/>
-                    {/* TODO : 성별 데이터 형식 useHex에서 수정 */}
                     <HexProgramBar value={item.value} age={age} fitnessType={item.fitnessType} gender={gender === "M" ? "male" : "female"} grade={item.grade}/>
                 </CardBackground>
                 )
@@ -143,7 +142,10 @@ const ResultData = ({program, value, fitnessType}: {program: string, value: numb
             </div>
           <div>
             <CardCaption caption="기록"/>
-            <div className={FONT_STYLES.heading6}>{value}{FitnessUnitMap[fitnessType as keyof typeof FitnessUnitMap]}</div>
+            <div className={FONT_STYLES.heading6}>
+              {Number.isInteger(value) ? value : value.toFixed(3)}
+              {FitnessUnitMap[fitnessType as keyof typeof FitnessUnitMap]}
+            </div>
           </div>
         </div>
     )
