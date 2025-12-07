@@ -69,7 +69,23 @@ export default function MeasurementPage() {
 
   useEffect(() => {
     // 로컬 스토리지에서 완료된 측정 항목들을 불러옴
-    setCompletedItems(getMeasurementCompletions());
+    const completions = getMeasurementCompletions();
+    console.log('📊 측정 완료 상태 확인:', completions);
+    console.log('📊 localStorage completedMeasurements:', localStorage.getItem('completedMeasurements'));
+    console.log('📊 localStorage measurement_agility:', localStorage.getItem('measurement_agility'));
+    setCompletedItems(completions);
+  }, []);
+
+  // 페이지가 포커스될 때마다 완료 상태 새로고침
+  useEffect(() => {
+    const handleFocus = () => {
+      const completions = getMeasurementCompletions();
+      console.log('📊 페이지 포커스 - 완료 상태 새로고침:', completions);
+      setCompletedItems(completions);
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
   }, []);
 
   const handleItemClick = (item: MeasurementItem) => {
@@ -85,11 +101,14 @@ export default function MeasurementPage() {
     // 로컬 스토리지에서 측정 데이터 수집
     const preSurvey = JSON.parse(localStorage.getItem('preSurvey') || '{}');
     
-    const testData = {
+    // 실제로 측정한 푸시업 종류만 확인
+    const wallPushUpReps = localStorage.getItem('measurement_pushup_wall');
+    const kneePushUpReps = localStorage.getItem('measurement_pushup_knee');
+    const standardPushUpReps = localStorage.getItem('measurement_pushup_standard');
+    
+    // 기본 측정 데이터
+    const testData: Partial<TestDataRequest> = {
       measurePlace: preSurvey.place || 'HOME',
-      wallPushUpReps: parseInt(localStorage.getItem('measurement_pushup_wall') || '0'),
-      kneePushUpReps: parseInt(localStorage.getItem('measurement_pushup_knee') || '0'),
-      standardPushUpReps: parseInt(localStorage.getItem('measurement_pushup_standard') || '0'),
       stepTestRecoveryBpm: parseInt(localStorage.getItem('measurement_cardio') || '0'),
       crossCrunchReps: parseInt(localStorage.getItem('measurement_endurance') || '0'),
       sitAndReach: parseFloat(localStorage.getItem('measurement_flexibility') || '0'),
@@ -97,8 +116,26 @@ export default function MeasurementPage() {
       flightTime: parseFloat(localStorage.getItem('measurement_quickness') || '0'),
     };
     
+    // 실제로 측정한 푸시업 종류만 추가
+    if (wallPushUpReps) {
+      testData.wallPushUpReps = parseInt(wallPushUpReps);
+    }
+    if (kneePushUpReps) {
+      testData.kneePushUpReps = parseInt(kneePushUpReps);
+    }
+    if (standardPushUpReps) {
+      testData.standardPushUpReps = parseInt(standardPushUpReps);
+    }
+    
+    // 실제로 측정한 푸시업 종류 로깅
+    const measuredPushupTypes = [];
+    if (wallPushUpReps) measuredPushupTypes.push(`벽 푸시업: ${wallPushUpReps}개`);
+    if (kneePushUpReps) measuredPushupTypes.push(`무릎 푸시업: ${kneePushUpReps}개`);
+    if (standardPushUpReps) measuredPushupTypes.push(`표준 푸시업: ${standardPushUpReps}개`);
+    
+    console.log('📊 측정된 푸시업 종류:', measuredPushupTypes.length > 0 ? measuredPushupTypes : '없음');
     console.log('📊 수집된 측정 데이터:', testData);
-    return testData;
+    return testData as TestDataRequest;
   };
 
   const handleSubmitResults = async () => {
@@ -127,7 +164,7 @@ export default function MeasurementPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white pb-[120px]">
       {/* 헤더 */}
       <div className="px-4 py-6">
         <h1 className="text-2xl font-bold text-black">Beeve</h1>

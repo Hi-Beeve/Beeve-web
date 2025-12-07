@@ -67,7 +67,19 @@ export function ReactionTime() {
         startAccelerometer();
       }
     }
-  }, [phase, hasAccelerometer]);
+    
+    // result 단계 진입 시 자동으로 완료 처리 (안전장치)
+    if (phase === 'result' && records.length > 0) {
+      const validRecords = records.filter(r => r.valid);
+      if (validRecords.length > 0) {
+        const bestTime = Math.min(...validRecords.map(r => r.reactionTime));
+        console.log('🎯 자동 완료 처리 - 최고 기록:', bestTime, 'ms');
+        localStorage.setItem('measurement_agility', (bestTime / 1000).toString());
+        addMeasurementCompletion('agility');
+        console.log('🎯 자동 완료 처리 완료');
+      }
+    }
+  }, [phase, hasAccelerometer, records]);
 
   // currentAttempt 변경 시 currentAttemptRef 업데이트
   useEffect(() => {
@@ -1102,7 +1114,31 @@ export function ReactionTime() {
                   다음 측정 ({currentAttempt + 1}회차)
                 </button>
                 <button
-                  onClick={() => setPhase('final-result')}
+                  onClick={() => {
+                    // 측정 결과를 localStorage에 저장
+                    const validRecords = records.filter(r => r.valid);
+                    console.log('🎯 민첩성 측정 완료 처리 시작 (측정 완료 버튼)');
+                    console.log('🎯 유효한 기록:', validRecords);
+                    
+                    if (validRecords.length > 0) {
+                      const bestTime = Math.min(...validRecords.map(r => r.reactionTime));
+                      console.log('🎯 최고 기록:', bestTime, 'ms');
+                      localStorage.setItem('measurement_agility', (bestTime / 1000).toString()); // 초 단위로 저장
+                      console.log('🎯 localStorage에 저장 완료');
+                      
+                      addMeasurementCompletion('agility');
+                      console.log('🎯 측정 완료 상태 저장 완료');
+                      
+                      // 저장 확인
+                      const saved = localStorage.getItem('measurement_agility');
+                      const completions = localStorage.getItem('completedMeasurements');
+                      console.log('🎯 저장 확인 - measurement_agility:', saved);
+                      console.log('🎯 저장 확인 - completedMeasurements:', completions);
+                    } else {
+                      console.log('❌ 유효한 기록이 없어 완료 처리하지 않음');
+                    }
+                    setPhase('final-result');
+                  }}
                   className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg"
                 >
                   측정 완료
@@ -1113,10 +1149,25 @@ export function ReactionTime() {
                 onClick={() => {
                   // 측정 결과를 localStorage에 저장
                   const validRecords = records.filter(r => r.valid);
+                  console.log('🎯 민첩성 측정 완료 처리 시작');
+                  console.log('🎯 유효한 기록:', validRecords);
+                  
                   if (validRecords.length > 0) {
                     const bestTime = Math.min(...validRecords.map(r => r.reactionTime));
+                    console.log('🎯 최고 기록:', bestTime, 'ms');
                     localStorage.setItem('measurement_agility', (bestTime / 1000).toString()); // 초 단위로 저장
+                    console.log('🎯 localStorage에 저장 완료');
+                    
                     addMeasurementCompletion('agility');
+                    console.log('🎯 측정 완료 상태 저장 완료');
+                    
+                    // 저장 확인
+                    const saved = localStorage.getItem('measurement_agility');
+                    const completions = localStorage.getItem('completedMeasurements');
+                    console.log('🎯 저장 확인 - measurement_agility:', saved);
+                    console.log('🎯 저장 확인 - completedMeasurements:', completions);
+                  } else {
+                    console.log('❌ 유효한 기록이 없어 완료 처리하지 않음');
                   }
                   setPhase('final-result');
                 }}
