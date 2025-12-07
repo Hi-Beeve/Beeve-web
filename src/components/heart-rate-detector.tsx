@@ -44,7 +44,22 @@ export function HeartRateDetector({ title, instruction, onComplete, onCancel }: 
       
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        videoRef.current.play();
+        
+        // 비디오가 로드된 후에 재생 시작
+        await new Promise<void>((resolve) => {
+          if (videoRef.current) {
+            videoRef.current.onloadedmetadata = () => {
+              resolve();
+            };
+          }
+        });
+        
+        try {
+          await videoRef.current.play();
+        } catch (playError) {
+          console.warn('Video play failed:', playError);
+          // 사용자 상호작용이 필요할 수 있음
+        }
       }
 
       // 플래시 켜기 (실험적 기능)
