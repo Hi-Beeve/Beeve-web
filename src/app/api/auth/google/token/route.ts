@@ -11,11 +11,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID;
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-    const redirectUri = process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_URI;
+    const redirectUri = process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_URI || process.env.GOOGLE_REDIRECT_URI;
+
+    console.log('Google OAuth Config:', {
+      clientId: clientId ? '✅ Present' : '❌ Missing',
+      clientSecret: clientSecret ? '✅ Present' : '❌ Missing',
+      redirectUri: redirectUri ? '✅ Present' : '❌ Missing'
+    });
 
     if (!clientId || !clientSecret || !redirectUri) {
+      console.error('Missing Google OAuth config:', { clientId: !!clientId, clientSecret: !!clientSecret, redirectUri: !!redirectUri });
       return NextResponse.json(
         { error: '구글 로그인 설정이 누락되었습니다.' },
         { status: 500 }
@@ -39,6 +46,11 @@ export async function POST(request: NextRequest) {
 
     if (!tokenResponse.ok) {
       const error = await tokenResponse.text();
+      console.error('Google token request failed:', {
+        status: tokenResponse.status,
+        statusText: tokenResponse.statusText,
+        error: error
+      });
       return NextResponse.json(
         { error: `구글 토큰 요청 실패: ${error}` },
         { status: 400 }
