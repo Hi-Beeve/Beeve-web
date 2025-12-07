@@ -28,8 +28,8 @@ export interface GoogleAuthResponse {
  * 구글 로그인 URL 생성
  */
 export const getGoogleLoginUrl = (): string => {
-  const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-  const redirectUri = process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_URI;
+  const clientId = process.env.NEXT_GOOGLE_CLIENT_ID;
+  const redirectUri = process.env.NEXT_GOOGLE_REDIRECT_URI;
   
   if (!clientId || !redirectUri) {
     throw new Error('구글 로그인 설정이 누락되었습니다.');

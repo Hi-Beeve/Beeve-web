@@ -38,8 +38,8 @@ export interface KakaoAuthResponse {
  * 카카오 로그인 URL 생성
  */
 export const getKakaoLoginUrl = (): string => {
-  const clientId = process.env.NEXT_PUBLIC_KAKAO_CLIENT_ID;
-  const redirectUri = process.env.NEXT_PUBLIC_KAKAO_REDIRECT_URI;
+  const clientId = process.env.NEXT_KAKAO_CLIENT_ID;
+  const redirectUri = process.env.NEXT_KAKAO_REDIRECT_URI;
   
   if (!clientId || !redirectUri) {
     throw new Error('카카오 로그인 설정이 누락되었습니다.');
@@ -59,9 +59,9 @@ export const getKakaoLoginUrl = (): string => {
  * 인증 코드로 액세스 토큰 요청
  */
 export const getKakaoAccessToken = async (code: string): Promise<KakaoAuthResponse> => {
-  const clientId = process.env.NEXT_PUBLIC_KAKAO_CLIENT_ID;
+  const clientId = process.env.NEXT_KAKAO_CLIENT_ID;
   const clientSecret = process.env.KAKAO_CLIENT_SECRET;
-  const redirectUri = process.env.NEXT_PUBLIC_KAKAO_REDIRECT_URI;
+  const redirectUri = process.env.NEXT_KAKAO_REDIRECT_URI;
 
   if (!clientId || !redirectUri) {
     throw new Error('카카오 로그인 설정이 누락되었습니다.');
