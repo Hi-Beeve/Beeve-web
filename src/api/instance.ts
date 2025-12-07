@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const instance = axios.create({
-  baseURL: process.env.NEXT_API_BASE_URL || 'https://beeve-api.mooo.com/api/v1', // 서버 도메인
+  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || 'https://beeve-api.mooo.com/api/v1', // 서버 도메인
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
