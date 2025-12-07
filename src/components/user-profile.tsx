@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/auth-context';
 import { kakaoLogout } from '@/lib/kakao-auth';
 import { googleLogout } from '@/lib/google-auth';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 
 interface UserProfileProps {
@@ -12,6 +13,7 @@ interface UserProfileProps {
 
 export function UserProfile({ className = '' }: UserProfileProps) {
   const { user, logout, isAuthenticated } = useAuth();
+  const router = useRouter();
   const [profile, setProfile] = useState(user?.profileImage);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -40,6 +42,11 @@ export function UserProfile({ className = '' }: UserProfileProps) {
       </a>
     );
   }
+
+  const handleMyPageClick = () => {
+    setIsMenuOpen(false);
+    router.push('/mypage');
+  };
 
   const handleLogout = async () => {
     try {
@@ -145,6 +152,17 @@ export function UserProfile({ className = '' }: UserProfileProps) {
               
               {/* 메뉴 아이템들 */}
               <div className="py-2">
+                <button
+                  onClick={handleMyPageClick}
+                  className="w-full px-3 py-2 text-left text-white hover:bg-gray-700 rounded transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    마이페이지
+                  </div>
+                </button>
                 <button
                   onClick={handleLogout}
                   disabled={isLoggingOut}

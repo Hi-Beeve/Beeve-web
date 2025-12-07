@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMember, useUpdateProfile } from "@/api/mypage/useMypage";
 import { FONT_STYLES } from '@/styles/fontStyles';
@@ -20,12 +20,22 @@ const EditPage = () => {
     const { updateProfile } = useUpdateProfile();
     // 폼 데이터 상태
     const [formData, setFormData] = useState({
-        name: data?.name || '',
+        name: '',
+        birthDate: '',
+        gender: '',
+        height: 0,
+        weight: 0
+    });
+
+    useEffect(()=>{
+        setFormData({
+            name: data?.name || '',
         birthDate: data?.birthDate || '',
-        gender: data?.gender || '',
+        gender: data?.gender === "M" ? "male" : "female" ,
         height: data?.height || 0,
         weight: data?.weight || 0
-    });
+        })
+    },[data])
     
     const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -85,13 +95,10 @@ const EditPage = () => {
 
     // 저장 핸들러
     const handleSave = () => {
-        if (validateForm()) {
-            // TODO: API 호출하여 프로필 업데이트
-            
+        if (validateForm()) {            
             console.log('프로필 업데이트:', formData);
             updateProfile(formData);
-            // 임시로 뒤로가기
-            router.back();
+            router.push('/mypage');
         }
     };
 

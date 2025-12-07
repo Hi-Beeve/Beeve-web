@@ -10,6 +10,9 @@ export const getProfileApi = async (): Promise<ProfileResponse> => {
 
 // 프로필 수정 API
 export const updateProfileApi = async (params: ProfileUpdateRequest): Promise<ProfileUpdateResponse> => {
-  const response = await instance.post<ProfileUpdateResponse>('/member/profile', params);
+  const response = await instance.post<ProfileUpdateResponse>('/member/profile', {params:{
+    ...params,
+    gender : params.gender === 'male'?'M':'F'
+  }});
   return response.data;
 };
