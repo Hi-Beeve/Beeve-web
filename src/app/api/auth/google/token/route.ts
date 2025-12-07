@@ -21,6 +21,14 @@ export async function POST(request: NextRequest) {
       redirectUri: redirectUri ? '✅ Present' : '❌ Missing'
     });
 
+    console.log('Environment Variables Debug:', {
+      NEXT_PUBLIC_GOOGLE_CLIENT_ID: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ? 'Set' : 'Not Set',
+      GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID ? 'Set' : 'Not Set',
+      GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET ? 'Set' : 'Not Set',
+      NEXT_PUBLIC_GOOGLE_REDIRECT_URI: process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_URI ? 'Set' : 'Not Set',
+      GOOGLE_REDIRECT_URI: process.env.GOOGLE_REDIRECT_URI ? 'Set' : 'Not Set'
+    });
+
     if (!clientId || !clientSecret || !redirectUri) {
       console.error('Missing Google OAuth config:', { clientId: !!clientId, clientSecret: !!clientSecret, redirectUri: !!redirectUri });
       return NextResponse.json(
