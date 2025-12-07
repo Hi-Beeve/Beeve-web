@@ -82,10 +82,20 @@ instance.interceptors.response.use(
       }
     }
     
-    // 기타 401 에러 처리
+    // AUTH101 (회원 없음) 에러는 auth.api.ts에서 처리하므로 그대로 통과
+    if (error.response?.data?.code === 'AUTH101' || error.response?.data?.code === 'MEMBER201') {
+      console.log('⚠️ User not found - will be handled by auth.api.ts');
+      return Promise.reject(error);
+    }
+    
+    // 기타 401 에러 처리 (토큰 없음 등)
     if (error.response?.status === 401) {
-      // Handle other unauthorized cases
-      console.log('⚠️ Unauthorized access');
+      console.log('⚠️ Unauthorized access - redirecting to login');
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('userData');
+      window.location.href = '/';
+      return Promise.reject(error);
     }
     
     return Promise.reject(error);
