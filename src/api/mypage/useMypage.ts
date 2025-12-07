@@ -37,7 +37,7 @@ export const useMember = () => {
 
   return {
     ...query,
-    data: query.data,
+    data: query.data?.data,
   }
 };
 

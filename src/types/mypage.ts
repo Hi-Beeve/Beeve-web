@@ -13,6 +13,8 @@ export type ProfileResponse = {
     };
 }
 
+export type ProfileResponseData = ProfileResponse['data'];
+
 // 프로필 수정 POST /member/profile
 export type ProfileUpdateRequest = {
   name: string;

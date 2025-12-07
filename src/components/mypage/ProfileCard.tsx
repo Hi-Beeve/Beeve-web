@@ -1,10 +1,10 @@
 import { FONT_COLORS, FONT_STYLES } from "@/styles/fontStyles";
-import { ProfileResponse } from "@/types/mypage";
+import { ProfileResponseData } from "@/types/mypage";
 import Image from "next/image";
 import ProfileIcon from "../../../public/profile.svg";
 import ArrowIcon from "../../../public/arrow_right.svg";
 
-export const ProfileCard = ({ data }: { data: ProfileResponse }) => {
+export const ProfileCard = ({ data }: { data: ProfileResponseData }) => {
     const onClickProfile = () => {
         window.location.href = '/mypage/edit';
     }

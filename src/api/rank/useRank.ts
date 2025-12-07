@@ -7,7 +7,7 @@ export const useRank = () => {
     
     if (!query.data) return { ...query, data: undefined };
     
-    const rawData: RankResponse = query.data;
+    const rawData: RankResponse = query.data.data;
     
     // rankHistoryList를 HexLineGraph 형식으로 변환
     const chartData = {

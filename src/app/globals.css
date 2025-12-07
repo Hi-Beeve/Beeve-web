@@ -134,3 +134,21 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* 개발자 도구 버튼 숨기기 */
+[data-nextjs-scroll-focus-boundary] {
+  display: none !important;
+}
+
+/* TanStack Query Devtools 버튼 숨기기 */
+[data-testid="react-query-devtools-btn"],
+button[aria-label*="devtools"],
+button[title*="devtools"] {
+  display: none !important;
+}
+
+/* Next.js 빌드 인디케이터 숨기기 */
+#__next-build-watcher,
+[data-nextjs-toast] {
+  display: none !important;
+}

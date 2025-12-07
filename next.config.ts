@@ -61,6 +61,11 @@ const nextConfig: NextConfig = {
   turbopack: {
     // MediaPipe 관련 설정을 Turbopack으로 이전
   },
+
+  // Next.js 개발자 도구 비활성화
+  devIndicators: {
+    buildActivity: false,
+  } as any,
   
   // 웹팩 설정 (Turbopack 사용 시 필요한 경우만)
   webpack: (config, { isServer }) => {

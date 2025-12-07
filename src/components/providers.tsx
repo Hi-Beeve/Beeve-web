@@ -1,7 +1,6 @@
 'use client';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { AuthProvider } from '@/contexts/auth-context';
 import { useState } from 'react';
 
@@ -26,7 +25,6 @@ export function Providers({ children }: ProvidersProps) {
       <AuthProvider>
         {children}
       </AuthProvider>
-      <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   );
 }
