@@ -42,7 +42,7 @@ export default function RankPage() {
         <RankCard rank={rankData?.rankHistoryList?.[0]?.rank || 0} />
         <HexLineGraph title="" data={rankData?.chartData || {labels: [], values: [], icon: ""}} minValue={1} maxValue={100} stepSize={25} />
         <DetailTitle />
-        <FitnessCardList fitness={rankData?.fitnessData || []}/>
+        <RankFitnessCardList fitness={rankData?.fitnessData || []}/>
     </div>
     )
 }
@@ -74,7 +74,7 @@ const RankCard = ({rank}: {rank: number}) => {
     )
 }
 
-const FitnessCardList = ({fitness}: {fitness: HexData[]}) => {
+const RankFitnessCardList = ({fitness}: {fitness: HexData[]}) => {
   const getSize = (fitnessType: any) => {
     return fitnessType === "STRENGTH" ? 20 : 24;
   }

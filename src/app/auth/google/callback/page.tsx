@@ -39,7 +39,7 @@ function GoogleCallbackContent() {
       setStatus('success');
       setIsProcessing(false);
       setTimeout(() => {
-        router.push('/');
+        router.push('/hex');
       }, 2000);
     }
   };
@@ -93,7 +93,7 @@ function GoogleCallbackContent() {
           // 코드가 없으면 이미 로그인 처리가 완료된 상태일 수 있음
           console.log('인증 코드가 없습니다. 이미 처리되었을 수 있습니다.');
           setTimeout(() => {
-            router.push('/');
+            router.push('/hex');
           }, 1000);
           return;
         }
@@ -110,7 +110,7 @@ function GoogleCallbackContent() {
             console.log('이미 처리된 인증 코드입니다.');
             setStatus('success');
             setTimeout(() => {
-              router.push('/');
+              router.push('/hex');
             }, 1000);
             return;
           } else {
