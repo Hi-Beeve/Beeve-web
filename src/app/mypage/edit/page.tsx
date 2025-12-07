@@ -20,11 +20,11 @@ const EditPage = () => {
     const { updateProfile } = useUpdateProfile();
     // 폼 데이터 상태
     const [formData, setFormData] = useState({
-        name: data?.name || '',
-        birthDate: data?.birthDate || '',
-        gender: data?.gender || '',
-        height: data?.height || 0,
-        weight: data?.weight || 0
+        name: data?.data?.name || '',
+        birthDate: data?.data?.birthDate || '',
+        gender: data?.data?.gender || '',
+        height: data?.data?.height || 0,
+        weight: data?.data?.weight || 0
     });
     
     const [errors, setErrors] = useState<Record<string, string>>({});
