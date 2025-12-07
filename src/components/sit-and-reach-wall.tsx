@@ -57,6 +57,8 @@ export function SitAndReachWall() {
   const [isActive, setIsActive] = useState(false);
   const [phase, setPhase] = useState<MeasurementPhase>(MeasurementPhase.SETUP);
   const [measurement, setMeasurement] = useState<WallMeasurement | null>(null);
+  const [bestMeasurement, setBestMeasurement] = useState<number>(0);
+  const [attemptCount, setAttemptCount] = useState<number>(0);
   const [pixelToRealRatio, setPixelToRealRatio] = useState<number>(0.1); // 기본값: 1픽셀 = 0.1cm
   const [wallPosition, setWallPosition] = useState<number>(100); // 화면에서 벽의 x 좌표
   const [userHeight,setHeight] = useState<number>(170); // 사용자 키 (cm) - 기본값 또는 프로필에서 가져옴
@@ -407,14 +409,27 @@ export function SitAndReachWall() {
                     setPhase(MeasurementPhase.RESULT);
                     setHoldStartTime(null);
                     
-                    // 측정 결과를 localStorage에 저장
-                    if (currentMeasurement) {
-                      localStorage.setItem('measurement_flexibility', currentMeasurement.distanceInCm.toString());
-                      addMeasurementCompletion('flexibility');
+                    // 시도 횟수 증가
+                    const newAttemptCount = attemptCount + 1;
+                    setAttemptCount(newAttemptCount);
+                    
+                    // 최고 기록 업데이트
+                    const currentDistance = currentMeasurement.distanceInCm;
+                    if (currentDistance > bestMeasurement) {
+                      setBestMeasurement(currentDistance);
+                      localStorage.setItem('measurement_flexibility', currentDistance.toString());
+                      setFeedback(`새 기록! ${currentDistance.toFixed(1)}cm (${newAttemptCount}/2회)`);
+                    } else {
+                      setFeedback(`측정 완료! ${currentDistance.toFixed(1)}cm (최고: ${bestMeasurement.toFixed(1)}cm) (${newAttemptCount}/2회)`);
                     }
                     
-                    setFeedback('측정 완료!');
-                    playVoiceGuidance('측정이 완료되었습니다');
+                    // 2회 측정 완료 시
+                    if (newAttemptCount >= 2) {
+                      addMeasurementCompletion('flexibility');
+                      playVoiceGuidance('모든 측정이 완료되었습니다');
+                    } else {
+                      playVoiceGuidance('측정이 완료되었습니다. 한 번 더 측정하세요');
+                    }
                   } else {
                     setFeedback(`자세 유지 중... ${(3 - elapsed).toFixed(1)}초 남음`);
                   }
@@ -454,6 +469,14 @@ export function SitAndReachWall() {
     setIsHeightCalibrated(false);
     setIsUserSitting(false);
     setFeedback('전신이 화면에 보이도록 서주세요');
+    
+    // 자동 캘리브레이션 적용 (3초 후)
+    setTimeout(() => {
+      setPixelToRealRatio(0.5); // 기본 비율값
+      setIsHeightCalibrated(true);
+      setPhase(MeasurementPhase.SITTING_MEASUREMENT);
+      setFeedback('앉아서 앞으로 굽히기를 시작하세요');
+    }, 3000);
   };
 
   const resetMeasurement = () => {
@@ -463,6 +486,58 @@ export function SitAndReachWall() {
     setCurrentHoldTime(0);
     setIsHeightCalibrated(false);
     setIsUserSitting(false);
+    
+    if (attemptCount >= 2) {
+      // 2회 측정 완료 후 리셋하면 처음부터 다시
+      setAttemptCount(0);
+      setBestMeasurement(0);
+      setFeedback('측정 시작 버튼을 눌러주세요');
+    } else {
+      // 아직 2회 측정이 안 끝났으면 다음 측정 준비
+      setFeedback(`${attemptCount + 1}번째 측정을 시작하세요`);
+    }
+  };
+
+  const forceCompleteMeasurement = () => {
+    // 현재 측정값이 있으면 강제로 완료 처리
+    if (measurement) {
+      const newAttemptCount = attemptCount + 1;
+      setAttemptCount(newAttemptCount);
+      
+      const currentDistance = measurement.distanceInCm;
+      if (currentDistance > bestMeasurement) {
+        setBestMeasurement(currentDistance);
+        localStorage.setItem('measurement_flexibility', currentDistance.toString());
+        setFeedback(`강제 완료! 새 기록: ${currentDistance.toFixed(1)}cm (${newAttemptCount}/2회)`);
+      } else {
+        setFeedback(`강제 완료! ${currentDistance.toFixed(1)}cm (최고: ${bestMeasurement.toFixed(1)}cm) (${newAttemptCount}/2회)`);
+      }
+      
+      setPhase(MeasurementPhase.RESULT);
+      setHoldStartTime(null);
+      
+      if (newAttemptCount >= 2) {
+        addMeasurementCompletion('flexibility');
+      }
+    } else {
+      // 측정값이 없으면 기본값으로 처리
+      const defaultDistance = 10; // 기본 10cm
+      const newAttemptCount = attemptCount + 1;
+      setAttemptCount(newAttemptCount);
+      
+      if (defaultDistance > bestMeasurement) {
+        setBestMeasurement(defaultDistance);
+        localStorage.setItem('measurement_flexibility', defaultDistance.toString());
+      }
+      
+      setFeedback(`강제 완료! 기본값: ${defaultDistance}cm (${newAttemptCount}/2회)`);
+      setPhase(MeasurementPhase.RESULT);
+      setHoldStartTime(null);
+      
+      if (newAttemptCount >= 2) {
+        addMeasurementCompletion('flexibility');
+      }
+    }
   };
 
   const handleSaveResult = () => {
@@ -692,7 +767,11 @@ export function SitAndReachWall() {
           exerciseName="앉아윗몸앞으로굽히기"
           videoRef={videoRef}
           isPortrait={true}
-          timerStatus={phase === MeasurementPhase.SITTING_MEASUREMENT ? 'measuring' : 'idle'}
+          timerStatus={
+            phase === MeasurementPhase.SITTING_MEASUREMENT ? 'measuring' : 
+            phase === MeasurementPhase.RESULT ? (attemptCount >= 2 ? 'finished' : 'idle') : 
+            'idle'
+          }
           preparingTime={preparingTime}
           remainingTime={remainingTime}
           count={measurement ? Math.round(measurement.distanceInCm) : 0}
@@ -709,6 +788,23 @@ export function SitAndReachWall() {
           }
           additionalInfo={
             <>
+              {/* 측정 진행 상황 */}
+              {(attemptCount > 0 || bestMeasurement > 0) && (
+                <div className="bg-blue-50 p-4 rounded-[20px] mb-4">
+                  <div className={`${FONT_STYLES.body9} text-[#767676] mb-2`}>측정 결과</div>
+                  <div className="flex justify-between items-center">
+                    <span className={`${FONT_STYLES.body10} text-[#767676]`}>시도 횟수:</span>
+                    <span className={`${FONT_STYLES.body10} font-bold text-[#9B8EC2]`}>{attemptCount}/2회</span>
+                  </div>
+                  {bestMeasurement > 0 && (
+                    <div className="flex justify-between items-center mt-1">
+                      <span className={`${FONT_STYLES.body10} text-[#767676]`}>최고 기록:</span>
+                      <span className={`${FONT_STYLES.body10} font-bold text-[#9B8EC2]`}>{bestMeasurement.toFixed(1)}cm</span>
+                    </div>
+                  )}
+                </div>
+              )}
+              
               {/* Height Calibration Status */}
               {phase === MeasurementPhase.HEIGHT_CALIBRATION && (
                 <div className="bg-gray-800 p-4 rounded-lg mb-4">
@@ -752,8 +848,11 @@ export function SitAndReachWall() {
           }
           onStartCamera={!isActive ? startCamera : undefined}
           onStartMeasurement={() => {
-            if (phase === MeasurementPhase.SETUP) {
+            if (phase === MeasurementPhase.SETUP || phase === MeasurementPhase.RESULT) {
               startMeasurement();
+            } else if (phase === MeasurementPhase.HEIGHT_CALIBRATION || phase === MeasurementPhase.SITTING_MEASUREMENT) {
+              // 측정 중일 때 클릭하면 강제로 측정 완료 처리
+              forceCompleteMeasurement();
             }
           }}
           onStopMeasurement={resetMeasurement}

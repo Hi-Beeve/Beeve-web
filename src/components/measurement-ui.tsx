@@ -210,8 +210,13 @@ export function MeasurementUI({
             >완료</CircleButton>
           ) : (
             <CircleButton
-            onClick={() => onStopMeasurement?.()}
-            >중단</CircleButton>
+            onClick={() => onStartMeasurement?.()}
+            >
+              <div className="animate-pulse text-center">
+                <div className="text-lg font-bold mb-1">측정 중</div>
+                <div className="text-sm opacity-80">클릭하여 완료</div>
+              </div>
+            </CircleButton>
           )}
       </div>
           </div>
