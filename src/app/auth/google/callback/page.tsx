@@ -165,7 +165,7 @@ function GoogleCallbackContent() {
         
         // 5초 후 메인 페이지로 리다이렉트
         setTimeout(() => {
-          router.push('/');
+          router.push('/hex');
         }, 5000);
       }
     };
