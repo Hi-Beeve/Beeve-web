@@ -79,6 +79,7 @@ function AdditionalInfoContent() {
 
   // 회원가입 성공 시 로그인 처리
   useEffect(() => {
+
     if (isSuccess && signUpData && tempUser && !loginProcessedRef.current) {
       console.log('🎉 회원가입 완료!', signUpData);
       loginProcessedRef.current = true; // 중복 실행 방지
@@ -94,6 +95,16 @@ function AdditionalInfoContent() {
       sessionStorage.removeItem('pendingOAuthUser');
       localStorage.removeItem('pendingOAuthUser');
       console.log('🗑️ Cleaned up pending OAuth data after successful signup');
+
+      // 사용자 추가 정보를 localStorage에 저장 (나이 계산용)
+      const userAdditionalInfo = {
+        birthDate: formData.birthDate,
+        gender: formData.gender,
+        height: formData.height,
+        weight: formData.weight
+      };
+      localStorage.setItem('userAdditionalInfo', JSON.stringify(userAdditionalInfo));
+      console.log('💾 User additional info saved to localStorage:', userAdditionalInfo);
       
       // 회원가입 성공 시 토큰이 이미 localStorage에 저장되었으므로
       // 클라이언트 상태만 업데이트
@@ -107,7 +118,7 @@ function AdditionalInfoContent() {
       });
       
       // 메인 페이지로 이동
-      router.push('/');
+      router.push('/hex');
     }
   }, [isSuccess, signUpData, tempUser, router]);
 

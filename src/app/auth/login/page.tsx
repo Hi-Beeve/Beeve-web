@@ -14,7 +14,7 @@ export default function LoginPage() {
   // 이미 로그인된 경우 메인 페이지로 리다이렉트
   useEffect(() => {
     if (isAuthenticated) {
-      router.push('/');
+      router.push('/hex');
     }
   }, [isAuthenticated, router]);
 

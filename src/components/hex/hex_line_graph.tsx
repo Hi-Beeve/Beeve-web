@@ -140,7 +140,10 @@ export const HexLineGraph = ({ title, data, maxValue = 4, minValue = 1, stepSize
       <div className="w-full h-full p-4 pt-14">
       {title && (
         <div className="absolute flex top-5 left-4 z-20 gap-2 pl-2">
-          <Image src={data.icon} alt="Icon" width={24} height={24} />
+          {data.icon && (
+
+            <Image src={data.icon} alt="Icon" width={24} height={24} />
+          )}
           <p className={`${FONT_STYLES.heading4}`}>{title}</p>
         </div>
       )}

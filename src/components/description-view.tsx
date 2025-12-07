@@ -22,7 +22,7 @@ export default function DescriptionView() {
       setExerciseKey(key);
     } else {
       // 유효하지 않은 타입일 경우 홈페이지로 리디렉션
-      router.replace('/');
+      router.replace('/hex');
     }
   }, [searchParams, router]);
 
