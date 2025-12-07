@@ -73,8 +73,10 @@ export const HexLineGraph = ({ title, data, maxValue = 4, minValue = 1, stepSize
     maintainAspectRatio: false,
     layout: {
       padding: {
-        // top: 25,
-        // bottom: 25,
+        top: 15,
+        bottom: 15,
+        left: 10,
+        right: 15, // 우측 여백 줄임
       },
     },
     plugins: {
@@ -107,8 +109,8 @@ export const HexLineGraph = ({ title, data, maxValue = 4, minValue = 1, stepSize
         position: 'right' as const,
         beginAtZero: false,
         reverse: true,
-        min: minValue,
-        max: maxValue,
+        min: minValue - 0.2, // 최소값에서 0.2 여백 추가
+        max: maxValue + 0.2, // 최대값에서 0.2 여백 추가
         grid: {
           drawBorder: false,
           lineWidth: 1,
@@ -119,6 +121,26 @@ export const HexLineGraph = ({ title, data, maxValue = 4, minValue = 1, stepSize
             size: 12,
           },
           stepSize: stepSize,
+        },
+        // afterBuildTicks를 사용하여 tick을 직접 제어
+        afterBuildTicks: function(scale: any) {
+          // 고정된 tick 값들만 생성
+          const fixedTicks = [];
+          if (minValue === 1 && maxValue === 100 && stepSize === 25) {
+            // 순위 차트의 경우: 1, 25, 50, 75, 100
+            [1, 25, 50, 75, 100].forEach(value => {
+              fixedTicks.push({ value });
+            });
+          } else {
+            // 일반적인 경우 - stepSize를 정확히 사용
+            console.log('🔍 tick 생성:', { minValue, maxValue, stepSize });
+            for (let i = minValue; i <= maxValue; i += stepSize) {
+              fixedTicks.push({ value: i });
+              console.log('🔍 tick 추가:', i);
+            }
+          }
+          console.log('🔍 최종 ticks:', fixedTicks);
+          scale.ticks = fixedTicks;
         },
         border: {
           color: 'transparent',
@@ -136,8 +158,8 @@ export const HexLineGraph = ({ title, data, maxValue = 4, minValue = 1, stepSize
   };
 
   return (
-    <div className="w-full h-52 bg-white rounded-lg relative">
-      <div className="w-full h-full p-4 pt-14">
+    <div className="w-full h-52 bg-white rounded-lg relative overflow-visible">
+      <div className="w-full h-full p-4 pt-14 overflow-visible">
       {title && (
         <div className="absolute flex top-5 left-4 z-20 gap-2 pl-2">
           {data.icon && (

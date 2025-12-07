@@ -73,7 +73,7 @@ const transformGraphData = (data: GraphResponse): GraphDataMap => {
 export const useGraph = () => {
     const query = useGraphQuery();
     
-    const transformedData = query.data ? transformGraphData(query.data) : null;
+    const transformedData = query.data ? transformGraphData(query.data.data) : null;
     
     return {
         ...query,

@@ -33,7 +33,14 @@ export default function GraphPage() {
     return(
         <div className="w-full pt-10 px-5 pb-10 flex flex-col gap-3">
             {Object.entries(transformedData).map(([key, value]) => (
-                <HexLineGraph key={key} title={key} data={value} maxValue={key==='종합등급' ? 5 : 4} />
+                <HexLineGraph 
+                    key={key} 
+                    title={key} 
+                    data={value} 
+                    maxValue={key==='종합등급' ? 5 : 4}
+                    minValue={1}
+                    stepSize={1}
+                />
             ))}
         </div>
     )
