@@ -1,3 +1,5 @@
+"use client"
+
 import { HexLineGraph } from "@/components/hex/hex_line_graph"
 import { useGraph } from "@/api/graph/useGraph"
 
