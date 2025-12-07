@@ -357,15 +357,16 @@ export function PushupDetector({ type, onBack }: PushupDetectorProps) {
     detect();
   };
 
-  const handleReset = () => {
-    setCount(0);
-    setState('ready');
-    stateRef.current = 'ready';
-    setFeedback('');
-    downFrameCountRef.current = 0;
-    upFrameCountRef.current = 0;
-    downAngleRef.current = 0;
-    resetTimer();
+  const handleSaveResult = () => {
+    // 측정 결과를 localStorage에 저장
+    const storageKey = `measurement_pushup_${type}`;
+    localStorage.setItem(storageKey, count.toString());
+    
+    // 측정 완료 상태 저장
+    addMeasurementCompletion('muscle');
+    
+    // measurement 페이지로 이동
+    window.location.href = '/measurement';
   };
 
   if (!isMounted) {
@@ -415,8 +416,18 @@ export function PushupDetector({ type, onBack }: PushupDetectorProps) {
           }
           onStartCamera={startCamera}
           onStartMeasurement={handleStartMeasurement}
-          onStopMeasurement={handleReset}
-          onReset={handleReset}
+          onStopMeasurement={() => {
+            // 측정 중단 시에는 리셋 로직 실행
+            setCount(0);
+            setState('ready');
+            stateRef.current = 'ready';
+            setFeedback('');
+            downFrameCountRef.current = 0;
+            upFrameCountRef.current = 0;
+            downAngleRef.current = 0;
+            resetTimer();
+          }}
+          onSaveResult={handleSaveResult}
           countLabel="푸시업 개수"
           timeLabel="남은 시간"
         />

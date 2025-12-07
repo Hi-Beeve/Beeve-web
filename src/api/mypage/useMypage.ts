@@ -1,28 +1,30 @@
+import { useEffect } from "react";
 import { useProfileQuery, useUpdateProfileQuery } from "./queries";
+import { useAuth } from "@/contexts/auth-context";
 
 export const useMember = () => {
   const query = useProfileQuery();
+  const { updateProfile } = useAuth();
+
+  // 프로필 데이터가 로드되면 AuthContext에 저장
+  useEffect(() => {
+    if (query.data && query.isSuccess) {
+      updateProfile({
+        birthDate: query.data.birthDate,
+        height: query.data.height,
+        weight: query.data.weight,
+        gender: query.data.gender,
+        nickname: query.data.name,
+        profileImage: query.data.profileUrl
+      });
+      console.log('✅ Profile data saved to AuthContext:', query.data);
+    }
+  }, [query.data, query.isSuccess, updateProfile]);
 
   return {
     ...query,
     data: query.data,
   }
-  // 개발용 mock 데이터
-  const mockData = {
-    name: "김개발",
-    birthDate: "1995-03-15",
-    gender: "male",
-    height: 175.5,
-    weight: 68.2,
-    bmi: 22.1,
-    profileUrl: "https://localhost:3001/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop&crop=face"
-  };
-
-  return {
-    ...query,
-    data: mockData, // 임시로 mock 데이터 사용
-    // data: query.data, // 실제 API 연동 시 이 라인 사용
-  };
 };
 
 export const useUpdateProfile = () => {

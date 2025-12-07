@@ -12,6 +12,11 @@ interface User {
   profileImage?: string;
   provider: 'kakao' | 'google';
   accessToken: string;
+  // 프로필 정보 추가
+  birthDate?: string;
+  height?: number;
+  weight?: number;
+  gender?: string;
 }
 
 interface AuthContextType {
@@ -19,6 +24,7 @@ interface AuthContextType {
   isLoading: boolean;
   login: (user: User) => void;
   logout: () => void;
+  updateProfile: (profileData: Partial<User>) => void;
   isAuthenticated: boolean;
 }
 
@@ -85,11 +91,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     console.log('🧹 Cookies cleared');
   };
 
+  const updateProfile = (profileData: Partial<User>) => {
+    if (user) {
+      const updatedUser = { ...user, ...profileData };
+      setUser(updatedUser);
+      
+      // localStorage에 업데이트된 사용자 정보 저장 (토큰 제외)
+      const userDataToSave = {
+        id: updatedUser.id,
+        nickname: updatedUser.nickname,
+        email: updatedUser.email,
+        profileImage: updatedUser.profileImage,
+        provider: updatedUser.provider,
+        birthDate: updatedUser.birthDate,
+        height: updatedUser.height,
+        weight: updatedUser.weight,
+        gender: updatedUser.gender
+      };
+      localStorage.setItem('userData', JSON.stringify(userDataToSave));
+      console.log('✅ Profile updated in localStorage:', userDataToSave);
+    }
+  };
+
   const value: AuthContextType = {
     user,
     isLoading,
     login,
     logout,
+    updateProfile,
     isAuthenticated: !!user,
   };
 

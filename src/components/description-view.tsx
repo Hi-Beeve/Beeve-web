@@ -56,7 +56,7 @@ export default function DescriptionView() {
   return (
     <div className="flex flex-col items-center h-screen p-8 overflow-y-auto">
       <div className="w-full max-w-4xl mx-auto">
-        <div className='w-full flex flex-col justify-center items-center py-12 px-7 gap-2'>
+        <div className='w-full flex flex-col justify-center items-center py-12 px-4 gap-2'>
 
        <div className='bg-[#BDB2DD] w-[100px] h-[100px] rounded-full flex justify-center items-center'>
         {/* 운동별 아이콘 */}
@@ -65,7 +65,9 @@ export default function DescriptionView() {
        <h1 className={FONT_STYLES.heading32}>{guide.title}</h1>
         
         </div>
-        <div className="w-full max-w-2xl mx-auto mb-8 rounded-lg overflow-hidden shadow-lg aspect-video">
+        {guide.youtubeVideoId && (
+
+          <div className="w-full max-w-2xl mx-auto mb-8 rounded-lg overflow-hidden shadow-lg aspect-video">
           <iframe
             src={`https://www.youtube.com/embed/${guide.youtubeVideoId}`}
             title="YouTube video player"
@@ -74,8 +76,9 @@ export default function DescriptionView() {
             allowFullScreen
             className="w-full h-full"
             style={{ aspectRatio: '16/9' }}
-          ></iframe>
+            ></iframe>
         </div>
+          )}
 
         <div className="grid md:grid-cols-2 gap-8">
           <div className="bg-[#F5F5F5] p-6 rounded-lg">

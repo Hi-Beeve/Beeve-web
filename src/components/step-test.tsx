@@ -7,6 +7,7 @@ import { BackHeader } from './common/BackHeader';
 import { FONT_STYLES } from '@/styles/fontStyles';
 import { CircleButton, CircleTimer } from './measurement-ui';
 import { useMember } from '@/api/mypage/useMypage';
+import { useAuth } from '@/contexts/auth-context';
 import { getAge } from '@/utils/getAge';
 import { Router } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -28,6 +29,7 @@ export function StepTest() {
   const [timeRemaining, setTimeRemaining] = useState(0);
   const router = useRouter();
   const {data} = useMember();
+  const { user } = useAuth();
 
   // 사용자 정보 (국민체력100 예시 데이터 기본값)
   const [age, setAge] = useState<number>(26);
@@ -35,12 +37,46 @@ export function StepTest() {
   const [weight, setWeight] = useState<number>(60);
   
   useEffect(()=>{
-    if(data){
-      setAge(getAge(data.birthDate));
-      setHeight(data.height);
-      setWeight(data.weight);
+    console.log('🔍 API 데이터:', data);
+    console.log('🔍 AuthContext 사용자:', user);
+    
+    // AuthContext에서 먼저 데이터 확인 (localStorage에 저장된 데이터)
+    if (user?.birthDate && user?.height && user?.weight) {
+      const calculatedAge = getAge(user.birthDate);
+      console.log('🔍 AuthContext에서 계산된 나이:', calculatedAge);
+      console.log('🔍 AuthContext 키:', user.height, typeof user.height);
+      console.log('🔍 AuthContext 몸무게:', user.weight, typeof user.weight);
+      
+      // 안전한 타입 변환
+      const safeAge = isNaN(calculatedAge) ? 26 : calculatedAge;
+      const safeHeight = typeof user.height === 'number' ? user.height : (user.height ? parseFloat(String(user.height)) : 165) || 165;
+      const safeWeight = typeof user.weight === 'number' ? user.weight : (user.weight ? parseFloat(String(user.weight)) : 60) || 60;
+      
+      console.log('🔍 AuthContext 안전한 변환 후:', { safeAge, safeHeight, safeWeight });
+      
+      setAge(safeAge);
+      setHeight(safeHeight);
+      setWeight(safeWeight);
     }
-  },[data])
+    // API 데이터가 있고 AuthContext에 데이터가 없는 경우
+    else if(data){
+      const calculatedAge = getAge(data.birthDate);
+      console.log('🔍 API에서 계산된 나이:', calculatedAge);
+      console.log('🔍 API 키:', data.height, typeof data.height);
+      console.log('🔍 API 몸무게:', data.weight, typeof data.weight);
+      
+      // 안전한 타입 변환
+      const safeAge = isNaN(calculatedAge) ? 26 : calculatedAge;
+      const safeHeight = typeof data.height === 'number' ? data.height : parseFloat(data.height) || 165;
+      const safeWeight = typeof data.weight === 'number' ? data.weight : parseFloat(data.weight) || 60;
+      
+      console.log('🔍 API 안전한 변환 후:', { safeAge, safeHeight, safeWeight });
+      
+      setAge(safeAge);
+      setHeight(safeHeight);
+      setWeight(safeWeight);
+    }
+  },[data, user])
 
   const onBack = () => {
     router.push('/measurement')
@@ -117,15 +153,31 @@ export function StepTest() {
   const calculateVO2Max = (): number => {
     if (!recoveryHeartRate) return 0;
     
+    // 디버깅 로그 추가
+    console.log('🔍 VO2Max 계산 변수들:');
+    console.log('age:', age, typeof age);
+    console.log('height:', height, typeof height);
+    console.log('weight:', weight, typeof weight);
+    console.log('recoveryHeartRate:', recoveryHeartRate, typeof recoveryHeartRate);
+    
     // 예상최대산소섭취량 = 70.597 - 0.246(연령) + 0.077(신장) - 0.222(체중) - 0.147(1분간회복기심박수)
     const vo2max = 70.597 - (0.246 * age) + (0.077 * height) - (0.222 * weight) - (0.147 * recoveryHeartRate);
+    
+    console.log('계산된 vo2max:', vo2max);
     
     return Math.round(vo2max * 10) / 10; // 소수점 첫째자리까지
   };
 
   const handleStopExercise = () => {
-    // TODO : 측정 중단 선택 시 다시 처음으로 돌아간다는 메시지 표시
-    setPhase('post-rest');
+    // 측정 중단 시 타이머 정리 및 초기화
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+    
+    // 타이머를 3분(180초)으로 초기화하고 대기상태로 설정
+    setTimeRemaining(180);
+    setPhase('exercise');
   };
   return (
     <div className="flex flex-col h-screen">

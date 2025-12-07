@@ -465,6 +465,20 @@ export function SitAndReachWall() {
     setIsUserSitting(false);
   };
 
+  const handleSaveResult = () => {
+    if (measurement) {
+      // 측정 결과를 localStorage에 저장
+      const storageKey = `measurement_sit_and_reach`;
+      localStorage.setItem(storageKey, measurement.distanceInCm.toString());
+      
+      // 측정 완료 상태 저장
+      addMeasurementCompletion('flexibility');
+      
+      // measurement 페이지로 이동
+      window.location.href = '/measurement';
+    }
+  };
+
   // 키 기반 자동 캘리브레이션
   const calibrateWithHeight = (landmarks: any[]) => {
     const nose = landmarks[POSE_LANDMARKS.NOSE];
@@ -711,7 +725,7 @@ export function SitAndReachWall() {
             }
           }}
           onStopMeasurement={resetMeasurement}
-          onReset={resetMeasurement}
+          onSaveResult={handleSaveResult}
           onVideoClick={() => {}}
         />
       )}

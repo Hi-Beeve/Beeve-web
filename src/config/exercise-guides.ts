@@ -62,7 +62,7 @@ export const EXERCISE_GUIDES: { [key: string]: ExerciseGuide } = {
   },
   'pushup-wall': {
     title: '벽 대고 팔굽혀펴기',
-    youtubeVideoId: 'E_34zLuYpoE', // 예시: 벽 푸시업 영상
+    youtubeVideoId: '', // 예시: 벽 푸시업 영상
     instructions: [
       '벽을 마주보고 서서 어깨너비보다 넓게 손을 짚습니다.',
       '발은 어깨너비만큼 벌리고, 몸은 머리부터 발끝까지 일직선을 유지합니다.',
@@ -80,7 +80,7 @@ export const EXERCISE_GUIDES: { [key: string]: ExerciseGuide } = {
   },
   'pushup-knee': {
     title: '무릎 대고 팔굽혀펴기',
-    youtubeVideoId: 't-dY2tV3I-E', // 예시: 니 푸시업 영상
+    youtubeVideoId: '', // 예시: 니 푸시업 영상
     instructions: [
       '무릎을 바닥에 대고 어깨너비보다 넓게 손을 짚습니다.',
       '머리부터 무릎까지 몸이 일직선이 되도록 자세를 잡습니다.',
@@ -98,7 +98,7 @@ export const EXERCISE_GUIDES: { [key: string]: ExerciseGuide } = {
   },
   'pushup-standard': {
     title: '정자세 팔굽혀펴기',
-    youtubeVideoId: 'C2d44M-3s-Y', // 예시: 정자세 푸시업 영상
+    youtubeVideoId: '', // 예시: 정자세 푸시업 영상
     instructions: [
       '양손을 어깨너비보다 약간 넓게 벌려 바닥에 위치시키고, 발끝으로 지지하여 엎드립니다.',
       '머리부터 발끝까지 몸이 일직선이 되도록 유지합니다.',

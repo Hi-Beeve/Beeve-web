@@ -92,7 +92,7 @@ const BodyInformation = ({ data }: { data: any }) => {
     };
 
     const formatGender = (gender: string) => {
-        return gender === 'male' ? '남성' : '여성';
+        return gender === 'M' ? '남성' : '여성';
     };
 
     return (

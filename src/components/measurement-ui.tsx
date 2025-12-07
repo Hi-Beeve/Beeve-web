@@ -37,7 +37,7 @@ interface MeasurementUIProps {
   onStartCamera?: () => void;
   onStartMeasurement?: () => void;
   onStopMeasurement?: () => void;
-  onReset?: () => void;
+  onSaveResult?: () => void;
   
   // 비디오 클릭 이벤트
   onVideoClick?: (event: React.MouseEvent<HTMLVideoElement>) => void;
@@ -67,7 +67,7 @@ export function MeasurementUI({
   onStartCamera,
   onStartMeasurement,
   onStopMeasurement,
-  onReset,
+  onSaveResult,
   onVideoClick,
   countLabel = '개수',
   timeLabel = '남은 시간',
@@ -78,7 +78,7 @@ export function MeasurementUI({
   return (
     <>
       {/* 스크롤 가능한 컨텐츠 영역 */}
-      <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 ">
+      <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 pb-[100px] min-h-[calc(100vh+120px)]">
           {/* 카메라 화면 */}
           <div className="relative mb-4 bg-[#656565] rounded-lg overflow-hidden border-1 border-[#D3C6E6]" style={{ aspectRatio: isPortrait ? '3/4' : '4/3' }}>
             <video
@@ -159,9 +159,9 @@ export function MeasurementUI({
       </div>
 
       {/* 하단 고정 버튼 */}
-      <div className='flex justify-between fixed bottom-8 left-8 right-8'>
+      <div className='flex justify-evenly fixed bottom-2 w-full px-5 py-3 '>
 {showTimer && (
-                <div className="relative h-[140px] w-[140px]">
+                <div className="relative h-[140px] w-[140px] bg-white rounded-full">
                   {/* SVG 원형 프로그레스 바 */}
                   <svg className="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 100 100">
                     {/* 배경 원 */}
@@ -206,8 +206,8 @@ export function MeasurementUI({
             >시작</CircleButton>
           ) : timerStatus === 'finished' ? (
             <CircleButton 
-            onClick={() => onReset?.()}
-            >재측정</CircleButton>
+            onClick={() => onSaveResult?.()}
+            >완료</CircleButton>
           ) : (
             <CircleButton
             onClick={() => onStopMeasurement?.()}

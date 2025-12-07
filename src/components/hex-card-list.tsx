@@ -87,7 +87,7 @@ const FitnessCardList = ({fitness, age, gender}: {fitness: HexData[], age: numbe
                     <CardTitleWithIcon className="bg-[#BDB2DD]" icon={<Image src={FitnessIconMap[item.fitnessType]} alt="gradeIcon" width={size} height={size}/>} title={FitnessNameMap[item.fitnessType]}/>
                     <ResultData program={item.program} value={item.rawValue || item.value} fitnessType={item.fitnessType}/>
                     {/* TODO : 성별 데이터 형식 useHex에서 수정 */}
-                    <HexProgramBar value={item.value} age={age} fitnessType={item.fitnessType} gender={gender === "MALE" ? "male" : "female"} grade={item.grade}/>
+                    <HexProgramBar value={item.value} age={age} fitnessType={item.fitnessType} gender={gender === "M" ? "male" : "female"} grade={item.grade}/>
                 </CardBackground>
                 )
               }
