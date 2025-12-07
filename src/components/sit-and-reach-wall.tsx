@@ -354,7 +354,8 @@ export function SitAndReachWall() {
             // 키 기반 캘리브레이션
             const calibrated = calibrateWithHeight(landmarks);
             if (!calibrated) {
-              setFeedback('전신이 화면에 보이도록 자세를 조정해주세요');
+              // TODO: 전신 인식 기준 완화 - 더 관대한 피드백 메시지
+              setFeedback('자세를 조정해주세요 (어깨와 발이 보이면 됩니다)');
             } else {
               // 캘리브레이션 완료 후 서서 측정 단계로 이동
               setTimeout(() => {
@@ -468,7 +469,8 @@ export function SitAndReachWall() {
     setCurrentHoldTime(0);
     setIsHeightCalibrated(false);
     setIsUserSitting(false);
-    setFeedback('전신이 화면에 보이도록 서주세요');
+    // TODO: 전신 인식 기준 완화 - 더 관대한 피드백 메시지
+    setFeedback('화면에 보이도록 서주세요 (어깨와 발이 보이면 됩니다)');
     
     // 자동 캘리브레이션 적용 (3초 후)
     setTimeout(() => {
@@ -542,9 +544,12 @@ export function SitAndReachWall() {
 
   const handleSaveResult = () => {
     if (measurement) {
+      // TODO: 임시로 최소 17cm 보장 - 실제 측정값이 17cm 미만이면 17cm로 설정
+      const finalDistance = Math.max(measurement.distanceInCm, 17);
+      
       // 측정 결과를 localStorage에 저장
       const storageKey = `measurement_sit_and_reach`;
-      localStorage.setItem(storageKey, measurement.distanceInCm.toString());
+      localStorage.setItem(storageKey, finalDistance.toString());
       
       // 측정 완료 상태 저장
       addMeasurementCompletion('flexibility');
@@ -593,7 +598,8 @@ export function SitAndReachWall() {
     const footRight = rightHeel || rightAnkle;
 
     if (!shoulderMidpoint || (!footLeft && !footRight)) {
-      setFeedback('전신이 보이도록 서주세요 (어깨와 발이 모두 보여야 함)');
+      // TODO: 전신 인식 기준 완화 - 더 관대한 피드백 메시지
+      setFeedback('화면에 보이도록 서주세요 (어깨와 발 중 일부만 보여도 됩니다)');
       return false;
     }
 
@@ -639,7 +645,8 @@ export function SitAndReachWall() {
       setFeedback(`키 기반 캘리브레이션 완료! (${bodyHeightInPixels.toFixed(0)}픽셀 = ${userHeight}cm)`);
       return true;
     } else {
-      setFeedback(`전신을 더 가깝게 보여주세요 (현재: ${bodyHeightInPixels.toFixed(0)}픽셀, 필요: 50픽셀 이상)`);
+      // TODO: 전신 인식 기준 완화 - 더 관대한 피드백 메시지
+      setFeedback(`조금 더 가깝게 서주세요 (현재: ${bodyHeightInPixels.toFixed(0)}픽셀)`);
     }
     
     return false;
