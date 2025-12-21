@@ -15,16 +15,21 @@ export default function HexChartSection({ data, onDateClick }: HexChartSectionPr
     day: '2-digit',
   }) ;
 
-  // grade 값들을 안전하게 추출
-  const hexDataArray = data.fitness.map((item, index) => {
+  // 육각형 순서 정의 (시계방향, 12시부터): 근력 -> 심폐 -> 유연성 -> 순발력 -> 민첩성 -> 근지구력
+  const HEXAGON_ORDER = ['STRENGTH', 'CARDIO', 'FLEXIBILITY', 'QUICKNESS', 'AGILITY', 'ENDURANCE'];
+
+  // grade 값들을 정해진 육각형 순서에 맞춰 추출
+  const hexDataArray = HEXAGON_ORDER.map(fitnessType => {
+    const item = data.fitness.find(f => f.fitnessType === fitnessType);
     if (!item || typeof item.grade !== 'number') {
-      console.warn(`⚠️ fitness[${index}]의 grade가 유효하지 않습니다:`, item);
+      console.warn(`⚠️ ${fitnessType}의 grade가 유효하지 않습니다:`, item);
       return 0; // 기본값
     }
     return item.grade;
   });
 
-  console.log('🔍 hexDataArray:', hexDataArray);
+  console.log('🔍 서버 데이터:', data.fitness.map(f => `${f.fitnessType}:${f.grade}`));
+  console.log('🔍 육각형 순서:', hexDataArray);
 
   return (
     <section className="w-full flex flex-col items-center py-8" >

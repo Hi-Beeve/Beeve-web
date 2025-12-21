@@ -32,7 +32,7 @@ const options = {
     r: {
       angleLines: { display: false, color: 'transparent' },
       min: 0,
-      max: 2.2,
+      max: 3.0,
       ticks: {
         stepSize: 1,
         display: false,
@@ -70,7 +70,7 @@ interface HexagonChartProps {
 }
 
 // 등급을 실제 값으로 변환: 1=80(가장 바깥), 2=63, 3=36, 4=0(중심)
-const GRADE_TO_VALUE = [0, 2.6, 2, 1.2, 0]; // index 0은 사용하지 않음
+const GRADE_TO_VALUE = [0, 3.6, 2.9, 2.2, 1.2, 0]; // index 0은 사용하지 않음
 
 export default function HexagonChart({ hexDataArray, width = 300, height = 300, innerFull=false }: HexagonChartProps) {
   // 등급 배열을 실제 값 배열로 변환
