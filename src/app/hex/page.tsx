@@ -14,17 +14,13 @@ function HexPageContent() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const searchParams = useSearchParams();
 
-  // 오늘 날짜를 YYYY-MM-DD 형식으로 가져오는 함수
-  const getTodayDate = () => {
-    const today = new Date();
-    return today.toISOString().split('T')[0];
-  };
 
   useEffect(() => {
-    // URL 파라미터에서 date를 확인하거나 오늘 날짜를 기본값으로 설정
+    // URL 파라미터에서 date를 확인하여 기본값으로 설정
     const dateParam = searchParams.get('date');
-    const defaultDate = dateParam || getTodayDate();
-    setSelectedDate(defaultDate);
+    if(dateParam){
+      setSelectedDate(dateParam);
+    }
   }, [searchParams]);
 
   const { data, isLoading, error } = useHex({ date: selectedDate });
