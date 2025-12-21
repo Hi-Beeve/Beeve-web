@@ -73,9 +73,10 @@ export const HexLineGraph = ({ title, data, maxValue = 4, minValue = 1, stepSize
     maintainAspectRatio: false,
     layout: {
       padding: {
-
-        // top: 25,
-        // bottom: 25,
+        top: 10,
+        bottom: 10,
+        left: 0,
+        right: 0,
       },
     },
     plugins: {
@@ -108,8 +109,8 @@ export const HexLineGraph = ({ title, data, maxValue = 4, minValue = 1, stepSize
         position: 'right' as const,
         beginAtZero: false,
         reverse: true,
-        min: minValue - 0.2,
-        max: maxValue -0.2,
+        min: minValue - 0.5,
+        max: maxValue + 0.5,
         grid: {
           drawBorder: false,
           lineWidth: 1,
