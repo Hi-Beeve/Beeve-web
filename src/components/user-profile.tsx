@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/auth-context';
-import { kakaoLogout } from '@/lib/kakao-auth';
-import { googleLogout } from '@/lib/google-auth';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 
@@ -48,32 +46,17 @@ export function UserProfile({ className = '' }: UserProfileProps) {
     router.push('/mypage');
   };
 
-  const handleLogout = async () => {
-    try {
-      setIsLoggingOut(true);
-      setIsMenuOpen(false);
-      
-      // 소셜 로그아웃 API 호출 (선택사항)
-      if (user?.accessToken) {
-        try {
-          if (user.provider === 'kakao') {
-            await kakaoLogout(user.accessToken);
-          } else if (user.provider === 'google') {
-            await googleLogout(user.accessToken);
-          }
-        } catch (error) {
-          console.error(`${user.provider} 로그아웃 실패:`, error);
-          // 소셜 로그아웃 실패해도 로컬 로그아웃은 진행
-        }
-      }
-      
-      // 로컬 로그아웃
-      logout();
-    } catch (error) {
-      console.error('로그아웃 실패:', error);
-    } finally {
-      setIsLoggingOut(false);
-    }
+  const handleLogout = () => {
+    setIsLoggingOut(true);
+    setIsMenuOpen(false);
+
+    // 로컬 사용자 데이터 삭제 (localStorage 등)
+    logout();
+
+    // 메인 페이지로 이동
+    router.push('/');
+
+    setIsLoggingOut(false);
   };
 
   return (

@@ -1,8 +1,12 @@
+'use client';
+
 import { FONT_COLORS, FONT_STYLES } from "@/styles/fontStyles";
 import { ProfileResponseData } from "@/types/mypage";
 import Image from "next/image";
 import ProfileIcon from "../../../public/profile.svg";
 import ArrowIcon from "../../../public/arrow_right.svg";
+import { useAuth } from "@/contexts/auth-context";
+import { useRouter } from "next/navigation";
 
 export const ProfileCard = ({ data }: { data: ProfileResponseData }) => {
     const onClickProfile = () => {
@@ -76,17 +80,25 @@ export const AppInfoCard = () => {
 }
 
 export const MemberLogout = () => {
+    const { logout } = useAuth();
+    const router = useRouter();
+
     const onClickLogout = () => {
-        // TODO : 로그아웃
+        // 로컬 사용자 데이터 삭제
+        logout();
+        // 메인 페이지로 이동
+        router.push('/');
     }
+
     const onClickWithdrawal = () => {
         // TODO : 회원탈퇴
     }
+
     return(
         <div className="flex w-full justify-center gap-4 text-[#767676] gap-4 text-[11px]">
-         <div onClick={onClickLogout}>로그아웃</div>
+         <div onClick={onClickLogout} className="cursor-pointer">로그아웃</div>
          <div className="w-[1px] h-[14px] bg-[#767676]"></div>
-        <div onClick={onClickWithdrawal}>회원탈퇴</div>
+        <div onClick={onClickWithdrawal} className="cursor-pointer">회원탈퇴</div>
         </div>
     )
 }
