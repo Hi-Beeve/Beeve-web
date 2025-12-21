@@ -164,7 +164,7 @@ export default function MeasurementPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white pb-[120px]">
+    <div className="min-h-screen bg-white pb-[120px] overflow-auto">
       {/* 헤더 */}
       <div className="px-4 py-6">
         <h1 className="text-2xl font-bold text-black">Beeve</h1>
@@ -189,7 +189,7 @@ export default function MeasurementPage() {
       </div>
 
       {/* STEP 2. 운동체력 */}
-      <div className="px-4 mb-8">
+      <div className="px-4 mb-8 pb-20">
         <h3 className="text-lg font-semibold text-black mb-4">STEP 2. 운동체력</h3>
         <div className="space-y-3">
           {MEASUREMENT_ITEMS.slice(4).map((item) => (

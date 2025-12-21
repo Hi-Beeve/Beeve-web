@@ -441,7 +441,7 @@ const router = useRouter()
             </div>
 
             {currentAttempt < 3 ? (
-              <FloatingButton className={`bg-transparent px-0 flex gap-1`}>
+              <div className="fixed bottom-8 left-8 right-8 bg-transparent px-0 flex gap-1">
                 <button
                   onClick={() => {
                     setCurrentAttempt(prev => prev + 1);
@@ -457,7 +457,7 @@ const router = useRouter()
                 >
                   측정 완료
                 </button>
-              </FloatingButton>
+              </div>
             ) : (
               <button
                 onClick={() => {
