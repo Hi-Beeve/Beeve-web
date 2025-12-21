@@ -36,6 +36,10 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'k.kakaocdn.net',
       },
+      {
+        protocol: 'http',
+        hostname: 'img1.kakaocdn.net'
+      },
       // 구글 이미지 도메인들
       {
         protocol: 'https',
