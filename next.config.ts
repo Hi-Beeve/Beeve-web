@@ -60,6 +60,7 @@ const nextConfig: NextConfig = {
   // Turbopack 설정 (Next.js 16에서 기본 활성화)
   turbopack: {
     // MediaPipe 관련 설정을 Turbopack으로 이전
+    root: __dirname,
   },
 
   // Next.js 개발자 도구 비활성화
