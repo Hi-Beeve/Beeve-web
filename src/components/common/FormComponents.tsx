@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { FONT_STYLES } from '@/styles/fontStyles';
 import Picker from "react-mobile-picker";
 import BottomSheet from '@/components/bottom-sheet';
+import { sendPhoneCode, verifyPhoneCode } from '@/api/auth/auth.api';
 
 // 성별 선택 컴포넌트
 interface GenderSelectProps {
@@ -253,6 +254,137 @@ export const NameInput = ({ value, onChange, error }: NameInputProps) => {
       />
       {error && (
         <div className="text-red-500 text-sm mt-2">{error}</div>
+      )}
+    </div>
+  );
+};
+
+// 휴대폰 인증 컴포넌트
+interface PhoneVerificationInputProps {
+  phoneNumber: string;
+  onPhoneNumberChange: (phoneNumber: string) => void;
+  onVerified: (verified: boolean, verificationToken?: string) => void;
+  error?: string;
+}
+
+export const PhoneVerificationInput = ({
+  phoneNumber,
+  onPhoneNumberChange,
+  onVerified,
+  error,
+}: PhoneVerificationInputProps) => {
+  const [codeSent, setCodeSent] = useState(false);
+  const [code, setCode] = useState('');
+  const [verified, setVerified] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+  const [message, setMessage] = useState('');
+
+  const handlePhoneNumberChange = (value: string) => {
+    const numbersOnly = value.replace(/[^0-9]/g, '').slice(0, 11);
+    onPhoneNumberChange(numbersOnly);
+  };
+
+  const handleSendCode = async () => {
+    if (phoneNumber.length !== 11) {
+      setMessage('휴대폰 번호 11자리를 입력해주세요.');
+      return;
+    }
+    setSending(true);
+    setMessage('');
+    try {
+      await sendPhoneCode(phoneNumber);
+      setCodeSent(true);
+      setMessage('인증번호가 발송되었습니다.');
+    } catch {
+      setMessage('인증번호 발송에 실패했습니다. 다시 시도해주세요.');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleVerifyCode = async () => {
+    if (code.length !== 6) {
+      setMessage('인증번호 6자리를 입력해주세요.');
+      return;
+    }
+    setVerifying(true);
+    setMessage('');
+    try {
+      const response = await verifyPhoneCode(phoneNumber, code);
+      const token = response.data?.data.verificationToken;
+      setVerified(true);
+      onVerified(true, token);
+      setMessage('인증이 완료되었습니다.');
+    } catch {
+      setMessage('인증번호가 올바르지 않습니다. 다시 확인해주세요.');
+    } finally {
+      setVerifying(false);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* 휴대폰 번호 입력 */}
+      <div className="flex gap-3">
+        <input
+          type="tel"
+          value={phoneNumber}
+          onChange={(e) => handlePhoneNumberChange(e.target.value)}
+          placeholder="01012345678"
+          disabled={verified}
+          className="flex-1 px-4 py-4 text-lg bg-[#F5F5F5] rounded-[20px] text-[#767676] placeholder-[#767676] focus:outline-none focus:ring-2 focus:ring-[#BDB2DD] focus:border-transparent disabled:opacity-50"
+        />
+        <button
+          type="button"
+          onClick={handleSendCode}
+          disabled={phoneNumber.length !== 11 || sending || verified}
+          className="px-4 py-3 bg-[#BDB2DD] text-white font-medium rounded-[20px] transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+        >
+          {sending ? '발송 중...' : codeSent ? '재발송' : '인증번호 발송'}
+        </button>
+      </div>
+
+      {/* 인증번호 입력 */}
+      {codeSent && !verified && (
+        <div className="flex gap-3">
+          <input
+            type="text"
+            inputMode="numeric"
+            value={code}
+            onChange={(e) => setCode(e.target.value.replace(/[^0-9]/g, '').slice(0, 6))}
+            placeholder="인증번호 6자리"
+            className="flex-1 px-4 py-4 text-lg bg-[#F5F5F5] rounded-[20px] text-[#767676] placeholder-[#767676] focus:outline-none focus:ring-2 focus:ring-[#BDB2DD] focus:border-transparent"
+          />
+          <button
+            type="button"
+            onClick={handleVerifyCode}
+            disabled={code.length !== 6 || verifying}
+            className="px-4 py-3 bg-[#BDB2DD] text-white font-medium rounded-[20px] transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+          >
+            {verifying ? '확인 중...' : '확인'}
+          </button>
+        </div>
+      )}
+
+      {/* 인증 완료 표시 */}
+      {verified && (
+        <div className="flex items-center gap-2 px-4 py-3 bg-green-50 rounded-[20px]">
+          <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+          <span className="text-green-600 font-medium">인증 완료</span>
+        </div>
+      )}
+
+      {/* 메시지 */}
+      {message && !verified && (
+        <div className={`text-sm px-1 ${message.includes('실패') || message.includes('올바르지') || message.includes('입력') ? 'text-red-500' : 'text-[#767676]'}`}>
+          {message}
+        </div>
+      )}
+      {error && (
+        <div className="text-red-500 text-sm">{error}</div>
       )}
     </div>
   );

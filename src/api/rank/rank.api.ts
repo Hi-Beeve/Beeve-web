@@ -2,7 +2,7 @@ import { RankResponse } from "@/types/rank";
 import instance from "../instance";
 
 export const getRankApi = async () => {
-    const response = await instance.get('/rank/list');
+    const response = await instance.get('/rank/age_group');
     return response;
     // return {data : mockData};
 }

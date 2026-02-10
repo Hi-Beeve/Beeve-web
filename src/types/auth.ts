@@ -21,7 +21,9 @@ export type AuthSignUpRequest = {
     gender: string,
     birthDate: string,
     height: number,
-    weight:number
+    weight:number,
+    phoneNumber: string,
+    verificationToken: string
 }
 
 // 클라이언트 OAuth 사용자 정보 타입
@@ -39,4 +41,6 @@ export type ClientAdditionalInfo = {
   gender: string;
   height: number;
   weight: number;
+  phoneNumber: string;
+  verificationToken: string;
 }

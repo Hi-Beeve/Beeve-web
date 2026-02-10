@@ -1,22 +1,24 @@
 import instance from '@/api/instance';
 import { HexWithDateRequest, HexWithDateResponse, TestDataRequest } from '@/types/hex';
 
-export const hexWithDateApi = async (params: HexWithDateRequest): Promise<{data:HexWithDateResponse}> => {
+export const hexWithDateApi = async (params: HexWithDateRequest): Promise<{data: HexWithDateResponse | null}> => {
   const response = await instance.get('/fitness', {
     params: {
       measureDay: params.date,
     },
   });
-  return response.data;
+  const innerData = response.data?.data ?? response.data;
+  return { data: innerData ?? null };
 };
+
 export const getHexDateListApi = async (): Promise<string[]> => {
-  // 실제 서버 연동 시 아래 주석 해제
-  const response = await instance.get<{ measureDates: string[] }>('/fitness/measure-days');
-  return response.data?.measureDates || [];
+  const response = await instance.get('/fitness/measure-days');
+  const payload = response.data?.data ?? response.data;
+  const dates = payload?.measureDates;
+  return Array.isArray(dates) ? dates : [];
 };
 
 export const postTestDataApi = async (params: TestDataRequest) => {
   const response = await instance.post<HexWithDateResponse>('/fitness', params);
   return response;
-
-}; 
+};

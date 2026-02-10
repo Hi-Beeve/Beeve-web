@@ -1,7 +1,6 @@
-import { RecommendRequestData } from "@/types/recommned";
 import instance from "../instance";
 
-export const recommendApi = async (params: RecommendRequestData) => {
-    const response = await instance.post('/recommend',params);
+export const recommendApi = async () => {
+    const response = await instance.get('/fitness/recommend');
     return response.data;
 }

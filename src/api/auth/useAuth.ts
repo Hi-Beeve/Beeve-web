@@ -64,7 +64,9 @@ export const useSignUp = () => {
       gender: convertedGender, // female → F, male → M 변환
       birthDate: additionalInfo.birthDate,
       height: additionalInfo.height,
-      weight: additionalInfo.weight
+      weight: additionalInfo.weight,
+      phoneNumber: additionalInfo.phoneNumber,
+      verificationToken: additionalInfo.verificationToken
     };
 
     return mutation.mutate(serverData);

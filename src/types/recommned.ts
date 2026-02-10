@@ -1,28 +1,28 @@
-export type RecommendResponseData = {
-"workout_plan": [
-      {
-        "day": string,
-        "focus": string,
-        "warm_up": string,
-        "cool_down": string,
-        "exercises": [
-          {
-            "name": string,
-            "sets": string,
-            "reps": string,
-            "rest_seconds": string,
-            "rpe": string
-          }
-        ]
-      }
-    ],
-    "notes": string
+export interface WorkoutExercise {
+  exerciseId?: number;
+  name: string;
+  sets: number;
+  reps: number;
+  duration: number | null;
+  rest_seconds: number;
+  rpe: number;
+  description: string;
 }
 
-export type RecommendRequestData = {
-     "gender": string, // F/M
-  "age": number,
-  "contraindications": string,
-  "measurePlace": string,
-  "purpose": string; // TODO : 현재 GENERAL_FITNESS로 고정
+export interface WorkoutDay {
+  date: string;
+  focus: string;
+  warm_up: string;
+  cool_down: string;
+  exercises: WorkoutExercise[];
+}
+
+export interface RecommendResponseData {
+  recommendationId: number;
+  targetFitnessType: string;
+  totalDuration: number;
+  rpe: number;
+  workout_plan: WorkoutDay[];
+  notes: string;
+  createdAt: string;
 }

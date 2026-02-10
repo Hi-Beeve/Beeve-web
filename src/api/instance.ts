@@ -1,7 +1,8 @@
 import axios from 'axios';
+import { ERROR_CODES } from '@/constants/errorCodes';
 
 const instance = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || 'https://beeve-api.mooo.com/api/v1', // 서버 도메인
+  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000/api/v1', //'https://beeve-api.mooo.com/api/v1', // 서버 도메인
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -35,7 +36,7 @@ instance.interceptors.response.use(
     const originalRequest = error.config;
     
     // AUTH102 응답 처리 (토큰 만료)
-    if (error.response?.data?.code === 'AUTH102' && !originalRequest._retry) {
+    if (error.response?.data?.code === ERROR_CODES.AUTH_TOKEN_EXPIRED && !originalRequest._retry) {
       originalRequest._retry = true;
       
       try {
@@ -46,7 +47,7 @@ instance.interceptors.response.use(
         
         // refresh token으로 새 토큰 요청
         const refreshResponse = await axios.post(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://beeve-api.mooo.com/api/v1'}/auth/refresh`,
+          `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000/api/v1'}/auth/refresh`,
           { refreshToken },
           {
             headers: {
@@ -83,7 +84,7 @@ instance.interceptors.response.use(
     }
     
     // AUTH101 (회원 없음) 에러는 auth.api.ts에서 처리하므로 그대로 통과
-    if (error.response?.data?.code === 'AUTH101' || error.response?.data?.code === 'MEMBER201') {
+    if (error.response?.data?.code === ERROR_CODES.AUTH_USER_NOT_FOUND || error.response?.data?.code === ERROR_CODES.MEMBER_NOT_FOUND) {
       console.log('⚠️ User not found - will be handled by auth.api.ts');
       return Promise.reject(error);
     }
@@ -94,7 +95,7 @@ instance.interceptors.response.use(
       localStorage.removeItem('authToken');
       localStorage.removeItem('refreshToken');
       localStorage.removeItem('userData');
-      window.location.href = '/';
+      // window.location.href = '/'; TODO : 서버랑 프론트랑 가까워질때까지 잠시 주석처리...
       return Promise.reject(error);
     }
     

@@ -1,6 +1,6 @@
 import instance from "../instance";
 
 export const getGraphData = async () => {
-    const response = await instance.get('/rank/grade-list');
+    const response = await instance.get('/rank/history');
     return response.data;
 }

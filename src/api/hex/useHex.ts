@@ -6,9 +6,8 @@ export const useHex = (params: HexWithDateRequest = {}) => {
   const query = useHexWithDateQuery(params);
 
 
-  const transformedData = query.data ? {
-    ...query.data?.data,
-    // hexDataArray: transformHexData(query.data.hexData),
+  const transformedData = query.data?.data ? {
+    ...query.data.data,
   } : undefined;
 
   return {

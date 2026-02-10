@@ -12,6 +12,7 @@ export const useHexWithDateQuery = (params: HexWithDateRequest) => {
   return useQuery({
     queryKey: hexQueryKeys.withDate(params),
     queryFn: () => hexWithDateApi(params),
+    enabled: !!params.date,
   });
 };
 
