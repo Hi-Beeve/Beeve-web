@@ -64,6 +64,7 @@ const MEASUREMENT_ITEMS: MeasurementItem[] = [
 export default function MeasurementPage() {
   const [completedItems, setCompletedItems] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [rpe, setRpe] = useState<number | null>(null);
   const router = useRouter();
   const postTestDataMutation = usePostTestDataMutation();
 
@@ -114,6 +115,7 @@ export default function MeasurementPage() {
       sitAndReach: parseFloat(localStorage.getItem('measurement_flexibility') || '0'),
       reactionTime: parseFloat(localStorage.getItem('measurement_agility') || '0'),
       flightTime: parseFloat(localStorage.getItem('measurement_quickness') || '0'),
+      rpe: rpe || 5,
     };
     
     // 실제로 측정한 푸시업 종류만 추가
@@ -138,9 +140,32 @@ export default function MeasurementPage() {
     return testData as TestDataRequest;
   };
 
+  // 🧪 개발용: 임의 측정 데이터 채우기
+  const fillMockData = () => {
+    // 각 측정 항목에 임의 데이터 설정
+    localStorage.setItem('measurement_pushup_wall', '25');
+    localStorage.setItem('measurement_endurance', '30');      // 크로스크런치 횟수
+    localStorage.setItem('measurement_cardio', '85');          // 심박수 BPM
+    localStorage.setItem('measurement_flexibility', '15.5');   // 앉아윗몸앞으로굽히기 cm
+    localStorage.setItem('measurement_agility', '0.35');       // 반응시간 초
+    localStorage.setItem('measurement_quickness', '0.45');     // 체공시간 초
+    localStorage.setItem('preSurvey', JSON.stringify({ place: 'HOME' }));
+
+    // 모든 측정 항목을 완료 처리
+    const allIds = MEASUREMENT_ITEMS.map(item => item.id);
+    localStorage.setItem('completedMeasurements', JSON.stringify(allIds));
+    setCompletedItems(allIds);
+    setRpe(7);
+
+    console.log('🧪 임의 측정 데이터가 설정되었습니다.');
+    alert('임의 측정 데이터가 채워졌습니다!');
+  };
+
+  const isAllCompleted = completedItems.length === MEASUREMENT_ITEMS.length && rpe !== null;
+
   const handleSubmitResults = async () => {
-    if (completedItems.length !== MEASUREMENT_ITEMS.length) {
-      alert('모든 측정을 완료해주세요.');
+    if (!isAllCompleted) {
+      alert('모든 측정과 운동 강도를 선택해주세요.');
       return;
     }
 
@@ -149,10 +174,7 @@ export default function MeasurementPage() {
     try {
       const testData = collectMeasurementData();
       await postTestDataMutation.mutateAsync(testData);
-      
-      // 성공 시 hex 페이지로 이동 (오늘 날짜 파라미터 포함)
-      const today = new Date().toISOString().split('T')[0];
-      router.push(`/hex?date=${today}`);
+      router.push('/measurement/result');
     } catch (error) {
       console.error('측정 데이터 전송 실패:', error);
       if (confirm('데이터 전송에 실패했습니다. 다시 시도하시겠습니까?')) {
@@ -205,20 +227,60 @@ export default function MeasurementPage() {
         </div>
       </div>
 
+      {/* STEP 3. 운동 강도 */}
+      <div className="px-4 mb-8">
+        <h3 className="text-lg font-semibold text-black mb-2">STEP 3. 운동 강도</h3>
+        <p className="text-sm text-gray-500 mb-4">오늘 체력 측정의 힘든 정도를 선택해주세요 (RPE)</p>
+        <div className="flex gap-2 flex-wrap">
+          {Array.from({ length: 10 }, (_, i) => i + 1).map((value) => (
+            <button
+              key={value}
+              className={`w-10 h-10 rounded-full text-sm font-semibold transition-colors ${
+                rpe === value
+                  ? 'bg-[#BDB2DD] text-white'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+              onClick={() => setRpe(value)}
+            >
+              {value}
+            </button>
+          ))}
+        </div>
+        {rpe !== null && (
+          <p className="mt-3 text-sm text-[#8B7BB5] font-medium">
+            선택한 강도: {rpe} / 10
+            {rpe <= 3 && ' (가벼움)'}
+            {rpe >= 4 && rpe <= 6 && ' (보통)'}
+            {rpe >= 7 && rpe <= 8 && ' (힘듦)'}
+            {rpe >= 9 && ' (매우 힘듦)'}
+          </p>
+        )}
+      </div>
+
+      {/* 🧪 개발용: 임의 데이터 채우기 버튼 */}
+      <div className="px-4 mb-4">
+        <button
+          className="w-full h-10 rounded-lg border-2 border-dashed border-orange-400 text-orange-500 text-sm font-medium"
+          onClick={fillMockData}
+        >
+          🧪 임의 측정 데이터 채우기 (개발용)
+        </button>
+      </div>
+
       {/* 결과 확인 버튼 */}
       <div className="fixed bottom-6 left-6 right-6">
         <button 
           className={`w-full h-14 rounded-[20px] font-medium ${
-            completedItems.length === MEASUREMENT_ITEMS.length 
+            isAllCompleted 
               ? 'bg-[#BDB2DD] text-white' 
               : 'bg-gray-300 text-gray-500'
           }`}
           onClick={handleSubmitResults}
-          disabled={isSubmitting || completedItems.length !== MEASUREMENT_ITEMS.length}
+          disabled={isSubmitting || !isAllCompleted}
         >
           {isSubmitting 
             ? '데이터 전송 중...' 
-            : completedItems.length === MEASUREMENT_ITEMS.length 
+            : isAllCompleted 
               ? '6각형 체력 결과 확인하기'
               : '다음'
           }

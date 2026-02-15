@@ -24,8 +24,15 @@ function HexPageContent() {
     }
   }, [searchParams]);
 
-  const { data, isLoading, error } = useHex({ date: selectedDate });
   const { data: dateList } = useHexDateListQuery();
+  const { data, isLoading, error } = useHex({ date: selectedDate });
+
+  // dateList 로드 후 첫 번째 날짜를 기본값으로 설정
+  useEffect(() => {
+    if (!selectedDate && dateList && dateList.length > 0) {
+      setSelectedDate(dateList[0]);
+    }
+  }, [dateList, selectedDate]);
 
   if (isLoading) {
     console.log("Loading...")
@@ -36,7 +43,6 @@ function HexPageContent() {
   }
 
   if (!data) {
-    console.error("No data available");
     return (
       <main className="flex flex-col items-center justify-center min-h-screen px-4">
         <BottomSheetPlusHex />

@@ -4,71 +4,29 @@ import RecommendHexSection from "@/components/recommend/RecommendHexSection";
 import { useHex } from "@/api/hex/useHex";
 import { RecommendCard, WorkoutType } from '@/components/recommend/RecommendCard';
 import { FONT_STYLES } from '@/styles/fontStyles';
-import { useMember } from "@/api/mypage/useMypage";
 import { useRecommend } from "@/api/recommend/useRecommend";
-import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/auth-context";
 import Image from "next/image"
 import calendar_icon from "../../../../public/calendar.svg"
 
-// 목 데이터
-const mockRecommendData = [
-  {
-    type: 'upper' as WorkoutType,
-    title: '상체 • 세션',
-    exercises: [
-      { name: '윗몸 일으키기', count: '30개 / 3세트' },
-      { name: '물 다운', count: '15개 / 3세트' },
-      { name: '물 업', count: '30개 / 3세트' }
-    ]
-  },
-  {
-    type: 'lower' as WorkoutType,
-    title: '하체 • 세션',
-    exercises: [
-      { name: '런지', count: '20개 / 5세트' },
-      { name: '스쿼트', count: '20개 / 5세트' },
-      { name: '벽 몸 다운', count: '20개 / 5세트' }
-    ]
-  },
-  {
-    type: 'balance' as WorkoutType,
-    title: '밸런스 • 세션',
-    exercises: [
-      { name: '플랭크', count: '1분 / 4세트' },
-      { name: '버피테스트', count: '15개 / 3세트' },
-      { name: '등받기', count: '50개 / 3세트' }
-    ]
-  }
-];
+const FITNESS_TYPE_NAMES: Record<string, string> = {
+  CARDIO: '심폐지구력',
+  ENDURANCE: '근지구력',
+  FLEXIBILITY: '유연성',
+  STRENGTH: '근력',
+  QUICKNESS: '순발력',
+  AGILITY: '민첩성',
+};
+
+function getWorkoutType(focus: string): WorkoutType {
+  if (focus.includes('상체') || focus.includes('근력')) return 'upper';
+  if (focus.includes('하체')) return 'lower';
+  return 'balance';
+}
 
 export default function RecommendPage() {
-  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
-  const { getRecommendation, isLoading: isRecommendLoading, data: recommendData, error: recommendError } = useRecommend();
-  const [hasRequestedRecommendation, setHasRequestedRecommendation] = useState(false);
-
-  // 사용자 정보가 로드된 후 추천 데이터 가져오기 (한 번만)
-  useEffect(() => {
-    // 인증 로딩 중이거나 사용자 정보가 없거나 이미 요청했으면 실행하지 않음
-    if (authLoading || !isAuthenticated || !user || hasRequestedRecommendation) {
-      return;
-    }
-
-    const fetchRecommendation = async () => {
-      try {
-        setHasRequestedRecommendation(true);
-        await getRecommendation({
-          contraindications: "",
-          measurePlace: ""
-        });
-      } catch (error) {
-        console.error('추천 데이터 가져오기 실패:', error);
-        setHasRequestedRecommendation(false); // 실패 시 다시 시도할 수 있도록
-      }
-    };
-
-    fetchRecommendation();
-  }, [authLoading, isAuthenticated, user, hasRequestedRecommendation]);
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { isLoading: isRecommendLoading, data: recommendData, errorMessage, refetch } = useRecommend();
 
   // 오늘 날짜를 기본값으로 설정
   const getTodayDate = () => {
@@ -116,41 +74,73 @@ export default function RecommendPage() {
             </h2>
           </div>
 
+          {/* 추천 요약 정보 */}
+          {recommendData && (
+            <div className="bg-purple-50 rounded-xl px-4 py-3 mb-4">
+              <p className="text-sm text-purple-700 font-medium">
+                집중 개선: {FITNESS_TYPE_NAMES[recommendData.targetFitnessType] || recommendData.targetFitnessType}
+                {' · '}총 {recommendData.totalDuration}분{' · '}강도 {recommendData.rpe}/10
+              </p>
+            </div>
+          )}
+
+          {/* AI 코멘트 */}
+          {recommendData?.notes && (
+            <div className="bg-blue-50 rounded-xl px-4 py-3 mb-4">
+              <p className="text-sm text-gray-700">{recommendData.notes}</p>
+            </div>
+          )}
+
           {/* 운동 카드 리스트 */}
           <div className="space-y-4">
             {isRecommendLoading ? (
               <div className="text-center py-8">
-                <div className="text-gray-500">AI 운동 추천을 생성 중입니다...</div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto" />
+                <div className="text-gray-500 mt-3">AI가 맞춤 운동을 추천하고 있습니다...</div>
+              </div>
+            ) : errorMessage ? (
+              <div className="text-center py-8">
+                <p className="text-gray-500 mb-3">{errorMessage}</p>
+                <button
+                  onClick={() => refetch()}
+                  className="px-4 py-2 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 transition"
+                >
+                  다시 시도
+                </button>
               </div>
             ) : recommendData?.workout_plan ? (
-              // 실제 추천 데이터 표시
-              recommendData.workout_plan.map((plan, index) => {
-                const workoutType: WorkoutType = plan.focus.includes('상체') ? 'upper' : 
-                                               plan.focus.includes('하체') ? 'lower' : 'balance';
-                return (
-                  <RecommendCard
-                    key={index}
-                    type={workoutType}
-                    title={`${plan.focus} • ${plan.day}`}
-                    exercises={plan.exercises.map(ex => ({
-                      name: ex.name,
-                      count: `${ex.sets}세트 ${ex.reps}회`
-                    }))}
-                  />
-                );
-              })
-            ) : (
-              // 목 데이터 표시
-              mockRecommendData.map((item, index) => (
+              recommendData.workout_plan.map((plan, index) => (
                 <RecommendCard
                   key={index}
-                  type={item.type}
-                  title={item.title}
-                  exercises={item.exercises}
+                  type={getWorkoutType(plan.focus)}
+                  day={plan}
+                  dayIndex={index}
                 />
               ))
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-gray-500">추천 데이터가 없습니다.</p>
+                <button
+                  onClick={() => refetch()}
+                  className="mt-3 px-4 py-2 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 transition"
+                >
+                  추천 받기
+                </button>
+              </div>
             )}
           </div>
+
+          {/* 새로고침 버튼 */}
+          {recommendData && (
+            <div className="mt-4 text-center">
+              <button
+                onClick={() => refetch()}
+                className="px-5 py-2.5 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 transition"
+              >
+                새로운 추천 받기
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </main>

@@ -6,18 +6,9 @@ import Image from 'next/image';
 import session_upper from "../../../public/session_upper.svg";
 import session_lower from "../../../public/session_lower.svg";
 import session_balance from "../../../public/session_balance.svg";
+import { WorkoutDay } from '@/types/recommned';
+
 export type WorkoutType = 'upper' | 'lower' | 'balance';
-
-interface Exercise {
-  name: string;
-  count: string;
-}
-
-interface RecommendCardProps {
-  type: WorkoutType;
-  title: string;
-  exercises: Exercise[];
-}
 
 const getCardStyles = (type: WorkoutType) => {
   switch (type) {
@@ -57,43 +48,76 @@ const getTypeIcon = (type: WorkoutType) => {
   }
 };
 
-export const RecommendCard: React.FC<RecommendCardProps> = ({ type, title, exercises }) => {
+interface RecommendCardProps {
+  type: WorkoutType;
+  day: WorkoutDay;
+  dayIndex: number;
+}
+
+export const RecommendCard: React.FC<RecommendCardProps> = ({ type, day, dayIndex }) => {
   const styles = getCardStyles(type);
   const icon = getTypeIcon(type);
 
   return (
-    <div 
+    <div
       className="rounded-2xl p-4 mb-4"
       style={{ backgroundColor: styles.backgroundColor }}
     >
       {/* 헤더 */}
-      <div className="flex items-center gap-2 mb-4">
-        <div 
+      <div className="flex items-center gap-2 mb-3">
+        <div
           className="w-8 h-8 rounded-full flex items-center justify-center"
           style={{ backgroundColor: styles.iconColor }}
         >
           {icon}
         </div>
-        <span className={`${FONT_STYLES.body7}`}>
-          {title}
-        </span>
+        <div className="flex flex-col">
+          <span className={`${FONT_STYLES.body7}`}>
+            Day {dayIndex + 1} · {day.focus}
+          </span>
+          <span className="text-xs text-gray-500">{day.date}</span>
+        </div>
+      </div>
+
+      {/* 준비 운동 */}
+      <div className="bg-white/60 rounded-xl px-3 py-2 mb-2">
+        <p className="text-xs font-semibold text-yellow-700 mb-1">준비 운동</p>
+        <p className="text-sm text-gray-700">{day.warm_up}</p>
       </div>
 
       {/* 운동 리스트 */}
-      <div className="space-y-3">
-        {exercises.map((exercise, index) => (
-          <div 
+      <div className="space-y-2 mb-2">
+        {day.exercises.map((exercise, index) => (
+          <div
             key={index}
-            className={`bg-white rounded-[30px] px-4 py-3 flex justify-between items-center border border-[${getCardStyles(type).iconColor}]`}
+            className="bg-white rounded-xl px-4 py-3"
           >
-            <span className={`${FONT_STYLES.heading14} text-gray-800`}>
-              {exercise.name}
-            </span>
-            <span className={`${FONT_STYLES.body14} text-gray-600`}>
-              {exercise.count}
-            </span>
+            <div className="flex justify-between items-center">
+              <span className={`${FONT_STYLES.heading14} text-gray-800`}>
+                {exercise.name}
+              </span>
+              <div className="flex items-center gap-1">
+                <span className="text-xs text-white bg-purple-500 rounded-full px-2 py-0.5">
+                  RPE {exercise.rpe}
+                </span>
+              </div>
+            </div>
+            <div className="flex gap-3 mt-1 text-sm text-gray-500">
+              <span>{exercise.sets}세트 × {exercise.reps}회</span>
+              {exercise.duration && <span>{exercise.duration}분</span>}
+              <span>휴식 {exercise.rest_seconds}초</span>
+            </div>
+            {exercise.description && (
+              <p className="text-xs text-gray-400 mt-1">{exercise.description}</p>
+            )}
           </div>
         ))}
+      </div>
+
+      {/* 정리 운동 */}
+      <div className="bg-white/60 rounded-xl px-3 py-2">
+        <p className="text-xs font-semibold text-blue-700 mb-1">정리 운동</p>
+        <p className="text-sm text-gray-700">{day.cool_down}</p>
       </div>
     </div>
   );

@@ -6,10 +6,10 @@ import { useAuth } from '@/contexts/auth-context';
 import { useSignUp } from '@/api/auth/useAuth';
 import { ClientOAuthInfo, ClientAdditionalInfo } from '@/types/auth';
 import { FONT_STYLES } from '@/styles/fontStyles';
-import { GenderSelect, BirthDateSelect, PhysicalInfoInput } from '@/components/common/FormComponents';
+import { GenderSelect, BirthDateSelect, PhysicalInfoInput, PhoneVerificationInput } from '@/components/common/FormComponents';
 import { ProgressBar } from '@/components/progress_bar';
 
-type FunnelStep = 'gender' | 'birthDate' | 'physicalInfo';
+type FunnelStep = 'gender' | 'birthDate' | 'physicalInfo' | 'phoneVerification';
 
 function AdditionalInfoContent() {
   const router = useRouter();
@@ -19,11 +19,14 @@ function AdditionalInfoContent() {
   
   const [currentStep, setCurrentStep] = useState<FunnelStep>('gender');
   const [error, setError] = useState<string>('');
+  const [phoneVerified, setPhoneVerified] = useState(false);
   const [formData, setFormData] = useState<ClientAdditionalInfo>({
     birthDate: '',
     gender: '',
     height: 0,
-    weight: 0
+    weight: 0,
+    phoneNumber: '',
+    verificationToken: ''
   });
 
 
@@ -175,6 +178,10 @@ function AdditionalInfoContent() {
         setCurrentStep('physicalInfo');
       }
     } else if (currentStep === 'physicalInfo') {
+      if (validatePhysicalInfo()) {
+        setCurrentStep('phoneVerification');
+      }
+    } else if (currentStep === 'phoneVerification') {
       handleFinalSubmit();
     }
   };
@@ -186,17 +193,21 @@ function AdditionalInfoContent() {
       setCurrentStep('gender');
     } else if (currentStep === 'physicalInfo') {
       setCurrentStep('birthDate');
+    } else if (currentStep === 'phoneVerification') {
+      setCurrentStep('physicalInfo');
     }
   };
 
   const getStepInfo = () => {
     switch (currentStep) {
       case 'gender':
-        return { step: 1, total: 3, title: '성별을\n선택해주세요' };
+        return { step: 1, total: 4, title: '성별을\n선택해주세요' };
       case 'birthDate':
-        return { step: 2, total: 3, title: '생년월일을\n입력해주세요' };
+        return { step: 2, total: 4, title: '생년월일을\n입력해주세요' };
       case 'physicalInfo':
-        return { step: 3, total: 3, title: '키와 체중을\n입력해주세요' };
+        return { step: 3, total: 4, title: '키와 체중을\n입력해주세요' };
+      case 'phoneVerification':
+        return { step: 4, total: 4, title: '휴대폰 번호를\n인증해주세요' };
     }
   };
 
@@ -284,6 +295,23 @@ function AdditionalInfoContent() {
               }}
             />
           )}
+
+          {/* 4단계: 휴대폰 인증 */}
+          {currentStep === 'phoneVerification' && (
+            <PhoneVerificationInput
+              phoneNumber={formData.phoneNumber}
+              onPhoneNumberChange={(phoneNumber) => {
+                setFormData(prev => ({ ...prev, phoneNumber }));
+                setError('');
+              }}
+              onVerified={(verified, token) => {
+                setPhoneVerified(verified);
+                if (token) {
+                  setFormData(prev => ({ ...prev, verificationToken: token }));
+                }
+              }}
+            />
+          )}
         </div>
         
         {/* 네비게이션 버튼들 */}
@@ -300,15 +328,15 @@ function AdditionalInfoContent() {
           <button
             type="button"
             onClick={handleNext}
-            disabled={isLoading}
-            className="flex-1 px-4 py-3 bg-[#BDB2DD] text-white font-medium rounded-[20px] transition-colors duration-200 disabled:cursor-not-allowed"
+            disabled={isLoading || (currentStep === 'phoneVerification' && !phoneVerified)}
+            className="flex-1 px-4 py-3 bg-[#BDB2DD] text-white font-medium rounded-[20px] transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? (
               <div className="flex items-center justify-center gap-2">
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 <span>처리 중...</span>
               </div>
-            ) : currentStep === 'physicalInfo' ? (
+            ) : currentStep === 'phoneVerification' ? (
               '가입 완료'
             ) : (
               '다음'

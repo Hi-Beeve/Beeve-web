@@ -48,13 +48,14 @@ export const FitnessUnitMap = {
 export type TestDataRequest = {
   measurePlace: string, // 측정장소 GYM, HOME, OUTSIDE
   wallPushUpReps?: number,// 근력 측정 운동따라 필드명 변경
-  kneePushUpReps?: number, 
+  kneePushUpReps?: number,
   standardPushUpReps?: number,
   stepTestRecoveryBpm: number,
   crossCrunchReps: number,
   sitAndReach: number,
   reactionTime: number,
   flightTime: number,
+  rpe: number, // 운동자각강도 1~10
 }
 
 // - fitnessType 종류
