@@ -2,13 +2,20 @@ import instance from '@/api/instance';
 import { HexWithDateRequest, HexWithDateResponse, TestDataRequest } from '@/types/hex';
 
 export const hexWithDateApi = async (params: HexWithDateRequest): Promise<{data: HexWithDateResponse | null}> => {
-  const response = await instance.get('/fitness', {
-    params: {
-      measureDay: params.date,
-    },
-  });
-  const innerData = response.data?.data ?? response.data;
-  return { data: innerData ?? null };
+  console.log('📡 hexWithDateApi 호출 - params:', params);
+  try {
+    const response = await instance.get('/fitness', {
+      params: {
+        measureDay: params.date,
+      },
+    });
+    console.log('📡 hexWithDateApi 응답:', response.status, response.data);
+    const innerData = response.data?.data ?? response.data;
+    return { data: innerData ?? null };
+  } catch (error) {
+    console.error('📡 hexWithDateApi 에러:', error);
+    throw error;
+  }
 };
 
 export const getHexDateListApi = async (): Promise<string[]> => {

@@ -8,11 +8,12 @@ export const hexQueryKeys = {
   postTestData: () => ['hex', 'postTestData'] as const,
 };
 
-export const useHexWithDateQuery = (params: HexWithDateRequest) => {
+export const useHexWithDateQuery = (params: HexWithDateRequest, options?: { noCache?: boolean }) => {
   return useQuery({
     queryKey: hexQueryKeys.withDate(params),
     queryFn: () => hexWithDateApi(params),
     enabled: !!params.date,
+    ...(options?.noCache && { staleTime: 0, gcTime: 0 }),
   });
 };
 

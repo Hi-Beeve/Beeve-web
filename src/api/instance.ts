@@ -13,9 +13,9 @@ const instance = axios.create({
 instance.interceptors.request.use(
   (config) => {
     // Add auth token if available
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem('authToken')?.trim();
     if (token) {
-      config.headers.Authorization = `${token}`;
+      config.headers.Authorization = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
       console.log('🔑 Token attached to request:', token.substring(0, 20) + '...');
     } else {
       console.log('⚠️ No authToken found in localStorage');

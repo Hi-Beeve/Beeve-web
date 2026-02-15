@@ -1,31 +1,38 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import HexagonChart from "@/components/hexagon-chart";
-import { HexWithDateResponse } from "@/types/hex";
+import { useHex } from "@/api/hex/useHex";
 
 const HEXAGON_ORDER = ['STRENGTH', 'CARDIO', 'FLEXIBILITY', 'QUICKNESS', 'AGILITY', 'ENDURANCE'];
 
 export default function MeasurementResultPage() {
   const router = useRouter();
-  const [data, setData] = useState<HexWithDateResponse | null>(null);
+  const today = new Date().toISOString().split("T")[0];
+  console.log('📊 Result page - today:', today);
+  const { data, isLoading, isError, status, fetchStatus } = useHex({ date: today, noCache: true });
+  console.log('📊 Result page - query status:', status, 'fetchStatus:', fetchStatus, 'data:', data);
 
-  useEffect(() => {
-    const stored = localStorage.getItem("measurementResult");
-    if (stored) {
-      try {
-        setData(JSON.parse(stored));
-      } catch {
-        router.replace("/hex");
-      }
-    } else {
-      router.replace("/hex");
-    }
-  }, [router]);
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <p className="text-gray-500">결과를 불러오는 중...</p>
+      </div>
+    );
+  }
 
-  if (!data) {
-    return null;
+  if (isError || !data) {
+    return (
+      <div className="min-h-screen bg-white flex flex-col items-center justify-center gap-4 px-4">
+        <p className="text-gray-500">측정 결과를 불러올 수 없습니다.</p>
+        <button
+          className="h-12 px-6 rounded-[20px] font-medium bg-gray-200 text-gray-700"
+          onClick={() => router.push("/hex")}
+        >
+          홈으로
+        </button>
+      </div>
+    );
   }
 
   const hexDataArray = HEXAGON_ORDER.map(fitnessType => {
@@ -59,19 +66,13 @@ export default function MeasurementResultPage() {
       <div className="w-full max-w-sm space-y-3 mt-auto pb-8">
         <button
           className="w-full h-14 rounded-[20px] font-medium bg-[#BDB2DD] text-white"
-          onClick={() => {
-            localStorage.removeItem("measurementResult");
-            router.push("/hex/recommend");
-          }}
+          onClick={() => router.push("/hex/recommend")}
         >
           내 체력 맞춤 운동 추천받기
         </button>
         <button
           className="w-full h-14 rounded-[20px] font-medium bg-gray-200 text-gray-700"
-          onClick={() => {
-            localStorage.removeItem("measurementResult");
-            router.push("/hex");
-          }}
+          onClick={() => router.push("/hex")}
         >
           홈으로
         </button>
