@@ -39,7 +39,7 @@ export default function PushupCounterPage() {
       {selectedType ? (
         <PushupDetector type={selectedType} onBack={handleBack} />
       ) : (
-        <PushupTypeSelector onSelect={handleTypeSelect} />
+        <PushupTypeSelector />
       )}
     </div>
   );
