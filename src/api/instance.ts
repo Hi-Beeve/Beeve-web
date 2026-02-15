@@ -60,8 +60,10 @@ instance.interceptors.response.use(
         
         // 새 토큰들을 localStorage에 저장
         localStorage.setItem('authToken', data.accessToken);
+        if (data.refreshToken) {
+          localStorage.setItem('refreshToken', data.refreshToken);
+        }
 
-        
         console.log('✅ Token refreshed successfully');
         
         // 원래 요청에 새 토큰을 추가하여 재시도

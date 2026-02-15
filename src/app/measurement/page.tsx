@@ -148,11 +148,12 @@ export default function MeasurementPage() {
     
     try {
       const testData = collectMeasurementData();
-      await postTestDataMutation.mutateAsync(testData);
-      
-      // 성공 시 hex 페이지로 이동 (오늘 날짜 파라미터 포함)
-      const today = new Date().toISOString().split('T')[0];
-      router.push(`/hex?date=${today}`);
+      const response = await postTestDataMutation.mutateAsync(testData);
+
+      // 응답 데이터를 localStorage에 임시 저장 후 결과 페이지로 이동
+      const resultData = response.data?.data ?? response.data;
+      localStorage.setItem('measurementResult', JSON.stringify(resultData));
+      router.push('/measurement/result');
     } catch (error) {
       console.error('측정 데이터 전송 실패:', error);
       if (confirm('데이터 전송에 실패했습니다. 다시 시도하시겠습니까?')) {
