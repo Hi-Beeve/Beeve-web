@@ -3,11 +3,12 @@ import { recommendApi } from "./recommend.api";
 
 export const recommendQueryKeys = {
     all: ['recommend'] as const,
+    byDate: (date?: string) => ['recommend', date] as const,
 }
 
-export const useRecommendQuery = () => {
+export const useRecommendQuery = (date?: string) => {
     return useQuery({
-        queryKey: recommendQueryKeys.all,
-        queryFn: () => recommendApi(),
+        queryKey: recommendQueryKeys.byDate(date),
+        queryFn: () => recommendApi(date),
     });
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import RecommendHexSection from "@/components/recommend/RecommendHexSection";
 import { useHex } from "@/api/hex/useHex";
 import { RecommendCard, WorkoutType } from '@/components/recommend/RecommendCard';
@@ -8,6 +9,7 @@ import { useRecommend } from "@/api/recommend/useRecommend";
 import { useAuth } from "@/contexts/auth-context";
 import Image from "next/image"
 import calendar_icon from "../../../../public/calendar.svg"
+import WeekDateSelector from "@/components/recommend/WeekDateSelector";
 
 const FITNESS_TYPE_NAMES: Record<string, string> = {
   CARDIO: '심폐지구력',
@@ -26,15 +28,16 @@ function getWorkoutType(focus: string): WorkoutType {
 
 export default function RecommendPage() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
-  const { isLoading: isRecommendLoading, data: recommendData, errorMessage, refetch } = useRecommend();
 
-  // 오늘 날짜를 기본값으로 설정
   const getTodayDate = () => {
     const today = new Date();
     return today.toISOString().split('T')[0];
   };
 
-  const { data, isLoading, error } = useHex({ date: getTodayDate() });
+  const [selectedDate, setSelectedDate] = useState(getTodayDate());
+
+  const { isLoading: isRecommendLoading, data: recommendData, errorMessage, refetch } = useRecommend(selectedDate);
+  const { data, isLoading, error } = useHex({ date: selectedDate });
 
   if (isLoading || authLoading) {
     return (
@@ -59,6 +62,9 @@ export default function RecommendPage() {
         <div className="pt-2 pb-4">
           <h1 className={`${FONT_STYLES.heading2} text-gray-900`}>운동추천</h1>
         </div>
+
+        {/* 주간 날짜 선택 */}
+        <WeekDateSelector selectedDate={selectedDate} onDateChange={setSelectedDate} />
 
         {/* 육각형 차트 섹션 */}
         <RecommendHexSection data={data} />
