@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useMember, useUpdateProfile } from "@/api/mypage/useMypage";
 import { FONT_STYLES } from '@/styles/fontStyles';
 import { 
@@ -13,8 +13,11 @@ import {
 import arrowLeft from '../../../../public/arrow_left.svg';
 import Image from 'next/image';
 
-const EditPage = () => {
+const EditContent = () => {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const from = searchParams.get('from') || 'mypage';
+    const date = searchParams.get('date') || '';
     const { data } = useMember();
     
     const { updateProfile } = useUpdateProfile();
@@ -93,12 +96,20 @@ const EditPage = () => {
         return Object.keys(newErrors).length === 0;
     };
 
+    const handleBack = () => {
+        if (from === 'confirm') {
+            router.push('/hex/recommend/confirm?date=' + date);
+        } else {
+            router.push('/mypage');
+        }
+    };
+
     // 저장 핸들러
     const handleSave = () => {
-        if (validateForm()) {            
+        if (validateForm()) {
             console.log('프로필 업데이트:', formData);
             updateProfile(formData);
-            router.push('/mypage');
+            handleBack();
         }
     };
 
@@ -114,8 +125,8 @@ const EditPage = () => {
         <div className="min-h-screen bg-white">
             {/* 헤더 */}
             <div className="flex flex-col gap-4 items-start p-5 pb-0">
-                <button 
-                    onClick={() => router.back()}
+                <button
+                    onClick={handleBack}
                     className=""
                 >
                     <Image src={arrowLeft} alt="arrow left" width={24} height={24}/>
@@ -224,4 +235,14 @@ const EditPage = () => {
     );
 };
 
-export default EditPage;
+export default function EditPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="text-gray-400">로딩 중...</div>
+            </div>
+        }>
+            <EditContent />
+        </Suspense>
+    );
+}

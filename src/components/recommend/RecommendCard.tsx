@@ -6,7 +6,7 @@ import Image from 'next/image';
 import session_upper from "../../../public/session_upper.svg";
 import session_lower from "../../../public/session_lower.svg";
 import session_balance from "../../../public/session_balance.svg";
-import { WorkoutDay } from '@/types/recommned';
+import { RecommendResponseData } from '@/types/recommned';
 
 export type WorkoutType = 'upper' | 'lower' | 'balance';
 
@@ -50,11 +50,10 @@ const getTypeIcon = (type: WorkoutType) => {
 
 interface RecommendCardProps {
   type: WorkoutType;
-  day: WorkoutDay;
-  dayIndex: number;
+  data: RecommendResponseData;
 }
 
-export const RecommendCard: React.FC<RecommendCardProps> = ({ type, day, dayIndex }) => {
+export const RecommendCard: React.FC<RecommendCardProps> = ({ type, data }) => {
   const styles = getCardStyles(type);
   const icon = getTypeIcon(type);
 
@@ -73,21 +72,20 @@ export const RecommendCard: React.FC<RecommendCardProps> = ({ type, day, dayInde
         </div>
         <div className="flex flex-col">
           <span className={`${FONT_STYLES.body7}`}>
-            Day {dayIndex + 1} · {day.focus}
+            {data.focus}
           </span>
-          <span className="text-xs text-gray-500">{day.date}</span>
         </div>
       </div>
 
       {/* 준비 운동 */}
       <div className="bg-white/60 rounded-xl px-3 py-2 mb-2">
         <p className="text-xs font-semibold text-yellow-700 mb-1">준비 운동</p>
-        <p className="text-sm text-gray-700">{day.warm_up}</p>
+        <p className="text-sm text-gray-700">{data.warm_up}</p>
       </div>
 
       {/* 운동 리스트 */}
       <div className="space-y-2 mb-2">
-        {day.exercises.map((exercise, index) => (
+        {data.exercises.map((exercise, index) => (
           <div
             key={index}
             className="bg-white rounded-xl px-4 py-3"
@@ -117,7 +115,7 @@ export const RecommendCard: React.FC<RecommendCardProps> = ({ type, day, dayInde
       {/* 정리 운동 */}
       <div className="bg-white/60 rounded-xl px-3 py-2">
         <p className="text-xs font-semibold text-blue-700 mb-1">정리 운동</p>
-        <p className="text-sm text-gray-700">{day.cool_down}</p>
+        <p className="text-sm text-gray-700">{data.cool_down}</p>
       </div>
     </div>
   );

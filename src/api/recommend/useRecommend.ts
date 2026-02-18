@@ -1,8 +1,8 @@
 import { useRecommendQuery } from "./queries";
 import { RecommendResponseData } from "@/types/recommned";
 
-export const useRecommend = () => {
-  const query = useRecommendQuery();
+export const useRecommend = (date?: string) => {
+  const query = useRecommendQuery(date);
 
   const recommendation: RecommendResponseData | undefined = query.data?.isSuccess
     ? query.data.data

@@ -4,6 +4,7 @@ import { FONT_COLORS, FONT_STYLES } from "@/styles/fontStyles";
 import { ProfileResponseData } from "@/types/mypage";
 import Image from "next/image";
 import ProfileIcon from "../../../public/profile.svg";
+import FitnessIcon from "../../../public/fitness.svg";
 import ArrowIcon from "../../../public/arrow_right.svg";
 import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
@@ -12,9 +13,14 @@ export const ProfileCard = ({ data }: { data: ProfileResponseData }) => {
     const onClickProfile = () => {
         window.location.href = '/mypage/edit';
     }
+    const onClickFitnessEdit = () => {
+        window.location.href = '/mypage/fitness-edit?from=mypage';
+    }
     return (
         <GrayCard className="flex flex-col items-start gap-5 py-5 px-4 w-full rounded-[20px]">
                 <TitleWithIcon title="프로필 수정" icon={ProfileIcon} onClick={onClickProfile} />
+            <div className="h-[1px] w-full bg-[#D9D9D9]"> </div>
+                <TitleWithIcon title="운동정보 수정" icon={FitnessIcon} onClick={onClickFitnessEdit} />
             <div className="h-[1px] w-full bg-[#D9D9D9]"> </div>
             <BMI bmi={data.bmi.toString()} />
         </GrayCard>

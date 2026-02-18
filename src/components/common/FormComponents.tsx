@@ -312,7 +312,7 @@ export const PhoneVerificationInput = ({
     setMessage('');
     try {
       const response = await verifyPhoneCode(phoneNumber, code);
-      const token = response.data?.data.verificationToken;
+      const token = response.data?.verificationToken;
       setVerified(true);
       onVerified(true, token);
       setMessage('인증이 완료되었습니다.');

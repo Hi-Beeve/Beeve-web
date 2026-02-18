@@ -10,7 +10,7 @@ export const socialAuthApi = async (params: AuthLoginRequest): Promise<{
   try {
     const response = await instance.post('/auth/login', params);
     return {
-      authData: response.data.data.data,
+      authData: response.data.data,
       needsSignUp: false
     };
   } catch (error: any) {
@@ -28,7 +28,7 @@ export const socialAuthApi = async (params: AuthLoginRequest): Promise<{
 // 회원가입 API - 성공 시 바로 로그인 토큰 반환
 export const signUpApi = async (params: AuthSignUpRequest): Promise<AuthResponse> => {
   const response = await instance.post('/auth/signup', params);
-  return response.data.data.data;
+  return response.data.data;
 };
 
 // 휴대폰 인증번호 발송

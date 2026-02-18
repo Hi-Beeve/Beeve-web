@@ -5,9 +5,7 @@ export const hexWithDateApi = async (params: HexWithDateRequest): Promise<{data:
   console.log('📡 hexWithDateApi 호출 - params:', params);
   try {
     const response = await instance.get('/fitness', {
-      params: {
-        measureDay: params.date,
-      },
+      params: params.date ? { measureDay: params.date } : {},
     });
     console.log('📡 hexWithDateApi 응답:', response.status, response.data);
     const innerData = response.data?.data ?? response.data;

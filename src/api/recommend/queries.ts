@@ -1,13 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
-import { recommendApi } from "./recommend.api";
+import { getRecommendApi } from "./recommend.api";
 
 export const recommendQueryKeys = {
     all: ['recommend'] as const,
+    byDate: (date?: string) => ['recommend', date] as const,
 }
 
-export const useRecommendQuery = () => {
+export const useRecommendQuery = (date?: string) => {
     return useQuery({
-        queryKey: recommendQueryKeys.all,
-        queryFn: () => recommendApi(),
+        queryKey: recommendQueryKeys.byDate(date),
+        queryFn: () => getRecommendApi(date),
     });
 }
