@@ -9,6 +9,7 @@ export const useGetExerciseInfoQuery = () => {
   return useQuery({
     queryKey: exerciseInfoQueryKeys.all,
     queryFn: getExerciseInfoApi,
+    retry: false,
   });
 };
 

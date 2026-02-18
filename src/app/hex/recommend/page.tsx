@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import RecommendHexSection from "@/components/recommend/RecommendHexSection";
 import { useHex } from "@/api/hex/useHex";
 import { RecommendCard, WorkoutType } from '@/components/recommend/RecommendCard';
 import { FONT_STYLES } from '@/styles/fontStyles';
 import { useRecommend } from "@/api/recommend/useRecommend";
+import { useGetExerciseInfo } from "@/api/exercise-info/useExerciseInfo";
 import { useAuth } from "@/contexts/auth-context";
 import Image from "next/image"
 import calendar_icon from "../../../../public/calendar.svg"
@@ -27,6 +29,7 @@ function getWorkoutType(focus: string): WorkoutType {
 }
 
 export default function RecommendPage() {
+  const router = useRouter();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
 
   const getTodayDate = () => {
@@ -38,8 +41,11 @@ export default function RecommendPage() {
 
   const { isLoading: isRecommendLoading, data: recommendData, errorMessage, refetch } = useRecommend(selectedDate);
   const { data, isLoading, error } = useHex({ date: selectedDate });
+  const { data: exerciseInfo, isLoading: isExerciseInfoLoading, isError: isExerciseInfoError } = useGetExerciseInfo();
 
-  if (isLoading || authLoading) {
+  const hasExerciseInfo = !!exerciseInfo && !isExerciseInfoError;
+
+  if (isLoading || authLoading || (isExerciseInfoLoading && !isExerciseInfoError)) {
     return (
       <div className="w-full pt-10 px-5 pb-10 flex justify-center items-center">
         <div>로딩 중...</div>
@@ -104,16 +110,6 @@ export default function RecommendPage() {
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto" />
                 <div className="text-gray-500 mt-3">AI가 맞춤 운동을 추천하고 있습니다...</div>
               </div>
-            ) : errorMessage ? (
-              <div className="text-center py-8">
-                <p className="text-gray-500 mb-3">{errorMessage}</p>
-                <button
-                  onClick={() => refetch()}
-                  className="px-4 py-2 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 transition"
-                >
-                  다시 시도
-                </button>
-              </div>
             ) : recommendData?.workout_plan ? (
               recommendData.workout_plan.map((plan, index) => (
                 <RecommendCard
@@ -124,13 +120,34 @@ export default function RecommendPage() {
                 />
               ))
             ) : (
-              <div className="text-center py-8">
-                <p className="text-gray-500">추천 데이터가 없습니다.</p>
+              <div className="text-center py-8 space-y-4">
+                <p className="text-gray-500">
+                  {!hasExerciseInfo
+                    ? '운동 정보를 먼저 입력해주세요.'
+                    : '아직 추천받은 운동이 없습니다.'}
+                </p>
+
+                {/* 운동 정보 입력하기 버튼 (운동정보 미입력 시) */}
+                {!hasExerciseInfo && (
+                  <button
+                    onClick={() => router.push('/mypage/fitness-edit?from=recommend')}
+                    className="w-full px-4 py-3 bg-[#BDB2DD] text-white font-medium rounded-[20px] transition-colors duration-200"
+                  >
+                    운동 정보 입력하기
+                  </button>
+                )}
+
+                {/* 맞춤 운동 추천 받기 버튼 */}
                 <button
-                  onClick={() => refetch()}
-                  className="mt-3 px-4 py-2 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 transition"
+                  onClick={() => router.push('/hex/recommend/confirm?date=' + selectedDate)}
+                  disabled={!hasExerciseInfo}
+                  className={`w-full px-4 py-3 font-medium rounded-[20px] transition-colors duration-200 ${
+                    hasExerciseInfo
+                      ? 'bg-black text-white'
+                      : 'bg-[#E0E0E0] text-[#999] cursor-not-allowed'
+                  }`}
                 >
-                  추천 받기
+                  맞춤 운동 추천 받기
                 </button>
               </div>
             )}

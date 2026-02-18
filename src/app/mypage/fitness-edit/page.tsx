@@ -27,9 +27,12 @@ const FitnessEditContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const from = searchParams.get('from') || 'mypage';
+  const date = searchParams.get('date') || '';
 
   const handleBack = () => {
-    if (from === 'recommend') {
+    if (from === 'confirm') {
+      router.push('/hex/recommend/confirm?date=' + date);
+    } else if (from === 'recommend') {
       router.push('/hex/recommend');
     } else {
       router.push('/mypage');
