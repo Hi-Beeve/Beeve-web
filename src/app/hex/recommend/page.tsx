@@ -40,23 +40,16 @@ export default function RecommendPage() {
   const [selectedDate, setSelectedDate] = useState(getTodayDate());
 
   const { isLoading: isRecommendLoading, data: recommendData, errorMessage, refetch } = useRecommend(selectedDate);
-  const { data, isLoading, error } = useHex({ date: selectedDate });
+  const { data: hexData, isLoading: isHexLoading } = useHex({});
   const { data: exerciseInfo, isLoading: isExerciseInfoLoading, isError: isExerciseInfoError } = useGetExerciseInfo();
 
   const hasExerciseInfo = !!exerciseInfo && !isExerciseInfoError;
+  const isToday = selectedDate === getTodayDate();
 
-  if (isLoading || authLoading || (isExerciseInfoLoading && !isExerciseInfoError)) {
+  if (isHexLoading || authLoading || (isExerciseInfoLoading && !isExerciseInfoError)) {
     return (
       <div className="w-full pt-10 px-5 pb-10 flex justify-center items-center">
         <div>로딩 중...</div>
-      </div>
-    );
-  }
-
-  if (error || !data) {
-    return (
-      <div className="w-full pt-10 px-5 pb-10 flex justify-center items-center">
-        <div>데이터를 불러오는데 실패했습니다.</div>
       </div>
     );
   }
@@ -73,7 +66,13 @@ export default function RecommendPage() {
         <WeekDateSelector selectedDate={selectedDate} onDateChange={setSelectedDate} />
 
         {/* 육각형 차트 섹션 */}
-        <RecommendHexSection data={data} />
+        {hexData?.fitness ? (
+          <RecommendHexSection data={hexData} />
+        ) : (
+          <div className="w-full bg-white rounded-2xl p-6 mb-6 text-center">
+            <p className="text-gray-400">최근 측정 데이터가 없습니다.</p>
+          </div>
+        )}
 
         {/* AI 맞춤 운동 스케줄 섹션 */}
         <div className="mt-6 bg-white rounded-[20px] px-4 py-5">
@@ -110,15 +109,11 @@ export default function RecommendPage() {
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto" />
                 <div className="text-gray-500 mt-3">AI가 맞춤 운동을 추천하고 있습니다...</div>
               </div>
-            ) : recommendData?.workout_plan ? (
-              recommendData.workout_plan.map((plan, index) => (
-                <RecommendCard
-                  key={index}
-                  type={getWorkoutType(plan.focus)}
-                  day={plan}
-                  dayIndex={index}
-                />
-              ))
+            ) : recommendData?.exercises ? (
+              <RecommendCard
+                type={getWorkoutType(recommendData.focus)}
+                data={recommendData}
+              />
             ) : (
               <div className="text-center py-8 space-y-4">
                 <p className="text-gray-500">
@@ -140,24 +135,24 @@ export default function RecommendPage() {
                 {/* 맞춤 운동 추천 받기 버튼 */}
                 <button
                   onClick={() => router.push('/hex/recommend/confirm?date=' + selectedDate)}
-                  disabled={!hasExerciseInfo}
+                  disabled={!hasExerciseInfo || !isToday}
                   className={`w-full px-4 py-3 font-medium rounded-[20px] transition-colors duration-200 ${
-                    hasExerciseInfo
+                    hasExerciseInfo && isToday
                       ? 'bg-black text-white'
                       : 'bg-[#E0E0E0] text-[#999] cursor-not-allowed'
                   }`}
                 >
-                  맞춤 운동 추천 받기
+                  {isToday ? '맞춤 운동 추천 받기' : '오늘 날짜만 추천받을 수 있습니다'}
                 </button>
               </div>
             )}
           </div>
 
           {/* 새로고침 버튼 */}
-          {recommendData && (
+          {recommendData && isToday && (
             <div className="mt-4 text-center">
               <button
-                onClick={() => refetch()}
+                onClick={() => router.push('/hex/recommend/confirm?date=' + selectedDate)}
                 className="px-5 py-2.5 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 transition"
               >
                 새로운 추천 받기

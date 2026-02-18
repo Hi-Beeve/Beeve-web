@@ -9,20 +9,15 @@ export interface WorkoutExercise {
   description: string;
 }
 
-export interface WorkoutDay {
-  date: string;
-  focus: string;
-  warm_up: string;
-  cool_down: string;
-  exercises: WorkoutExercise[];
-}
-
 export interface RecommendResponseData {
   recommendationId: number;
   targetFitnessType: string;
   totalDuration: number;
   rpe: number;
-  workout_plan: WorkoutDay[];
+  focus: string;
+  warm_up: string;
+  cool_down: string;
+  exercises: WorkoutExercise[];
   notes: string;
   createdAt: string;
 }
