@@ -2,7 +2,7 @@ import axios from 'axios';
 import { ERROR_CODES } from '@/constants/errorCodes';
 
 const instance = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000/api/v1', //'https://beeve-api.mooo.com/api/v1', // 서버 도메인
+  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || 'https://beeve-api-179219167030.asia-northeast3.run.app/api/v1', //'http://localhost:3000/api/v1', // 서버 도메인
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',

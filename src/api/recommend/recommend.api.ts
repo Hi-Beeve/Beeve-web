@@ -9,6 +9,6 @@ export const getRecommendApi = async (date?: string) => {
 
 // AI 호출해서 새 추천 생성 (POST)
 export const createRecommendApi = async () => {
-    const response = await instance.post('/fitness/recommend', {});
+    const response = await instance.post('/fitness/recommend', {}, { timeout: 65000 });
     return response.data;
 }

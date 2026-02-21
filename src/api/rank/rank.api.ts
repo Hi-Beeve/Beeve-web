@@ -8,48 +8,51 @@ export const getRankApi = async () => {
 }
 
 const mockData:RankResponse = {
+    "currentRank": {
+        "percentile": 14
+    },
     "rankHistoryList": [
       {
-        "rank": 38,
+        "percentile": 38,
         "date": '2025-11-30'
       },
       {
-        "rank":33,
+        "percentile": 33,
         "date": '2025-12-01'
       },
       {
-        "rank":23,
+        "percentile": 23,
         "date": '2025-12-06'
       },
       {
-        "rank":14,
+        "percentile": 14,
         "date": '2025-12-07'
       }
     ],
     "fitnessRankList": [
       {
         "type": "STRENGTH",
-        "rank": 14
+        "percentile": 14
       },
-        {
-            type: "CARDIO",
-            rank: 45,
-        },
-        {
-            type: "ENDURANCE",
-            rank: 36,
-        },
-        {
-            type: "FLEXIBILITY",
-            rank : 60
-        },
-        {
-            type: "AGILITY",
-            rank: 42
-        },
-        {
-            type: "QUICKNESS",
-            rank: 76
-        }
+      {
+        type: "CARDIO",
+        percentile: 45,
+      },
+      {
+        type: "ENDURANCE",
+        percentile: 36,
+      },
+      {
+        type: "FLEXIBILITY",
+        percentile: 60
+      },
+      {
+        type: "AGILITY",
+        percentile: 42
+      },
+      {
+        type: "QUICKNESS",
+        percentile: 76
+      }
     ]
 }

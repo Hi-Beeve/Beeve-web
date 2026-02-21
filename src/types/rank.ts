@@ -1,10 +1,13 @@
 import { FITNESS_TYPE } from "./hex";
 
 export type RankHistory = {
-    rank: number,
+    percentile: number,
     date: string,
 }
 export type RankResponse = {
+    currentRank: {
+        percentile: number,
+    },
     rankHistoryList: RankHistory[],
-    fitnessRankList: {type:FITNESS_TYPE,rank:number}[],
+    fitnessRankList: {type: FITNESS_TYPE, percentile: number}[],
 }
