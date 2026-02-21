@@ -39,7 +39,7 @@ export default function RankPage() {
   return (
     <div className="w-full pt-10 px-5 pb-10 flex flex-col gap-3">
         <Title ageRange={ageRange}/>
-        <RankCard rank={rankData?.rankHistoryList?.[0]?.rank || 0} />
+        <RankCard rank={rankData?.currentRank?.percentile || 0} />
         <HexLineGraph title="" data={rankData?.chartData || {labels: [], values: [], icon: ""}} minValue={1} maxValue={100} stepSize={25} />
         <DetailTitle />
         <RankFitnessCardList fitness={rankData?.fitnessData || []}/>
@@ -60,7 +60,7 @@ const DetailTitle = () =>{
     return(
         <div className="flex flex-col justify-between pt-10">
             <p className={`${FONT_STYLES.heading3}`}>항목별</p>
-            <div className={`${FONT_STYLES.body14} ${FONT_COLORS.primaryDark}`}>동년배 100명 중 나의 등수</div>
+            <div className={`${FONT_STYLES.body14} ${FONT_COLORS.primaryDark}`}>동년배 중 나의 상위 백분위</div>
         </div>
     )
 }
@@ -68,7 +68,7 @@ const RankCard = ({rank}: {rank: number}) => {
     return(
         <CardBackground>
             <CardTitleWithIcon className="bg-[#BDB2DD]" icon={<Image src={gradeIcon} alt="rankIcon" width={10} height={24}/>} title=""/>
-            <div className={`flex items-end gap-1`}><span className={`${FONT_STYLES.body14} ${FONT_COLORS.primaryDark}`}>동년배 100명 중 </span><CardValue value={`${rank}등`}/></div>
+            <div className={`flex items-end gap-1`}><span className={`${FONT_STYLES.body14} ${FONT_COLORS.primaryDark}`}>동년배 상위 </span><CardValue value={`${rank}%`}/></div>
             
         </CardBackground>
     )
@@ -85,7 +85,7 @@ const RankFitnessCardList = ({fitness}: {fitness: HexData[]}) => {
               return(
                 <CardBackground key={item.fitnessType} className="flex justify-between gap-2">
                     <CardTitleWithIcon icon={<Image src={FitnessIconMap[item.fitnessType]} alt="gradeIcon" width={size} height={size}/>} title={FitnessNameMap[item.fitnessType]}/>
-                    <CardValue value={`${item.grade}등`}/>
+                    <CardValue value={`상위 ${item.grade}%`}/>
                 </CardBackground>
                 )
               }
