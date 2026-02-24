@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { useAuth } from '@/contexts/auth-context';
 import { useSignUp } from '@/api/auth/useAuth';
 import { ClientOAuthInfo, ClientAdditionalInfo } from '@/types/auth';
@@ -19,6 +20,7 @@ function AdditionalInfoContent() {
   
   const [currentStep, setCurrentStep] = useState<FunnelStep>('gender');
   const [error, setError] = useState<string>('');
+  const [privacyAgreed, setPrivacyAgreed] = useState(false);
   const [phoneVerified, setPhoneVerified] = useState(false);
   const [formData, setFormData] = useState<ClientAdditionalInfo>({
     birthDate: '',
@@ -170,6 +172,10 @@ function AdditionalInfoContent() {
     setError('');
     
     if (currentStep === 'gender') {
+      if (!privacyAgreed) {
+        setError('개인정보 수집·이용에 동의해주세요.');
+        return;
+      }
       if (validateGender()) {
         setCurrentStep('birthDate');
       }
@@ -258,14 +264,34 @@ function AdditionalInfoContent() {
         <div className="space-y-6">
           {/* 1단계: 성별 선택 */}
           {currentStep === 'gender' && (
-            <GenderSelect
-              value={formData.gender}
-              onChange={(gender) => {
-                setFormData(prev => ({ ...prev, gender }));
-                setError('');
-              }}
-              error={error}
-            />
+            <>
+              <GenderSelect
+                value={formData.gender}
+                onChange={(gender) => {
+                  setFormData(prev => ({ ...prev, gender }));
+                  setError('');
+                }}
+                error={error}
+              />
+              <label className="flex items-start gap-3 cursor-pointer mt-2">
+                <input
+                  type="checkbox"
+                  checked={privacyAgreed}
+                  onChange={(e) => {
+                    setPrivacyAgreed(e.target.checked);
+                    setError('');
+                  }}
+                  className="mt-0.5 w-4 h-4 accent-[#BDB2DD] shrink-0"
+                />
+                <span className="text-sm text-[#444] leading-relaxed">
+                  (필수){' '}
+                  <Link href="/privacy" target="_blank" className="underline text-[#BDB2DD]">
+                    개인정보 수집·이용
+                  </Link>
+                  에 동의합니다.
+                </span>
+              </label>
+            </>
           )}
 
           {/* 2단계: 생년월일 입력 */}
