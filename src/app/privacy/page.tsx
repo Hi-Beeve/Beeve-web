@@ -1,13 +1,14 @@
 export const metadata = {
-  title: '개인정보처리방침 - Beeve',
-  description: 'Beeve 서비스 개인정보처리방침',
+  title: '개인정보처리방침 - Hi,Beeve',
+  description: 'Hi,Beeve 서비스 개인정보처리방침',
 };
 
 export default function PrivacyPage() {
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-2xl mx-auto px-5 py-10">
-        <h1 className="text-2xl font-bold text-[#1a1a1a] mb-8">개인정보처리방침</h1>
+        <h1 className="text-2xl font-bold text-[#1a1a1a] mb-2">개인정보처리방침</h1>
+        <p className="text-sm text-[#888] mb-8">Hi,Beeve (이하 "서비스")는 이용자의 개인정보를 소중히 여기며, 관련 법령을 준수합니다.</p>
 
         <Section title="1. 수집하는 개인정보">
           <ul className="list-disc pl-5 space-y-1 text-[#444]">
@@ -26,7 +27,15 @@ export default function PrivacyPage() {
           </ul>
         </Section>
 
-        <Section title="3. 개인정보의 제3자 제공">
+        <Section title="3. 개인정보 보유 및 이용 기간">
+          <ul className="list-disc pl-5 space-y-1 text-[#444]">
+            <li>서비스 이용 기간 동안 보유</li>
+            <li>회원 탈퇴 시 탈퇴일로부터 <strong>1년 후 완전 삭제</strong></li>
+            <li>단, 관계 법령에 따라 보존 의무가 있는 경우 해당 기간 동안 보관</li>
+          </ul>
+        </Section>
+
+        <Section title="4. 개인정보의 제3자 제공">
           <p className="text-[#444] mb-3">Google Gemini API (AI 운동 추천)</p>
           <table className="w-full text-sm border-collapse">
             <tbody>
@@ -46,22 +55,44 @@ export default function PrivacyPage() {
           </table>
         </Section>
 
-        <Section title="4. 의료 면책">
+        <Section title="5. 동의 거부 시 불이익">
+          <p className="text-[#444] leading-relaxed">
+            개인정보 수집·이용에 동의하지 않으실 수 있습니다.
+            단, 동의를 거부하실 경우 <strong>서비스 회원가입 및 이용이 제한</strong>됩니다.
+          </p>
+        </Section>
+
+        <Section title="6. 의료 면책">
           <p className="text-[#444] leading-relaxed">
             본 앱은 의료기기가 아니며, 질병의 진단, 치료, 예방을 목적으로 하지 않습니다.
             제공되는 정보는 참고용이며, 건강 이상 시 반드시 전문의와 상담하세요.
           </p>
         </Section>
 
-        <Section title="5. AI 기술 사용 안내">
+        <Section title="7. AI 기술 사용 안내">
           <p className="text-[#444] leading-relaxed">
             운동 추천 기능은 Google Gemini AI를 활용합니다.
             AI 생성 콘텐츠는 참고 자료로만 활용하시기 바랍니다.
           </p>
         </Section>
 
+        <Section title="8. 개인정보처리자 정보">
+          <table className="w-full text-sm border-collapse">
+            <tbody>
+              <tr className="border-b border-[#eee]">
+                <td className="py-2 pr-4 text-[#888] w-28 align-top">서비스명</td>
+                <td className="py-2 text-[#444]">Hi,Beeve</td>
+              </tr>
+              <tr>
+                <td className="py-2 pr-4 text-[#888] align-top">문의 이메일</td>
+                <td className="py-2 text-[#444]">beeve.test@gmail.com</td>
+              </tr>
+            </tbody>
+          </table>
+        </Section>
+
         <p className="text-sm text-[#aaa] mt-10 pt-6 border-t border-[#eee]">
-          최종 수정일: 2025년 2월 24일
+          최종 수정일: 2026년 2월 24일
         </p>
       </div>
     </div>
