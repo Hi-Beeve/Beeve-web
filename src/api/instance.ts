@@ -27,6 +27,27 @@ instance.interceptors.request.use(
   }
 );
 
+// refresh 중복 실행 방지용
+let isRefreshing = false;
+let failedQueue: Array<{ resolve: (value: string) => void; reject: (reason?: unknown) => void }> = [];
+
+const processQueue = (error: unknown, token: string | null = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token!);
+    }
+  });
+  failedQueue = [];
+};
+
+const clearAuthStorage = () => {
+  localStorage.removeItem('authToken');
+  localStorage.removeItem('refreshToken');
+  localStorage.removeItem('userData');
+};
+
 // Response interceptor
 instance.interceptors.response.use(
   (response) => {
@@ -34,73 +55,74 @@ instance.interceptors.response.use(
   },
   async (error) => {
     const originalRequest = error.config;
-    
-    // AUTH102 응답 처리 (토큰 만료)
+
+    // AUTH101 (회원 없음) 에러는 auth.api.ts에서 처리하므로 그대로 통과
+    if (
+      error.response?.data?.code === ERROR_CODES.AUTH_USER_NOT_FOUND ||
+      error.response?.data?.code === ERROR_CODES.MEMBER_NOT_FOUND
+    ) {
+      console.log('⚠️ User not found - will be handled by auth.api.ts');
+      return Promise.reject(error);
+    }
+
+    // AUTH102 응답 처리 (토큰 만료) - race condition 방지 처리 포함
     if (error.response?.data?.code === ERROR_CODES.AUTH_TOKEN_EXPIRED && !originalRequest._retry) {
+      // 이미 refresh 중이면 대기열에 추가
+      if (isRefreshing) {
+        return new Promise<string>((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        })
+          .then((token) => {
+            originalRequest.headers.Authorization = `Bearer ${token}`;
+            return instance(originalRequest);
+          })
+          .catch((err) => Promise.reject(err));
+      }
+
       originalRequest._retry = true;
-      
+      isRefreshing = true;
+
+      const refreshToken = localStorage.getItem('refreshToken');
+      if (!refreshToken) {
+        isRefreshing = false;
+        processQueue(new Error('No refresh token'));
+        clearAuthStorage();
+        window.location.href = '/';
+        return Promise.reject(error);
+      }
+
       try {
-        const refreshToken = localStorage.getItem('refreshToken');
-        if (!refreshToken) {
-          throw new Error('No refresh token available');
-        }
-        
-        // refresh token으로 새 토큰 요청
         const refreshResponse = await axios.post(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000/api/v1'}/auth/refresh`,
+          `${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://beeve-api-179219167030.asia-northeast3.run.app/api/v1'}/auth/refresh`,
           { refreshToken },
-          {
-            headers: {
-              'Content-Type': 'application/json',
-            }
-          }
+          { headers: { 'Content-Type': 'application/json' } }
         );
-        
+
         const { data } = refreshResponse.data;
-        
-        // 새 토큰들을 localStorage에 저장
+
         localStorage.setItem('authToken', data.accessToken);
         if (data.refreshToken) {
           localStorage.setItem('refreshToken', data.refreshToken);
         }
 
         console.log('✅ Token refreshed successfully');
-        
-        // 원래 요청에 새 토큰을 추가하여 재시도
-        originalRequest.headers.Authorization = `${data.accessToken}`;
+        processQueue(null, data.accessToken);
+        isRefreshing = false;
+
+        originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
         return instance(originalRequest);
-        
       } catch (refreshError) {
         console.error('❌ Token refresh failed:', refreshError);
-        
-        // refresh 실패 시 로그아웃 처리
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('userData');
-        
-        // 로그인 페이지로 리다이렉트
+        processQueue(refreshError);
+        isRefreshing = false;
+
+        clearAuthStorage();
         window.location.href = '/';
-        
         return Promise.reject(refreshError);
       }
     }
-    
-    // AUTH101 (회원 없음) 에러는 auth.api.ts에서 처리하므로 그대로 통과
-    if (error.response?.data?.code === ERROR_CODES.AUTH_USER_NOT_FOUND || error.response?.data?.code === ERROR_CODES.MEMBER_NOT_FOUND) {
-      console.log('⚠️ User not found - will be handled by auth.api.ts');
-      return Promise.reject(error);
-    }
-    
-    // 기타 401 에러 처리 (토큰 없음 등)
-    if (error.response?.status === 401) {
-      console.log('⚠️ Unauthorized access - redirecting to login');
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('userData');
-      // window.location.href = '/'; TODO : 서버랑 프론트랑 가까워질때까지 잠시 주석처리...
-      return Promise.reject(error);
-    }
-    
+
+    // 그 외 401은 토큰을 삭제하지 않고 에러만 전파 (엔드포인트 권한 문제 등)
     return Promise.reject(error);
   }
 );
