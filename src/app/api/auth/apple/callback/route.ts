@@ -16,13 +16,15 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       return NextResponse.redirect(
-        new URL(`/auth/login?error=apple_${error}`, request.url)
+        new URL(`/auth/login?error=apple_${error}`, request.url),
+        302
       );
     }
 
     if (!idToken) {
       return NextResponse.redirect(
-        new URL('/auth/login?error=no_id_token', request.url)
+        new URL('/auth/login?error=no_id_token', request.url),
+        302
       );
     }
 
@@ -43,17 +45,20 @@ export async function POST(request: NextRequest) {
     }
 
     // 클라이언트 콜백 페이지로 GET redirect
+    // 302를 명시해야 브라우저가 POST → GET으로 전환함 (기본값 307은 POST 유지 → 405 발생)
     const redirectParams = new URLSearchParams({ sub });
     if (email) redirectParams.set('email', email);
     if (name) redirectParams.set('name', name);
 
     return NextResponse.redirect(
-      new URL(`/auth/apple/callback?${redirectParams.toString()}`, request.url)
+      new URL(`/auth/apple/callback?${redirectParams.toString()}`, request.url),
+      302
     );
   } catch (err) {
     console.error('Apple callback error:', err);
     return NextResponse.redirect(
-      new URL('/auth/login?error=apple_callback_failed', request.url)
+      new URL('/auth/login?error=apple_callback_failed', request.url),
+      302
     );
   }
 }
