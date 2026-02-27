@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
 import { KakaoLoginButton } from '@/components/kakao-login-button';
 import { GoogleLoginButton } from '@/components/google-login-button';
+import { AppleLoginButton } from '@/components/apple-login-button';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -59,6 +60,7 @@ export default function LoginPage() {
         <div className="space-y-4">
           <KakaoLoginButton />
           <GoogleLoginButton />
+          <AppleLoginButton />
         </div>
 
         {/* 추가 정보 */}

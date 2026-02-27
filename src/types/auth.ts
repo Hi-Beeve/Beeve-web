@@ -32,7 +32,7 @@ export type ClientOAuthInfo = {
   nickname: string;
   email?: string;
   profileImage?: string;
-  provider: 'kakao' | 'google';
+  provider: 'kakao' | 'google' | 'apple';
 }
 
 // 클라이언트 추가 정보 타입

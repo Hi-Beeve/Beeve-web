@@ -2,11 +2,13 @@
 
 import google_icon from '../../public/google-icon.svg';
 import kakao_icon from '../../public/kakao_icon.svg';
+import apple_icon from '../../public/apple_icon.svg';
 import splash from '../../public/splash_logo.svg';
 import Image from 'next/image';
 import { useState } from 'react';
 import { getKakaoLoginUrl } from '@/lib/kakao-auth';
 import { getGoogleLoginUrl } from '@/lib/google-auth';
+import { getAppleLoginUrl } from '@/lib/apple-auth';
 
 export default function Home() {
   return (
@@ -41,19 +43,37 @@ const SignInGroup = () => {
     }
   };
 
+  const handleAppleLogin = () => {
+    try {
+      setIsLoading('apple');
+      const loginUrl = getAppleLoginUrl();
+      window.location.href = loginUrl;
+    } catch (error) {
+      console.error('애플 로그인 오류:', error);
+      setIsLoading('');
+    }
+  };
+
   return (
     <div className="absolute bottom-10 w-full px-5 flex flex-col gap-3">
-      <SignInTag 
-        icon={google_icon} 
-        text="구글" 
-        className="bg-[#F5F5F5] border-1 border-[#767676]" 
+      <SignInTag
+        icon={apple_icon}
+        text="애플"
+        className="bg-black text-white"
+        onClick={handleAppleLogin}
+        isLoading={isLoading === 'apple'}
+      />
+      <SignInTag
+        icon={google_icon}
+        text="구글"
+        className="bg-[#F5F5F5] border-1 border-[#767676] text-[#404040]"
         onClick={handleGoogleLogin}
         isLoading={isLoading === 'google'}
       />
-      <SignInTag 
-        icon={kakao_icon} 
-        text="카카오" 
-        className="bg-[#FEE500]" 
+      <SignInTag
+        icon={kakao_icon}
+        text="카카오"
+        className="bg-[#FEE500] text-[#404040]"
         onClick={handleKakaoLogin}
         isLoading={isLoading === 'kakao'}
       />
@@ -78,7 +98,7 @@ const SignInTag = ({
     <button 
       onClick={onClick}
       disabled={isLoading}
-      className={`flex items-center justify-center gap-2 h-[56px] rounded-[20px] w-full ${className} text-[#404040] transition-opacity duration-200 ${isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-80 active:opacity-60'}`}
+      className={`flex items-center justify-center gap-2 h-[56px] rounded-[20px] w-full ${className} transition-opacity duration-200 ${isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-80 active:opacity-60'}`}
     >
       {isLoading ? (
         <>
