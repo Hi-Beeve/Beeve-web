@@ -5,6 +5,7 @@ import { FONT_STYLES } from '@/styles/fontStyles';
 import Picker from "react-mobile-picker";
 import BottomSheet from '@/components/bottom-sheet';
 import { sendPhoneCode, verifyPhoneCode } from '@/api/auth/auth.api';
+import { ERROR_CODES } from '@/constants/errorCodes';
 
 // 성별 선택 컴포넌트
 interface GenderSelectProps {
@@ -296,8 +297,19 @@ export const PhoneVerificationInput = ({
       await sendPhoneCode(phoneNumber);
       setCodeSent(true);
       setMessage('인증번호가 발송되었습니다.');
-    } catch {
-      setMessage('인증번호 발송에 실패했습니다. 다시 시도해주세요.');
+    } catch (error) {
+      const code = (error as { response?: { data?: { code?: string } } })?.response?.data?.code;
+      if (code === ERROR_CODES.AUTH_PHONE_INVALID_FORMAT) {
+        setMessage('올바른 휴대폰 번호를 입력해주세요.');
+      } else if (code === ERROR_CODES.AUTH_PHONE_TOO_SOON) {
+        setMessage('3분 후 다시 시도해주세요.');
+      } else if (code === ERROR_CODES.AUTH_PHONE_DAILY_LIMIT) {
+        setMessage('하루 최대 5회까지만 요청할 수 있습니다.');
+      } else if (code === ERROR_CODES.AUTH_PHONE_SMS_FAILED) {
+        setMessage('SMS 발송에 실패했습니다. 잠시 후 다시 시도해주세요.');
+      } else {
+        setMessage('인증번호 발송에 실패했습니다. 다시 시도해주세요.');
+      }
     } finally {
       setSending(false);
     }
