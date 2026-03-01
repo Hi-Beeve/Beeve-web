@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback, Rea
 import Cookies from 'js-cookie';
 import { KakaoUser } from '@/lib/kakao-auth';
 import { GoogleUser } from '@/lib/google-auth';
+import type { NativeLoginData } from '@/lib/app-bridge';
 
 interface User {
   id: string;
@@ -90,6 +91,53 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     Cookies.remove(TOKEN_COOKIE_KEY);
     console.log('🧹 Cookies cleared');
   }, []);
+
+  // Flutter WebView AppBridge 등록
+  useEffect(() => {
+    window.AppBridge = {
+      onLoginSuccess: (data: NativeLoginData) => {
+        try {
+          if (!data.accessToken || !data.refreshToken || !data.providerUserId || !data.name || !data.provider) {
+            console.error('[AppBridge] onLoginSuccess: 필수 필드 누락', data);
+            return;
+          }
+
+          // http(s)://로 시작하지 않으면 프로필 이미지 무시
+          const profileImage = data.profileUrl?.startsWith('http') ? data.profileUrl : undefined;
+
+          // authToken/refreshToken은 login()이 저장하지 않으므로 별도 저장
+          localStorage.setItem('authToken', data.accessToken);
+          localStorage.setItem('refreshToken', data.refreshToken);
+
+          // React 상태 업데이트 (login()이 userData를 localStorage에 저장)
+          login({
+            id: data.providerUserId,
+            nickname: data.name,
+            email: data.email,
+            profileImage,
+            provider: data.provider,
+            accessToken: data.accessToken,
+          });
+
+          window.location.href = '/hex';
+        } catch (error) {
+          console.error('[AppBridge] onLoginSuccess 처리 중 오류:', error);
+        }
+      },
+      onLogout: () => {
+        try {
+          logout();
+          window.location.href = '/';
+        } catch (error) {
+          console.error('[AppBridge] onLogout 처리 중 오류:', error);
+        }
+      },
+    };
+
+    return () => {
+      delete window.AppBridge;
+    };
+  }, [login, logout]);
 
   const updateProfile = useCallback((profileData: Partial<User>) => {
     setUser(currentUser => {
