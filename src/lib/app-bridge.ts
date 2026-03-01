@@ -7,9 +7,10 @@ export interface NativeLoginData {
   accessToken: string;
   refreshToken: string;
   name: string;
-  profileUrl: string;
+  profileUrl?: string;
   providerUserId: string;
   email?: string;
+  provider: 'kakao' | 'google' | 'apple';
 }
 
 declare global {

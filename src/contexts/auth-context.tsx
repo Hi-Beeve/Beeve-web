@@ -96,31 +96,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     window.AppBridge = {
       onLoginSuccess: (data: NativeLoginData) => {
-        console.log('📱 AppBridge.onLoginSuccess called from Flutter');
+        try {
+          if (!data.accessToken || !data.refreshToken || !data.providerUserId || !data.name || !data.provider) {
+            console.error('[AppBridge] onLoginSuccess: 필수 필드 누락', data);
+            return;
+          }
 
-        const userData: User = {
-          id: data.providerUserId,
-          nickname: data.name,
-          email: data.email,
-          profileImage: data.profileUrl,
-          provider: 'google',
-          accessToken: data.accessToken,
-        };
+          // http(s)://로 시작하지 않으면 프로필 이미지 무시
+          const profileImage = data.profileUrl?.startsWith('http') ? data.profileUrl : undefined;
 
-        // 토큰 저장
-        localStorage.setItem('authToken', data.accessToken);
-        localStorage.setItem('refreshToken', data.refreshToken);
+          // authToken/refreshToken은 login()이 저장하지 않으므로 별도 저장
+          localStorage.setItem('authToken', data.accessToken);
+          localStorage.setItem('refreshToken', data.refreshToken);
 
-        // React 상태 업데이트 (login()이 userData도 localStorage에 저장)
-        login(userData);
+          // React 상태 업데이트 (login()이 userData를 localStorage에 저장)
+          login({
+            id: data.providerUserId,
+            nickname: data.name,
+            email: data.email,
+            profileImage,
+            provider: data.provider,
+            accessToken: data.accessToken,
+          });
 
-        // /hex 페이지로 이동
-        window.location.href = '/hex';
+          window.location.href = '/hex';
+        } catch (error) {
+          console.error('[AppBridge] onLoginSuccess 처리 중 오류:', error);
+        }
       },
       onLogout: () => {
-        console.log('📱 AppBridge.onLogout called from Flutter');
-        logout();
-        window.location.href = '/';
+        try {
+          logout();
+          window.location.href = '/';
+        } catch (error) {
+          console.error('[AppBridge] onLogout 처리 중 오류:', error);
+        }
       },
     };
 
