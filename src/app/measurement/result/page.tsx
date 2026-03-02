@@ -57,11 +57,6 @@ export default function MeasurementResultPage() {
         <HexagonChart hexDataArray={hexDataArray} width={280} height={280} />
       </div>
 
-      {/* 체력 유형 텍스트 */}
-      <p className="text-lg font-semibold text-black mb-12">
-        당신의 체력 유형은 ___입니다.
-      </p>
-
       {/* 버튼 영역 */}
       <div className="w-full max-w-sm space-y-3 mt-auto pb-8">
         <button
