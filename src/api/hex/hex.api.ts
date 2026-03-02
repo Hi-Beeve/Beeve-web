@@ -9,7 +9,10 @@ export const hexWithDateApi = async (params: HexWithDateRequest): Promise<{data:
     });
     console.log('📡 hexWithDateApi 응답:', response.status, response.data);
     const innerData = response.data?.data ?? response.data;
-    return { data: innerData ?? null };
+    if (!innerData || !Array.isArray(innerData.fitness)) {
+      return { data: null };
+    }
+    return { data: innerData };
   } catch (error) {
     console.error('📡 hexWithDateApi 에러:', error);
     throw error;
