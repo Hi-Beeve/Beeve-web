@@ -10,11 +10,6 @@ interface HexChartSectionProps {
 }
 
 export default function HexChartSection({ data, onDateClick }: HexChartSectionProps) {
-  const formattedDate = new Date(data.measureDay).toLocaleDateString('ko-KR', {
-    month: '2-digit',
-    day: '2-digit',
-  }) ;
-
   // 육각형 순서 정의 (시계방향, 12시부터): 근력 -> 심폐 -> 유연성 -> 순발력 -> 민첩성 -> 근지구력
   const HEXAGON_ORDER = ['STRENGTH', 'CARDIO', 'FLEXIBILITY', 'QUICKNESS', 'AGILITY', 'ENDURANCE'];
 
@@ -37,7 +32,7 @@ export default function HexChartSection({ data, onDateClick }: HexChartSectionPr
       <div className="my-0">
         <HexagonChart hexDataArray={hexDataArray} />
       </div>
-      <DateSection date={formattedDate} onClick={onDateClick}/>
+      <DateSection date={data.measureDay} onClick={onDateClick}/>
     </section>
   );
 }
