@@ -2,11 +2,13 @@
 
 import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import { ProgressBar } from '@/components/progress_bar';
 import { FONT_STYLES } from '@/styles/fontStyles';
 import { useMember } from '@/api/mypage/useMypage';
 import { useGetExerciseInfo } from '@/api/exercise-info/useExerciseInfo';
 import { createRecommendApi } from '@/api/recommend/recommend.api';
+import { recommendQueryKeys } from '@/api/recommend/queries';
 
 type Step = 1 | 2 | 3;
 
@@ -14,6 +16,8 @@ function ConfirmContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const date = searchParams.get('date') ?? '';
+
+  const queryClient = useQueryClient();
 
   const [step, setStep] = useState<Step>(1);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -175,7 +179,10 @@ function ConfirmContent() {
           {isComplete && !error && (
             <div className="pb-5 h-[56px]">
               <button
-                onClick={() => router.push('/hex/recommend')}
+                onClick={() => {
+                  queryClient.invalidateQueries({ queryKey: recommendQueryKeys.all });
+                  router.push('/hex/recommend');
+                }}
                 className="w-full px-4 py-3 bg-[#BDB2DD] text-white font-medium rounded-[20px]"
               >
                 확인
