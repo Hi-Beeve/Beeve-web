@@ -21,7 +21,7 @@ export interface HexGradeInfo {
 
 export interface HexWithDateResponse {
  totalGrade : number; // 등급 
- totalRank : number; // 순위
+ totalPercentile : number; // 순위
  measurePlace : string; // 측정장소 GYM, HOME, OUTSIDE
  height : number; // 키
  weight : number; // 체중

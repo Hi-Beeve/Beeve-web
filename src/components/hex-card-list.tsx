@@ -23,7 +23,7 @@ export default function HexCardList({ data }: HexCardListProps) {
 
       <ProfileCard user={data}/>
       <TotalGradeCard grade={data.totalGrade}/>
-      <RankCard rank={data.totalRank}/>
+      <RankCard rank={data.totalPercentile}/>
       <PlaceCard place={data.measurePlace}/>
       <h3 className={`${FONT_STYLES.heading3} py-3 px-1`}>체력항목</h3>
       <FitnessCardList fitness={data.fitness} age={data.age} gender={data.gender}/>
