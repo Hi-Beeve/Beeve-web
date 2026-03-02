@@ -80,7 +80,7 @@ function ConfirmContent() {
 
       {/* Step 1: 신체정보 확인 */}
       {step === 1 && (
-        <div className="flex flex-col flex-1">
+        <div className="flex flex-col">
           <div className="flex flex-col items-start pt-10 pb-8">
             <h1 className={`mb-2 ${FONT_STYLES.heading28} whitespace-pre-line`}>
               {`${name}님의\n신체정보를 확인해주세요.`}
@@ -95,18 +95,16 @@ function ConfirmContent() {
             <InfoRow label="몸무게" value={`${member?.weight ?? '-'}kg`} />
           </div>
 
-          <div className="flex-1" />
-
-          <div className="flex gap-4 pb-5 h-[56px]">
+          <div className="flex gap-4 mt-5 h-[56px]">
             <button
               onClick={() => router.push('/mypage/edit?from=confirm&date=' + date)}
-              className="flex-1 px-4 py-3 bg-[#F5F5F5] text-[#767676] font-medium rounded-[20px]"
+              className="flex-1 flex items-center justify-center bg-[#F5F5F5] text-[#767676] font-bold rounded-[20px]"
             >
               수정하기
             </button>
             <button
               onClick={() => setStep(2)}
-              className="flex-1 px-4 py-3 bg-[#BDB2DD] text-white font-medium rounded-[20px]"
+              className="flex-1 flex items-center justify-center bg-[#BDB2DD] text-white font-bold rounded-[20px]"
             >
               다음
             </button>
@@ -116,7 +114,7 @@ function ConfirmContent() {
 
       {/* Step 2: 운동정보 확인 */}
       {step === 2 && (
-        <div className="flex flex-col flex-1">
+        <div className="flex flex-col">
           <div className="flex flex-col items-start pt-10 pb-8">
             <h1 className={`mb-2 ${FONT_STYLES.heading28} whitespace-pre-line`}>
               {`${name}님의\n운동정보를 확인해주세요.`}
@@ -130,18 +128,16 @@ function ConfirmContent() {
             <InfoRow label="건강 상태" value={healthStatus()} />
           </div>
 
-          <div className="flex-1" />
-
-          <div className="flex gap-4 pb-5 h-[56px]">
+          <div className="flex gap-4 mt-5 h-[56px]">
             <button
               onClick={() => router.push('/mypage/fitness-edit?from=confirm&date=' + date)}
-              className="flex-1 px-4 py-3 bg-[#F5F5F5] text-[#767676] font-medium rounded-[20px]"
+              className="flex-1 flex items-center justify-center bg-[#F5F5F5] text-[#767676] font-bold rounded-[20px]"
             >
               수정하기
             </button>
             <button
               onClick={handleStep3Enter}
-              className="flex-1 px-4 py-3 bg-[#BDB2DD] text-white font-medium rounded-[20px]"
+              className="flex-1 flex items-center justify-center bg-[#BDB2DD] text-white font-bold rounded-[20px]"
             >
               다음
             </button>
