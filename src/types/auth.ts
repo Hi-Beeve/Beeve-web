@@ -3,6 +3,22 @@ export type AuthLoginRequest = {
     providerUserId: string;
 }
 
+export type EmailLoginRequest = {
+    email: string;
+    password: string;
+}
+
+export type EmailLoginResponse = {
+    accessToken: string;
+    tokenType: string;
+    refreshToken: string;
+    expiresIn: number;
+    scope: string;
+    refreshTokenExpiresIn: number;
+    name: string;
+    profileUrl: string;
+}
+
 export type AuthResponse = {
     accessToken: string;
     tokenType: string;
@@ -32,7 +48,7 @@ export type ClientOAuthInfo = {
   nickname: string;
   email?: string;
   profileImage?: string;
-  provider: 'kakao' | 'google' | 'apple';
+  provider: 'kakao' | 'google' | 'apple' | 'email';
 }
 
 // 클라이언트 추가 정보 타입

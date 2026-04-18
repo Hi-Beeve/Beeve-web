@@ -1,4 +1,4 @@
-import { AuthLoginRequest, AuthSignUpRequest, AuthResponse } from "@/types/auth";
+import { AuthLoginRequest, AuthSignUpRequest, AuthResponse, EmailLoginRequest, EmailLoginResponse } from "@/types/auth";
 import instance from "../instance";
 import { ERROR_CODES } from "@/constants/errorCodes";
 
@@ -28,6 +28,12 @@ export const socialAuthApi = async (params: AuthLoginRequest): Promise<{
 // 회원가입 API - 성공 시 바로 로그인 토큰 반환
 export const signUpApi = async (params: AuthSignUpRequest): Promise<AuthResponse> => {
   const response = await instance.post('/auth/signup', params);
+  return response.data.data;
+};
+
+// 이메일/비밀번호 로그인 (심사용)
+export const emailLoginApi = async (params: EmailLoginRequest): Promise<EmailLoginResponse> => {
+  const response = await instance.post('/auth/email-login', params);
   return response.data.data;
 };
 

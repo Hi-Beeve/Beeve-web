@@ -337,6 +337,19 @@ export const PhoneVerificationInput = ({
 
   return (
     <div className="space-y-4">
+      {/* 심사용 안내 */}
+      {process.env.NEXT_PUBLIC_APP_REVIEW === 'true' && (
+        <div className="flex items-start gap-2 px-4 py-3 bg-blue-50 border border-blue-200 rounded-[16px]">
+          <svg className="w-4 h-4 text-blue-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <p className="text-blue-700 text-sm leading-relaxed">
+            심사용 계정은 휴대폰 번호 <strong>01012345678</strong> 입력 후<br />
+            인증번호 <strong>000000</strong>을 입력하세요.
+          </p>
+        </div>
+      )}
+
       {/* 휴대폰 번호 입력 */}
       <div className="flex gap-3">
         <input

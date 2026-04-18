@@ -11,7 +11,7 @@ interface User {
   nickname: string;
   email?: string;
   profileImage?: string;
-  provider: 'kakao' | 'google' | 'apple';
+  provider: 'kakao' | 'google' | 'apple' | 'email';
   accessToken: string;
   // 프로필 정보 추가
   birthDate?: string;
