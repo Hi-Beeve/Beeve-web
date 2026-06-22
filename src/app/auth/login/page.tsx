@@ -17,7 +17,6 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [emailLoading, setEmailLoading] = useState(false);
-  const [showEmailForm, setShowEmailForm] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -25,18 +24,18 @@ export default function LoginPage() {
     }
   }, [isAuthenticated, router]);
 
-  const validateEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+  const TEST_EMAIL = 'beeve.test@gmail.com';
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
-    if (!validateEmail(email)) {
-      setError('올바른 이메일 주소를 입력해주세요.');
+    if (email !== TEST_EMAIL) {
+      setError('등록된 이메일이 아닙니다.');
       return;
     }
-    if (password.length < 6) {
-      setError('비밀번호를 6자 이상 입력해주세요.');
+    if (password.length < 1) {
+      setError('비밀번호를 입력해주세요.');
       return;
     }
 
@@ -115,46 +114,37 @@ export default function LoginPage() {
           <div className="flex-1 h-px bg-gray-600" />
         </div>
 
-        {/* 이메일 로그인 토글 */}
-        {!showEmailForm ? (
+        {/* 이메일 로그인 폼 */}
+        <form onSubmit={handleEmailLogin} className="space-y-3">
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => { setEmail(e.target.value); setError(''); }}
+            placeholder="이메일"
+            autoComplete="email"
+            className="w-full px-4 py-3 bg-gray-700 text-white placeholder-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+          />
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => { setPassword(e.target.value); setError(''); }}
+            placeholder="비밀번호"
+            autoComplete="current-password"
+            className="w-full px-4 py-3 bg-gray-700 text-white placeholder-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+          />
           <button
-            onClick={() => setShowEmailForm(true)}
-            className="w-full py-3 text-gray-400 hover:text-white text-sm transition-colors border border-gray-600 rounded-lg hover:border-gray-400"
+            type="submit"
+            disabled={emailLoading}
+            className="w-full py-3 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
           >
-            이메일로 로그인
+            {emailLoading ? (
+              <span className="flex items-center justify-center gap-2">
+                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                로그인 중...
+              </span>
+            ) : '로그인'}
           </button>
-        ) : (
-          <form onSubmit={handleEmailLogin} className="space-y-3">
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => { setEmail(e.target.value); setError(''); }}
-              placeholder="이메일"
-              autoComplete="email"
-              className="w-full px-4 py-3 bg-gray-700 text-white placeholder-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
-            />
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => { setPassword(e.target.value); setError(''); }}
-              placeholder="비밀번호"
-              autoComplete="current-password"
-              className="w-full px-4 py-3 bg-gray-700 text-white placeholder-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
-            />
-            <button
-              type="submit"
-              disabled={emailLoading}
-              className="w-full py-3 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-            >
-              {emailLoading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  로그인 중...
-                </span>
-              ) : '로그인'}
-            </button>
-          </form>
-        )}
+        </form>
 
         {/* 추가 정보 */}
         <div className="mt-8 text-center">
