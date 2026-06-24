@@ -19,7 +19,7 @@ export default function LoginPage() {
     }
   }, [isAuthenticated, router]);
 
-  const TEST_EMAIL = 'beeve.test@gmail.com';
+  const TEST_EMAIL = 'beeve@gmail.com';
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
