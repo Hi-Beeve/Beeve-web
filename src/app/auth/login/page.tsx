@@ -3,17 +3,12 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
-import { KakaoLoginButton } from '@/components/kakao-login-button';
-import { GoogleLoginButton } from '@/components/google-login-button';
-import { AppleLoginButton } from '@/components/apple-login-button';
 import { emailLoginApi } from '@/api/auth/auth.api';
 
 export default function LoginPage() {
   const router = useRouter();
   const { isAuthenticated, login } = useAuth();
   const [error, setError] = useState<string>('');
-
-  // 이메일 폼 상태
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [emailLoading, setEmailLoading] = useState(false);
@@ -31,11 +26,11 @@ export default function LoginPage() {
     setError('');
 
     if (email !== TEST_EMAIL) {
-      setError('등록된 이메일이 아닙니다.');
+      setError('This email is not registered.');
       return;
     }
     if (password.length < 1) {
-      setError('비밀번호를 입력해주세요.');
+      setError('Please enter your password.');
       return;
     }
 
@@ -59,9 +54,9 @@ export default function LoginPage() {
     } catch (err: any) {
       const code = err?.response?.data?.code;
       if (code === 'AUTH301') {
-        setError('이메일 또는 비밀번호를 확인해주세요.');
+        setError('Incorrect email or password.');
       } else {
-        setError('로그인에 실패했습니다. 다시 시도해주세요.');
+        setError('Login failed. Please try again.');
       }
     } finally {
       setEmailLoading(false);
@@ -73,7 +68,7 @@ export default function LoginPage() {
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-white">메인 페이지로 이동 중...</p>
+          <p className="text-white">Redirecting...</p>
         </div>
       </div>
     );
@@ -85,7 +80,6 @@ export default function LoginPage() {
         {/* 헤더 */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-white mb-2">Beeve</h1>
-          <p className="text-gray-400">운동 측정 앱에 오신 것을 환영합니다</p>
         </div>
 
         {/* 에러 메시지 */}
@@ -100,27 +94,13 @@ export default function LoginPage() {
           </div>
         )}
 
-        {/* 소셜 로그인 버튼 */}
-        <div className="space-y-4">
-          <KakaoLoginButton />
-          <GoogleLoginButton />
-          <AppleLoginButton />
-        </div>
-
-        {/* 구분선 */}
-        <div className="flex items-center gap-3 my-6">
-          <div className="flex-1 h-px bg-gray-600" />
-          <span className="text-gray-500 text-sm">또는</span>
-          <div className="flex-1 h-px bg-gray-600" />
-        </div>
-
         {/* 이메일 로그인 폼 */}
         <form onSubmit={handleEmailLogin} className="space-y-3">
           <input
             type="email"
             value={email}
             onChange={(e) => { setEmail(e.target.value); setError(''); }}
-            placeholder="이메일"
+            placeholder="Email"
             autoComplete="email"
             className="w-full px-4 py-3 bg-gray-700 text-white placeholder-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
           />
@@ -128,7 +108,7 @@ export default function LoginPage() {
             type="password"
             value={password}
             onChange={(e) => { setPassword(e.target.value); setError(''); }}
-            placeholder="비밀번호"
+            placeholder="Password"
             autoComplete="current-password"
             className="w-full px-4 py-3 bg-gray-700 text-white placeholder-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
           />
@@ -140,19 +120,11 @@ export default function LoginPage() {
             {emailLoading ? (
               <span className="flex items-center justify-center gap-2">
                 <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                로그인 중...
+                Signing in...
               </span>
-            ) : '로그인'}
+            ) : 'Sign in'}
           </button>
         </form>
-
-        {/* 추가 정보 */}
-        <div className="mt-8 text-center">
-          <p className="text-gray-500 text-sm">
-            로그인하면 개인 운동 기록을 저장하고<br />
-            맞춤형 운동 분석을 받을 수 있습니다.
-          </p>
-        </div>
 
         {/* 뒤로가기 버튼 */}
         <div className="mt-6 text-center">
@@ -160,7 +132,7 @@ export default function LoginPage() {
             onClick={() => router.back()}
             className="text-gray-400 hover:text-white transition-colors text-sm"
           >
-            ← 뒤로가기
+            ← Back
           </button>
         </div>
       </div>

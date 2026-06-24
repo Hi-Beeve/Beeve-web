@@ -82,7 +82,7 @@ const SignInGroup = () => {
         href="/auth/login"
         className="text-center text-sm text-gray-400 hover:text-gray-200 transition-colors py-2"
       >
-        이메일로 로그인
+        Sign in with Email
       </Link>
     </div>
   );
