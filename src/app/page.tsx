@@ -6,6 +6,7 @@ import apple_icon from '../../public/apple_icon.svg';
 import splash from '../../public/splash_logo.svg';
 import Image from 'next/image';
 import { useState } from 'react';
+import Link from 'next/link';
 import { getKakaoLoginUrl } from '@/lib/kakao-auth';
 import { getGoogleLoginUrl } from '@/lib/google-auth';
 import { getAppleLoginUrl } from '@/lib/apple-auth';
@@ -77,6 +78,12 @@ const SignInGroup = () => {
         onClick={handleKakaoLogin}
         isLoading={isLoading === 'kakao'}
       />
+      <Link
+        href="/auth/login"
+        className="text-center text-sm text-gray-400 hover:text-gray-200 transition-colors py-2"
+      >
+        이메일로 로그인
+      </Link>
     </div>
   );
 };
