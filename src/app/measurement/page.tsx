@@ -257,13 +257,13 @@ export default function MeasurementPage() {
         )}
       </div>
 
-      {/* 🧪 개발용: 임의 데이터 채우기 버튼 */}
+      {/* 심사용: 임의 데이터 채우기 버튼 */}
       <div className="px-4 mb-4">
         <button
           className="w-full h-10 rounded-lg border-2 border-dashed border-orange-400 text-orange-500 text-sm font-medium"
           onClick={fillMockData}
         >
-          🧪 임의 측정 데이터 채우기 (개발용)
+          Fill with test data (for review)
         </button>
       </div>
 
