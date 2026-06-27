@@ -10,7 +10,19 @@ export type ProfileResponse = {
         weight: number;
         bmi: number;
         profileUrl: string;
+        aiConsent: boolean;
     };
+}
+
+// AI 동의 상태 변경 PATCH /member/ai-consent
+export type AiConsentRequest = {
+  aiConsent: boolean;
+}
+
+export type AiConsentResponse = {
+  isSuccess: boolean;
+  code: string;
+  data: { aiConsent: boolean };
 }
 
 export type ProfileResponseData = ProfileResponse['data'];

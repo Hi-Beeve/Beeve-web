@@ -8,8 +8,11 @@ import FitnessIcon from "../../../public/fitness.svg";
 import ArrowIcon from "../../../public/arrow_right.svg";
 import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
+import { useUpdateAiConsent } from "@/api/mypage/useMypage";
 
 export const ProfileCard = ({ data }: { data: ProfileResponseData }) => {
+    const { updateAiConsent, isPending } = useUpdateAiConsent();
+
     const onClickProfile = () => {
         window.location.href = '/mypage/edit';
     }
@@ -18,10 +21,25 @@ export const ProfileCard = ({ data }: { data: ProfileResponseData }) => {
     }
     return (
         <GrayCard className="flex flex-col items-start gap-5 py-5 px-4 w-full rounded-[20px]">
-                <TitleWithIcon title="프로필 수정" icon={ProfileIcon} onClick={onClickProfile} />
-            <div className="h-[1px] w-full bg-[#D9D9D9]"> </div>
-                <TitleWithIcon title="운동정보 수정" icon={FitnessIcon} onClick={onClickFitnessEdit} />
-            <div className="h-[1px] w-full bg-[#D9D9D9]"> </div>
+            <TitleWithIcon title="프로필 수정" icon={ProfileIcon} onClick={onClickProfile} />
+            <div className="h-[1px] w-full bg-[#D9D9D9]" />
+            <TitleWithIcon title="운동정보 수정" icon={FitnessIcon} onClick={onClickFitnessEdit} />
+            <div className="h-[1px] w-full bg-[#D9D9D9]" />
+            <div className="flex justify-between items-center w-full">
+                <p className={FONT_STYLES.body2}>AI 서비스 정보 제공 동의</p>
+                <button
+                    onClick={() => updateAiConsent(!data.aiConsent)}
+                    disabled={isPending}
+                    className={`relative w-12 h-6 rounded-full transition-colors duration-200 ${
+                        data.aiConsent ? 'bg-[#BDB2DD]' : 'bg-gray-300'
+                    }`}
+                >
+                    <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${
+                        data.aiConsent ? 'translate-x-6' : 'translate-x-0'
+                    }`} />
+                </button>
+            </div>
+            <div className="h-[1px] w-full bg-[#D9D9D9]" />
             <BMI bmi={data.bmi.toString()} />
         </GrayCard>
     );

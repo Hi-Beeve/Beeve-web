@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useProfileQuery, useUpdateProfileQuery } from "./queries";
+import { useProfileQuery, useUpdateProfileQuery, useAiConsentMutation } from "./queries";
 import { useAuth } from "@/contexts/auth-context";
 
 export const useMember = () => {
@@ -47,5 +47,14 @@ export const useUpdateProfile = () => {
   return {
     ...mutation,
     updateProfile: mutation.mutate,
+  };
+};
+
+export const useUpdateAiConsent = () => {
+  const mutation = useAiConsentMutation();
+
+  return {
+    ...mutation,
+    updateAiConsent: (aiConsent: boolean) => mutation.mutate({ aiConsent }),
   };
 };
