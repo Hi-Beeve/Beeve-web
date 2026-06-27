@@ -79,7 +79,7 @@ export const AppInfoCard = () => {
         // TODO : 이용약관 페이지로 이동
     }
     const onClickPrivacyPolicy = () => {
-        // TODO : 개인정보 처리방침 페이지로 이동
+        window.location.href = '/privacy';
     }
     const onClickOpenSource = () => {
         // TODO : 오픈소스 라이센스 페이지로 이동
