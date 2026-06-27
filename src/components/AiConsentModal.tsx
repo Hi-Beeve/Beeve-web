@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect } from 'react';
 import { useUpdateAiConsent } from '@/api/mypage/useMypage';
 
 interface AiConsentModalProps {
@@ -9,12 +9,14 @@ interface AiConsentModalProps {
 }
 
 export function AiConsentModal({ onConsent, onCancel }: AiConsentModalProps) {
-  const { updateAiConsent, isPending } = useUpdateAiConsent();
+  const { updateAiConsent, isPending, isSuccess } = useUpdateAiConsent();
+
+  useEffect(() => {
+    if (isSuccess) onConsent();
+  }, [isSuccess]);
 
   const handleConsent = () => {
-    updateAiConsent(true, {
-      onSuccess: () => onConsent(),
-    });
+    updateAiConsent(true);
   };
 
   return (
