@@ -65,6 +65,14 @@ instance.interceptors.response.use(
       return Promise.reject(error);
     }
 
+    // AUTH104: 탈퇴된 사용자의 토큰 → 즉시 강제 로그아웃
+    if (error.response?.data?.code === ERROR_CODES.AUTH_TOKEN_REQUIRED) {
+      console.log('⚠️ Withdrawn user token detected - forcing logout');
+      clearAuthStorage();
+      window.location.href = '/';
+      return Promise.reject(error);
+    }
+
     // AUTH102 응답 처리 (토큰 만료) - race condition 방지 처리 포함
     if (error.response?.data?.code === ERROR_CODES.AUTH_TOKEN_EXPIRED && !originalRequest._retry) {
       // 이미 refresh 중이면 대기열에 추가

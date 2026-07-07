@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from "react";
 import { FONT_COLORS, FONT_STYLES } from "@/styles/fontStyles";
 import { ProfileResponseData } from "@/types/mypage";
 import Image from "next/image";
@@ -8,7 +9,7 @@ import FitnessIcon from "../../../public/fitness.svg";
 import ArrowIcon from "../../../public/arrow_right.svg";
 import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
-import { useUpdateAiConsent } from "@/api/mypage/useMypage";
+import { useUpdateAiConsent, useWithdraw } from "@/api/mypage/useMypage";
 
 export const ProfileCard = ({ data }: { data: ProfileResponseData }) => {
     const { updateAiConsent, isPending } = useUpdateAiConsent();
@@ -106,25 +107,79 @@ export const AppInfoCard = () => {
 export const MemberLogout = () => {
     const { logout } = useAuth();
     const router = useRouter();
+    const { withdraw, isPending } = useWithdraw();
+    const [showConfirm, setShowConfirm] = useState(false);
 
     const onClickLogout = () => {
-        // 로컬 사용자 데이터 삭제
         logout();
-        // 메인 페이지로 이동
         router.push('/');
-    }
+    };
 
     const onClickWithdrawal = () => {
-        // TODO : 회원탈퇴
-    }
+        setShowConfirm(true);
+    };
 
-    return(
-        <div className="flex w-full justify-center gap-4 text-[#767676] gap-4 text-[11px]">
-         <div onClick={onClickLogout} className="cursor-pointer">로그아웃</div>
-         <div className="w-[1px] h-[14px] bg-[#767676]"></div>
-        <div onClick={onClickWithdrawal} className="cursor-pointer">회원탈퇴</div>
-        </div>
-    )
+    const onConfirmWithdrawal = async () => {
+        try {
+            await withdraw();
+            logout();
+            router.push('/');
+        } catch (err) {
+            console.error('회원탈퇴 실패:', err);
+            setShowConfirm(false);
+        }
+    };
+
+    return (
+        <>
+            <div className="flex w-full justify-center gap-4 text-[#767676] text-[11px]">
+                <button
+                    type="button"
+                    onClick={onClickLogout}
+                    className="cursor-pointer min-h-[44px] min-w-[44px] flex items-center"
+                >
+                    로그아웃
+                </button>
+                <div className="w-[1px] h-[14px] bg-[#767676] self-center" />
+                <button
+                    type="button"
+                    onClick={onClickWithdrawal}
+                    className="cursor-pointer min-h-[44px] min-w-[44px] flex items-center"
+                >
+                    회원탈퇴
+                </button>
+            </div>
+
+            {showConfirm && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl p-6 max-w-sm w-full mx-4">
+                        <h2 className={`${FONT_STYLES.heading3} text-center mb-3`}>회원탈퇴</h2>
+                        <p className="text-gray-600 text-center text-sm mb-6">
+                            탈퇴하면 모든 데이터가 삭제되며 복구할 수 없습니다. 정말 탈퇴하시겠습니까?
+                        </p>
+                        <div className="flex gap-3">
+                            <button
+                                type="button"
+                                onClick={() => setShowConfirm(false)}
+                                disabled={isPending}
+                                className="flex-1 bg-gray-200 hover:bg-gray-300 disabled:bg-gray-100 text-gray-700 font-semibold py-3 rounded-lg transition-colors"
+                            >
+                                취소
+                            </button>
+                            <button
+                                type="button"
+                                onClick={onConfirmWithdrawal}
+                                disabled={isPending}
+                                className="flex-1 bg-red-500 hover:bg-red-600 disabled:bg-red-300 text-white font-semibold py-3 rounded-lg transition-colors"
+                            >
+                                {isPending ? '처리 중...' : '탈퇴하기'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </>
+    );
 }
 export const BMI = ({bmi}: {bmi: string}) => {
     const bmiValue = parseFloat(bmi);

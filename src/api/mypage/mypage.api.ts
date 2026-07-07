@@ -22,3 +22,8 @@ export const updateAiConsentApi = async (params: AiConsentRequest): Promise<AiCo
   const response = await instance.patch<AiConsentResponse>('/member/ai-consent', params);
   return response.data;
 };
+
+// 회원탈퇴 API
+export const withdrawMemberApi = async (): Promise<void> => {
+  await instance.delete('/member');
+};

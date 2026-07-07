@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getProfileApi, updateProfileApi, updateAiConsentApi } from "./mypage.api";
+import { getProfileApi, updateProfileApi, updateAiConsentApi, withdrawMemberApi } from "./mypage.api";
 
 export const mypageQueryKeys = {
   all: ['mypage'] as const,
@@ -25,5 +25,11 @@ export const useAiConsentMutation = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: mypageQueryKeys.all });
     },
+  });
+};
+
+export const useWithdrawMutation = () => {
+  return useMutation({
+    mutationFn: withdrawMemberApi,
   });
 };
