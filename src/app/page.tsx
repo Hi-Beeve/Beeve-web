@@ -13,10 +13,13 @@ import { getAppleLoginUrl } from '@/lib/apple-auth';
 
 export default function Home() {
   return (
-    <div className="flex flex-col items-center justify-center h-screen w-full py-5 pb-20">
-      <Image src={splash} alt="splash" width={170} height={100} />
+    <div className="flex flex-col items-center h-screen w-full py-5 pb-10">
+      <div className="flex-1 flex items-center justify-center">
+        <Image src={splash} alt="splash" width={170} height={100} />
+      </div>
       <SignInGroup />
-    </div>  );
+    </div>
+  );
 }
 
 const SignInGroup = () => {
@@ -56,7 +59,7 @@ const SignInGroup = () => {
   };
 
   return (
-    <div className="absolute bottom-10 w-full px-5 flex flex-col gap-3">
+    <div className="w-full px-5 flex flex-col gap-3">
       <SignInTag
         icon={apple_icon}
         text="애플"
