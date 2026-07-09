@@ -238,7 +238,7 @@ function AdditionalInfoContent() {
   const stepInfo = getStepInfo();
 
   return (
-    <div className="min-h-screen flex items-start justify-center p-5">
+    <div className="min-h-screen flex items-start justify-center p-5 pb-10">
       <div className="rounded-lg max-w-md w-full">
         {/* 진행 상황 표시 */}
         <ProgressBar stepInfo={stepInfo} />
@@ -341,7 +341,7 @@ function AdditionalInfoContent() {
         </div>
         
         {/* 네비게이션 버튼들 */}
-        <div className="flex gap-4 fixed bottom-4 left-5 right-5 h-[56px]">
+        <div className="flex gap-4 mt-6 h-[56px]">
           {currentStep !== 'gender' && (
             <button
               type="button"
