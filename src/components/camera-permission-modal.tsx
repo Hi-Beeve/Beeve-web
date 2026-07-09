@@ -36,8 +36,13 @@ export function CameraPermissionModal({
   };
 
   const openSettings = () => {
-    // iOS Safari: 설정 앱으로 직접 이동하는 딥링크
-    window.location.href = 'app-settings:';
+    // window.location.href 대신 anchor click 사용
+    // WebView 페이지 이동 없이 OS 레벨에서 딥링크 처리 유도
+    const a = document.createElement('a');
+    a.href = 'app-settings:';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   };
 
   if (!isOpen) return null;
