@@ -20,8 +20,6 @@ const nextConfig = {
     unoptimized: false,
   },
 
-  turbopack: {},
-
   webpack: (config) => {
     config.resolve.fallback = {
       ...config.resolve.fallback,
