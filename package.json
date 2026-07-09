@@ -4,10 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev -H localhost",
-    "build": "next build --webpack",
+    "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "build:vercel": "next build --webpack",
+    "build:vercel": "next build",
     "preview": "next build && next start",
     "type-check": "tsc --noEmit",
     "deploy": "vercel --prod",
