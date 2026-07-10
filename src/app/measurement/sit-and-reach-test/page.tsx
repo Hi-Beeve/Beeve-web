@@ -1,10 +1,12 @@
 'use client';
+import { useRouter } from 'next/navigation';
 import { BackHeader } from '@/components/common/BackHeader';
 import { SitAndReachWall } from '@/components/sit-and-reach-wall';
 
 export default function SitAndReachTestPage() {
+  const router = useRouter();
   const onBack = () => {
-    window.history.back();
+    router.push('/measurement');
   }
   return (
     <div className="min-h-screen ">

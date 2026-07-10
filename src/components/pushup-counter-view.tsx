@@ -1,6 +1,6 @@
 'use client';
 
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { PushupType } from '@/types/pushup';
 import { PushupDetector } from '@/components/pushup-counter';
 import { PushupTypeSelector } from '@/components/pushup-type-selector';
@@ -8,9 +8,10 @@ import { BackHeader } from './common/BackHeader';
 
 export default function PushupCounterView() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const type = searchParams.get('type');
   const handleClickBack = () => {
-    window.history.back();
+    router.push('/measurement');
   }
   return (
     <div className="relative">
