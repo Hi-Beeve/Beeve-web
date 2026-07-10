@@ -5,6 +5,7 @@ import Cookies from 'js-cookie';
 import { KakaoUser } from '@/lib/kakao-auth';
 import { GoogleUser } from '@/lib/google-auth';
 import type { NativeLoginData } from '@/lib/app-bridge';
+import { registerBridgeHandlers, unregisterBridgeHandlers, notifyNativeLogout } from '@/lib/app-bridge';
 
 interface User {
   id: string;
@@ -90,52 +91,63 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     Cookies.remove(AUTH_COOKIE_KEY);
     Cookies.remove(TOKEN_COOKIE_KEY);
     console.log('🧹 Cookies cleared');
+
+    // Flutter 앱에 웹 로그아웃 이벤트 전달 (앱이 네이티브 토큰 삭제)
+    notifyNativeLogout();
   }, []);
 
   // Flutter WebView AppBridge 등록
+  // window.AppBridge는 app-bridge.ts 모듈 로드 시점(React 마운트 전)에 이미 초기화됨.
+  // 여기서는 실제 핸들러를 붙이고, 모듈이 큐에 보관한 이벤트를 소진시킴.
   useEffect(() => {
-    window.AppBridge = {
-      onLoginSuccess: (data: NativeLoginData) => {
-        try {
-          if (!data.accessToken || !data.refreshToken || !data.providerUserId || !data.name || !data.provider) {
-            console.error('[AppBridge] onLoginSuccess: 필수 필드 누락', data);
-            return;
-          }
+    const handleLogin = (data: NativeLoginData) => {
+      try {
+        if (!data.accessToken || !data.refreshToken || !data.providerUserId || !data.name || !data.provider) {
+          console.error('[AppBridge] onLoginSuccess: 필수 필드 누락', data);
+          return;
+        }
 
-          // http(s)://로 시작하지 않으면 프로필 이미지 무시
-          const profileImage = data.profileUrl?.startsWith('http') ? data.profileUrl : undefined;
+        // http(s)://로 시작하지 않으면 프로필 이미지 무시
+        const profileImage = data.profileUrl?.startsWith('http') ? data.profileUrl : undefined;
 
-          // authToken/refreshToken은 login()이 저장하지 않으므로 별도 저장
-          localStorage.setItem('authToken', data.accessToken);
-          localStorage.setItem('refreshToken', data.refreshToken);
+        // authToken/refreshToken은 login()이 저장하지 않으므로 별도 저장
+        localStorage.setItem('authToken', data.accessToken);
+        localStorage.setItem('refreshToken', data.refreshToken);
 
-          // React 상태 업데이트 (login()이 userData를 localStorage에 저장)
-          login({
-            id: data.providerUserId,
-            nickname: data.name,
-            email: data.email,
-            profileImage,
-            provider: data.provider,
-            accessToken: data.accessToken,
-          });
+        // React 상태 업데이트 (login()이 userData를 localStorage에 저장)
+        login({
+          id: data.providerUserId,
+          nickname: data.name,
+          email: data.email,
+          profileImage,
+          provider: data.provider,
+          accessToken: data.accessToken,
+        });
 
+        // 루트(/)에 있을 때만 /hex로 이동.
+        // 콜드 재시작 자동 로그인 시 / → /hex 이동,
+        // 이미 다른 페이지에 있는 경우(토큰 재주입)에는 이동하지 않음.
+        if (window.location.pathname === '/') {
           window.location.href = '/hex';
-        } catch (error) {
-          console.error('[AppBridge] onLoginSuccess 처리 중 오류:', error);
         }
-      },
-      onLogout: () => {
-        try {
-          logout();
-          window.location.href = '/';
-        } catch (error) {
-          console.error('[AppBridge] onLogout 처리 중 오류:', error);
-        }
-      },
+      } catch (error) {
+        console.error('[AppBridge] onLoginSuccess 처리 중 오류:', error);
+      }
     };
 
+    const handleLogout = () => {
+      try {
+        logout();
+        window.location.href = '/';
+      } catch (error) {
+        console.error('[AppBridge] onLogout 처리 중 오류:', error);
+      }
+    };
+
+    registerBridgeHandlers(handleLogin, handleLogout);
+
     return () => {
-      delete window.AppBridge;
+      unregisterBridgeHandlers();
     };
   }, [login, logout]);
 
