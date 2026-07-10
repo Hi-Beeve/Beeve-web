@@ -11,10 +11,11 @@
 export interface NativeLoginData {
   accessToken: string;
   refreshToken: string;
-  name: string;
-  profileUrl?: string;
-  providerUserId: string;
-  email?: string;
+  // 최초 로그인 시 채워짐, 세션 복구(콜드 재시작) 시 null
+  name: string | null;
+  profileUrl?: string | null;
+  providerUserId: string | null;
+  email?: string | null;
   provider: 'kakao' | 'google' | 'apple';
 }
 

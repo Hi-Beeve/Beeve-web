@@ -36,13 +36,9 @@ export function CameraPermissionModal({
   };
 
   const openSettings = () => {
-    // window.location.href 대신 anchor click 사용
-    // WebView 페이지 이동 없이 OS 레벨에서 딥링크 처리 유도
-    const a = document.createElement('a');
-    a.href = 'app-settings:';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    // Flutter 앱이 NavigationDelegate에서 app-settings: URL을 가로채 iOS 설정 앱을 열고
+    // WebView 자체는 이동 없이 그대로 유지함 (앱팀 확인)
+    window.location.href = 'app-settings:';
   };
 
   if (!isOpen) return null;

@@ -102,27 +102,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const handleLogin = (data: NativeLoginData) => {
       try {
-        if (!data.accessToken || !data.refreshToken || !data.providerUserId || !data.name || !data.provider) {
-          console.error('[AppBridge] onLoginSuccess: 필수 필드 누락', data);
+        // accessToken, refreshToken만 필수 (세션 복구 시 name 등은 null)
+        if (!data.accessToken || !data.refreshToken) {
+          console.error('[AppBridge] onLoginSuccess: 토큰 누락', data);
           return;
         }
 
-        // http(s)://로 시작하지 않으면 프로필 이미지 무시
-        const profileImage = data.profileUrl?.startsWith('http') ? data.profileUrl : undefined;
-
-        // authToken/refreshToken은 login()이 저장하지 않으므로 별도 저장
         localStorage.setItem('authToken', data.accessToken);
         localStorage.setItem('refreshToken', data.refreshToken);
 
-        // React 상태 업데이트 (login()이 userData를 localStorage에 저장)
-        login({
-          id: data.providerUserId,
-          nickname: data.name,
-          email: data.email,
-          profileImage,
-          provider: data.provider,
-          accessToken: data.accessToken,
-        });
+        const isSessionRecovery = !data.name || !data.providerUserId;
+
+        if (isSessionRecovery) {
+          // 세션 복구: 프로필 정보 없음 → 기존 저장된 userData로 상태 복원
+          const savedUser = localStorage.getItem('userData');
+          if (savedUser) {
+            const parsedUser = JSON.parse(savedUser);
+            login({ ...parsedUser, accessToken: data.accessToken });
+            console.log('[AppBridge] 세션 복구 완료 (기존 userData 사용)');
+          } else {
+            // 저장된 사용자 정보도 없음 → 토큰만 갱신, 각 페이지에서 API 호출로 처리
+            console.warn('[AppBridge] 세션 복구: 저장된 사용자 정보 없음, 토큰만 갱신');
+          }
+        } else {
+          // 최초 로그인: 모든 필드 있음
+          const profileImage = data.profileUrl?.startsWith('http') ? data.profileUrl : undefined;
+          login({
+            id: data.providerUserId!,
+            nickname: data.name!,
+            email: data.email ?? undefined,
+            profileImage,
+            provider: data.provider,
+            accessToken: data.accessToken,
+          });
+        }
 
         // 루트(/)에 있을 때만 /hex로 이동.
         // 콜드 재시작 자동 로그인 시 / → /hex 이동,

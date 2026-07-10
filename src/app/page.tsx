@@ -5,13 +5,35 @@ import kakao_icon from '../../public/kakao_icon.svg';
 import apple_icon from '../../public/apple_icon.svg';
 import splash from '../../public/splash_logo.svg';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/auth-context';
 import { getKakaoLoginUrl } from '@/lib/kakao-auth';
 import { getGoogleLoginUrl } from '@/lib/google-auth';
 import { getAppleLoginUrl } from '@/lib/apple-auth';
 
 export default function Home() {
+  const { isAuthenticated, isLoading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      router.replace('/hex');
+    }
+  }, [isLoading, isAuthenticated, router]);
+
+  // 인증 확인 중 또는 이미 인증됨 → 로그인 버튼 노출 안 함 (깜빡임 방지)
+  if (isLoading || isAuthenticated) {
+    return (
+      <div className="flex flex-col items-center h-screen w-full py-5 pb-10">
+        <div className="flex-1 flex items-center justify-center">
+          <Image src={splash} alt="splash" width={170} height={100} />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col items-center h-screen w-full py-5 pb-10">
       <div className="flex-1 flex items-center justify-center">
