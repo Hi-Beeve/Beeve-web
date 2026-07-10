@@ -36,6 +36,12 @@ export function CameraPermissionModal({
   };
 
   const openSettings = () => {
+    // iOS가 설정 앱 전환 중 앱 프로세스를 종료할 수 있으므로,
+    // 돌아왔을 때 복원할 경로를 미리 저장 (5분 TTL)
+    localStorage.setItem(
+      'returnAfterSettings',
+      JSON.stringify({ path: window.location.pathname + window.location.search, ts: Date.now() })
+    );
     // Flutter 앱이 NavigationDelegate에서 app-settings: URL을 가로채 iOS 설정 앱을 열고
     // WebView 자체는 이동 없이 그대로 유지함 (앱팀 확인)
     window.location.href = 'app-settings:';

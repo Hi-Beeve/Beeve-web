@@ -137,10 +137,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           });
         }
 
-        // 루트(/)에 있을 때만 /hex로 이동.
-        // 콜드 재시작 자동 로그인 시 / → /hex 이동,
-        // 이미 다른 페이지에 있는 경우(토큰 재주입)에는 이동하지 않음.
+        // 루트(/)에 있을 때만 이동 (이미 다른 페이지에 있으면 이동 안 함)
         if (window.location.pathname === '/') {
+          // 카메라 설정 이동 전 저장한 경로가 있으면 복원 (5분 TTL)
+          const returnRaw = localStorage.getItem('returnAfterSettings');
+          if (returnRaw) {
+            try {
+              const { path, ts } = JSON.parse(returnRaw);
+              localStorage.removeItem('returnAfterSettings');
+              if (Date.now() - ts < 5 * 60 * 1000) {
+                window.location.href = path;
+                return;
+              }
+            } catch {
+              localStorage.removeItem('returnAfterSettings');
+            }
+          }
           window.location.href = '/hex';
         }
       } catch (error) {
