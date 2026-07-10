@@ -138,21 +138,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         // 루트(/)에 있을 때만 이동 (이미 다른 페이지에 있으면 이동 안 함)
+        // returnAfterSettings 복원은 루트 페이지(page.tsx)의 isAuthenticated useEffect에서 처리
         if (window.location.pathname === '/') {
-          // 카메라 설정 이동 전 저장한 경로가 있으면 복원 (5분 TTL)
-          const returnRaw = localStorage.getItem('returnAfterSettings');
-          if (returnRaw) {
-            try {
-              const { path, ts } = JSON.parse(returnRaw);
-              localStorage.removeItem('returnAfterSettings');
-              if (Date.now() - ts < 5 * 60 * 1000) {
-                window.location.href = path;
-                return;
-              }
-            } catch {
-              localStorage.removeItem('returnAfterSettings');
-            }
-          }
           window.location.href = '/hex';
         }
       } catch (error) {
