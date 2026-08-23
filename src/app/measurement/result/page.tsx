@@ -1,10 +1,35 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import HexagonChart from "@/components/hexagon-chart";
+import FitnessMbtiCard from "@/components/fitness-mbti-card";
+import { FONT_STYLES } from "@/styles/fontStyles";
 import { useHex } from "@/api/hex/useHex";
 
-const HEXAGON_ORDER = ['STRENGTH', 'CARDIO', 'FLEXIBILITY', 'QUICKNESS', 'AGILITY', 'ENDURANCE'];
+const PAGE_BG = "#F8F7FB";
+
+async function shareResult() {
+  const shareData = {
+    title: "체력 MBTI",
+    text: "내 체력 MBTI 결과를 확인해보세요!",
+    url: window.location.href,
+  };
+
+  if (navigator.share) {
+    try {
+      await navigator.share(shareData);
+    } catch {
+      // 사용자가 공유를 취소한 경우 등은 무시
+    }
+    return;
+  }
+
+  try {
+    await navigator.clipboard.writeText(shareData.url);
+    alert("링크가 복사되었습니다.");
+  } catch {
+    // 클립보드 접근 실패는 무시
+  }
+}
 
 export default function MeasurementResultPage() {
   const router = useRouter();
@@ -15,7 +40,10 @@ export default function MeasurementResultPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ backgroundColor: PAGE_BG }}
+      >
         <p className="text-gray-500">결과를 불러오는 중...</p>
       </div>
     );
@@ -23,7 +51,10 @@ export default function MeasurementResultPage() {
 
   if (isError || !data) {
     return (
-      <div className="min-h-screen bg-white flex flex-col items-center justify-center gap-4 px-4">
+      <div
+        className="min-h-screen flex flex-col items-center justify-center gap-4 px-4"
+        style={{ backgroundColor: PAGE_BG }}
+      >
         <p className="text-gray-500">측정 결과를 불러올 수 없습니다.</p>
         <button
           className="h-12 px-6 rounded-[20px] font-medium bg-gray-200 text-gray-700"
@@ -35,38 +66,28 @@ export default function MeasurementResultPage() {
     );
   }
 
-  const hexDataArray = HEXAGON_ORDER.map(fitnessType => {
-    const item = data.fitness.find(f => f.fitnessType === fitnessType);
-    return item?.grade ?? 0;
-  });
-
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center px-4 py-8">
-      {/* 헤더 */}
-      <h1 className="text-2xl font-bold text-black mb-2">측정 완료!</h1>
-      <p className="text-sm text-gray-500 mb-8">
-        {new Date(data.measureDay).toLocaleDateString("ko-KR", {
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        })} 측정 결과
-      </p>
+    <div
+      className="min-h-screen flex flex-col items-center px-4 py-8"
+      style={{ backgroundColor: PAGE_BG }}
+    >
+      <h1 className={`${FONT_STYLES.heading5} mb-6`}>체력 MBTI</h1>
 
-      {/* 레이다 그래프 */}
-      <div className="mb-8">
-        <HexagonChart hexDataArray={hexDataArray} width={280} height={280} />
-      </div>
+      <FitnessMbtiCard fitness={data.fitness} />
 
       {/* 버튼 영역 */}
-      <div className="w-full max-w-sm space-y-3 mt-auto pb-8">
+      <div className="w-full flex gap-[15px] mt-auto pt-8">
         <button
-          className="w-full h-14 rounded-[20px] font-medium bg-[#BDB2DD] text-white"
-          onClick={() => router.push("/hex/recommend")}
+          className="flex-1 h-14 rounded-[18px] font-medium text-white flex items-center justify-center gap-2"
+          style={{ backgroundColor: "#BDB2DD" }}
+          onClick={shareResult}
         >
-          내 체력 맞춤 운동 추천받기
+          <img src="/share_mbti.svg" alt="" className="w-[13px] h-[15px]" />
+          친구와 공유하기
         </button>
         <button
-          className="w-full h-14 rounded-[20px] font-medium bg-gray-200 text-gray-700"
+          className="flex-1 h-14 rounded-[18px] font-medium text-white"
+          style={{ backgroundColor: "rgba(101, 101, 101, 0.8)" }}
           onClick={() => router.push("/hex")}
         >
           홈으로
