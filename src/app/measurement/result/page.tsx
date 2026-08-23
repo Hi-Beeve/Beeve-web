@@ -17,17 +17,19 @@ async function shareResult() {
   if (navigator.share) {
     try {
       await navigator.share(shareData);
-    } catch {
-      // 사용자가 공유를 취소한 경우 등은 무시
+      return;
+    } catch (err) {
+      if ((err as Error)?.name === "AbortError") return; // 사용자가 공유를 취소함
+      // navigator.share 실패 시 클립보드 복사로 폴백
     }
-    return;
   }
 
   try {
     await navigator.clipboard.writeText(shareData.url);
     alert("링크가 복사되었습니다.");
   } catch {
-    // 클립보드 접근 실패는 무시
+    // 클립보드 접근도 막혀있는 환경(WebView 등)의 최종 폴백: 링크를 직접 노출
+    alert(shareData.url);
   }
 }
 
@@ -71,7 +73,7 @@ export default function MeasurementResultPage() {
       className="min-h-screen flex flex-col items-center px-4 py-8"
       style={{ backgroundColor: PAGE_BG }}
     >
-      <h1 className={`${FONT_STYLES.heading5} mb-6`}>체력 MBTI</h1>
+      <h1 className={`w-full text-left ${FONT_STYLES.heading5} mb-6`}>체력 MBTI</h1>
 
       <FitnessMbtiCard fitness={data.fitness} />
 

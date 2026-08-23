@@ -20,7 +20,7 @@ export const FITNESS_MBTI_LIST: FitnessMbtiEntry[] = [
     strongestLabel: "근력",
     weakest: "ENDURANCE",
     weakestLabel: "근지구력",
-    animalName: "파워히어로 곰 🐻",
+    animalName: "파워히어로 곰",
     animalDescription: "한 방은 강하지만 지구력은 없어요",
     animalDescriptionBullets: [
       "한 방에 엄청난 힘을 발휘하지만 5분만 버티면 탈진하는 순간 파워 곰.",
@@ -34,7 +34,7 @@ export const FITNESS_MBTI_LIST: FitnessMbtiEntry[] = [
     strongestLabel: "근력",
     weakest: "CARDIO",
     weakestLabel: "심폐지구력",
-    animalName: "숨찬 고릴라 🦍",
+    animalName: "숨찬 고릴라",
     animalDescription: "힘은 세지만 조금만 움직여도 헥헥거려요",
     animalDescriptionBullets: [
       "헬스장에서 무거운 바벨을 번쩍 들어올리지만, 계단 3층만 올라가도 숨이 턱까지 차오르는 숨찬 고릴라.",
@@ -48,7 +48,7 @@ export const FITNESS_MBTI_LIST: FitnessMbtiEntry[] = [
     strongestLabel: "근력",
     weakest: "FLEXIBILITY",
     weakestLabel: "유연성",
-    animalName: "중량치는 뻣뻣 코끼리 🐘",
+    animalName: "중량치는 뻣뻣 코끼리",
     animalDescription: "힘은 엄청난데 몸이 뻣뻣해요",
     animalDescriptionBullets: [
       "중량 운동에서는 최강이지만 스트레칭만 하면 비명이 나오는 뻣뻣한 코끼리.",
@@ -62,7 +62,7 @@ export const FITNESS_MBTI_LIST: FitnessMbtiEntry[] = [
     strongestLabel: "근력",
     weakest: "QUICKNESS",
     weakestLabel: "순발력",
-    animalName: "느긋한 들소 🐃",
+    animalName: "느긋한 들소",
     animalDescription: "무게는 버티지만 반응이 느려요",
     animalDescriptionBullets: [
       "묵직한 힘으로 무거운 걸 버티지만 빠른 반응이 필요하면 당황하는 느린 들소.",
@@ -76,7 +76,7 @@ export const FITNESS_MBTI_LIST: FitnessMbtiEntry[] = [
     strongestLabel: "근력",
     weakest: "AGILITY",
     weakestLabel: "민첩성",
-    animalName: "우직한 걸음걸이 하마 🦛",
+    animalName: "우직한 걸음걸이 하마",
     animalDescription: "힘은 세지만 재빠르게 못 움직여요",
     animalDescriptionBullets: [
       "엄청난 힘으로 밀어붙이지만 방향 전환은 서툰 묵직한 하마.",
@@ -90,7 +90,7 @@ export const FITNESS_MBTI_LIST: FitnessMbtiEntry[] = [
     strongestLabel: "근지구력",
     weakest: "STRENGTH",
     weakestLabel: "근력",
-    animalName: "끈기가득 다람쥐 🐿️",
+    animalName: "끈기가득 다람쥐",
     animalDescription: "오래 버티지만 순간 파워는 약해요",
     animalDescriptionBullets: [
       "끈기 있게 오래오래 버티지만 순간 파워는 약한 끈기 다람쥐.",
@@ -104,7 +104,7 @@ export const FITNESS_MBTI_LIST: FitnessMbtiEntry[] = [
     strongestLabel: "근지구력",
     weakest: "CARDIO",
     weakestLabel: "심폐지구력",
-    animalName: "복근짱짱 개미 🐜",
+    animalName: "복근짱짱 개미",
     animalDescription: "버티기는 잘하는데 달리기는 힘들어요",
     animalDescriptionBullets: [
       "복근 운동은 100개도 가능하지만 달리기만 시작하면 금방 지치는 플랭크 개미.",
@@ -118,7 +118,7 @@ export const FITNESS_MBTI_LIST: FitnessMbtiEntry[] = [
     strongestLabel: "근지구력",
     weakest: "FLEXIBILITY",
     weakestLabel: "유연성",
-    animalName: "양철로봇 일개미 🐜",
+    animalName: "양철로봇 일개미",
     animalDescription: "열심히 일하지만 몸이 경직돼있어요",
     animalDescriptionBullets: [
       "플랭크 5분도 끄떡없지만 앞으로 몸 숙이기는 고문인 뻣뻣 일개미.",
@@ -132,7 +132,7 @@ export const FITNESS_MBTI_LIST: FitnessMbtiEntry[] = [
     strongestLabel: "근지구력",
     weakest: "QUICKNESS",
     weakestLabel: "순발력",
-    animalName: "한 발 느린 비버 🦫",
+    animalName: "한 발 느린 비버",
     animalDescription: "꾸준히 일하지만 반응은 느려요",
     animalDescriptionBullets: [
       "꾸준히 오래 버티는 건 잘하지만 빠른 반응은 어려운 느긋한 비버.",
@@ -146,7 +146,7 @@ export const FITNESS_MBTI_LIST: FitnessMbtiEntry[] = [
     strongestLabel: "근지구력",
     weakest: "AGILITY",
     weakestLabel: "민첩성",
-    animalName: "오래오래 걷는 두더지 🦔",
+    animalName: "오래오래 걷는 두더지",
     animalDescription: "끈기는 있지만 민첩하진 않아요",
     animalDescriptionBullets: [
       "묵묵히 오래 버티는 건 잘하지만 재빠른 움직임은 서툰 묵묵한 두더지.",
@@ -160,7 +160,7 @@ export const FITNESS_MBTI_LIST: FitnessMbtiEntry[] = [
     strongestLabel: "심폐지구력",
     weakest: "STRENGTH",
     weakestLabel: "근력",
-    animalName: "마라톤 끝판왕 사슴 🦌",
+    animalName: "마라톤 끝판왕 사슴",
     animalDescription: "끝없이 달리지만 힘은 약해요",
     animalDescriptionBullets: [
       "끝없이 달릴 수 있지만 무거운 물건만 보면 피하는 마라톤 사슴.",
@@ -174,7 +174,7 @@ export const FITNESS_MBTI_LIST: FitnessMbtiEntry[] = [
     strongestLabel: "심폐지구력",
     weakest: "ENDURANCE",
     weakestLabel: "근지구력",
-    animalName: "유산소만랩 토끼 🐰",
+    animalName: "유산소만랩 토끼",
     animalDescription: "달리기는 잘하지만 버티기는 못해요",
     animalDescriptionBullets: [
       "달리기는 끝도 없이 잘하지만 윗몸일으키기 10개면 포기하는 유산소 토끼.",
@@ -188,7 +188,7 @@ export const FITNESS_MBTI_LIST: FitnessMbtiEntry[] = [
     strongestLabel: "심폐지구력",
     weakest: "FLEXIBILITY",
     weakestLabel: "유연성",
-    animalName: "낭만여행가 뻣뻣 늑대 🐺",
+    animalName: "낭만여행가 뻣뻣 늑대",
     animalDescription: "오래 달리지만 몸이 뻣뻣해요",
     animalDescriptionBullets: [
       "10km를 거뜬히 달리지만 신발 끈 묶으려 허리 숙이면 비명이 나오는 뻣뻣 러너 공주.",
@@ -202,7 +202,7 @@ export const FITNESS_MBTI_LIST: FitnessMbtiEntry[] = [
     strongestLabel: "심폐지구력",
     weakest: "QUICKNESS",
     weakestLabel: "순발력",
-    animalName: "반응느린 능글여우 🦊",
+    animalName: "반응느린 능글여우",
     animalDescription: "장거리는 좋지만 순간 반응은 느려요",
     animalDescriptionBullets: [
       "마라톤은 완주하지만 100m 전력질주는 힘든 느긋한 여우.",
@@ -216,7 +216,7 @@ export const FITNESS_MBTI_LIST: FitnessMbtiEntry[] = [
     strongestLabel: "심폐지구력",
     weakest: "AGILITY",
     weakestLabel: "민첩성",
-    animalName: "당근에게 일편단심 말 🐴",
+    animalName: "당근에게 일편단심 말",
     animalDescription: "앞으로 달리기는 잘하지만 방향 전환은 서툴러요",
     animalDescriptionBullets: [
       "앞으로만 달리는 건 최고지만 지그재그는 어려운 직진 말.",
@@ -230,7 +230,7 @@ export const FITNESS_MBTI_LIST: FitnessMbtiEntry[] = [
     strongestLabel: "유연성",
     weakest: "STRENGTH",
     weakestLabel: "근력",
-    animalName: "말랑말랑 문어 🐙",
+    animalName: "말랑말랑 문어",
     animalDescription: "말랑말랑하지만 힘이 없어요",
     animalDescriptionBullets: [
       "몸은 부드럽게 휘어지지만 무거운 물건만 보면 도망가는 고무줄 공주.",
@@ -244,7 +244,7 @@ export const FITNESS_MBTI_LIST: FitnessMbtiEntry[] = [
     strongestLabel: "유연성",
     weakest: "ENDURANCE",
     weakestLabel: "근지구력",
-    animalName: "5분 요가 뱀 🐍",
+    animalName: "5분 요가 뱀",
     animalDescription: "유연하지만 오래 버티진 못해요",
     animalDescriptionBullets: [
       "요가 자세는 완벽하게 잡지만 5분만 버티면 포기하는 5분 뱀.",
@@ -258,7 +258,7 @@ export const FITNESS_MBTI_LIST: FitnessMbtiEntry[] = [
     strongestLabel: "유연성",
     weakest: "CARDIO",
     weakestLabel: "심폐지구력",
-    animalName: "숨찬 유연 고양이 🐱",
+    animalName: "숨찬 유연 고양이",
     animalDescription: "유연한데 조금만 뛰어도 힘들어요",
     animalDescriptionBullets: [
       "개다리 찢기는 완벽하지만 계단만 올라가도 숨차는 숨찬 고양이.",
@@ -272,7 +272,7 @@ export const FITNESS_MBTI_LIST: FitnessMbtiEntry[] = [
     strongestLabel: "유연성",
     weakest: "QUICKNESS",
     weakestLabel: "순발력",
-    animalName: "느긋한 젠틀 표범 🐆",
+    animalName: "느긋한 젠틀 표범",
     animalDescription: "몸은 유연한데 반응이 느려요",
     animalDescriptionBullets: [
       "몸은 부드럽게 휘어지지만 빠르게 반응하는 건 귀찮아하는 느긋한 고양이 공주.",
@@ -286,7 +286,7 @@ export const FITNESS_MBTI_LIST: FitnessMbtiEntry[] = [
     strongestLabel: "유연성",
     weakest: "AGILITY",
     weakestLabel: "민첩성",
-    animalName: "발레하는 팬더 🐼",
+    animalName: "발레하는 팬더",
     animalDescription: "유연하지만 민첩하진 않아요",
     animalDescriptionBullets: [
       "어떤 자세든 완벽하게 구부리지만 빠르게 움직이는 건 싫어하는 슬로우 팬더.",
@@ -300,7 +300,7 @@ export const FITNESS_MBTI_LIST: FitnessMbtiEntry[] = [
     strongestLabel: "순발력",
     weakest: "STRENGTH",
     weakestLabel: "근력",
-    animalName: "번개비행 참새 🐦",
+    animalName: "번개비행 참새",
     animalDescription: "반응은 빠르지만 힘이 약해요",
     animalDescriptionBullets: [
       "0.1초 만에 반응하지만 무거운 건 못 드는 번개 참새.",
@@ -314,7 +314,7 @@ export const FITNESS_MBTI_LIST: FitnessMbtiEntry[] = [
     strongestLabel: "순발력",
     weakest: "ENDURANCE",
     weakestLabel: "근지구력",
-    animalName: "전력질주 치타 🐆",
+    animalName: "전력질주 치타",
     animalDescription: "순간 스피드는 최고지만 금방 지쳐요",
     animalDescriptionBullets: [
       "출발선에서는 모두를 앞서지만 100m만 달리면 금방 지쳐버리는 단거리 치타.",
@@ -328,7 +328,7 @@ export const FITNESS_MBTI_LIST: FitnessMbtiEntry[] = [
     strongestLabel: "순발력",
     weakest: "CARDIO",
     weakestLabel: "심폐지구력",
-    animalName: "낚아채는 독수리 🦅",
+    animalName: "낚아채는 독수리",
     animalDescription: "처음 반응은 빠른데 오래 못 가요",
     animalDescriptionBullets: [
       "처음 5초는 번개처럼 빠르지만 그 뒤로는 지쳐버리는 5초 독수리.",
@@ -342,7 +342,7 @@ export const FITNESS_MBTI_LIST: FitnessMbtiEntry[] = [
     strongestLabel: "순발력",
     weakest: "FLEXIBILITY",
     weakestLabel: "유연성",
-    animalName: "부딪히는 매 🦅",
+    animalName: "부딪히는 매",
     animalDescription: "빠르지만 몸이 뻣뻣해요",
     animalDescriptionBullets: [
       "빠르게 질주하지만 몸 숙이기는 고문인 뻣뻣 매.",
@@ -355,7 +355,7 @@ export const FITNESS_MBTI_LIST: FitnessMbtiEntry[] = [
     strongestLabel: "순발력",
     weakest: "AGILITY",
     weakestLabel: "민첩성",
-    animalName: "직진 콘도르 🦅",
+    animalName: "직진 콘도르",
     animalDescription: "직선 비행은 빠른데 방향 전환은 느려요",
     animalDescriptionBullets: [
       "직선으로 날아가는 건 빠르지만 방향 전환은 느린 직진 콘도르.",
@@ -369,7 +369,7 @@ export const FITNESS_MBTI_LIST: FitnessMbtiEntry[] = [
     strongestLabel: "민첩성",
     weakest: "STRENGTH",
     weakestLabel: "근력",
-    animalName: "하늘하늘 나비 🦋",
+    animalName: "하늘하늘 나비",
     animalDescription: "재빠르지만 힘이 없어요",
     animalDescriptionBullets: [
       "재빠르게 이리저리 움직이지만 힘은 약한 나비 공주.",
@@ -383,7 +383,7 @@ export const FITNESS_MBTI_LIST: FitnessMbtiEntry[] = [
     strongestLabel: "민첩성",
     weakest: "ENDURANCE",
     weakestLabel: "근지구력",
-    animalName: "쏜살 벌새 🐦",
+    animalName: "쏜살 벌새",
     animalDescription: "민첩하지만 금방 지쳐요",
     animalDescriptionBullets: [
       "처음엔 재빠르게 움직이지만 5분만 지나면 지치는 5분 벌새.",
@@ -397,7 +397,7 @@ export const FITNESS_MBTI_LIST: FitnessMbtiEntry[] = [
     strongestLabel: "민첩성",
     weakest: "CARDIO",
     weakestLabel: "심폐지구력",
-    animalName: "의지박약 다람쥐 🐿️",
+    animalName: "의지박약 다람쥐",
     animalDescription: "재빠르게 움직이지만 오래 못해요",
     animalDescriptionBullets: [
       "재빠르게 이리저리 움직이지만 금방 숨차는 숨찬 다람쥐.",
@@ -411,7 +411,7 @@ export const FITNESS_MBTI_LIST: FitnessMbtiEntry[] = [
     strongestLabel: "민첩성",
     weakest: "FLEXIBILITY",
     weakestLabel: "유연성",
-    animalName: "뻣뻣 족제비 🦡",
+    animalName: "뻣뻣 족제비",
     animalDescription: "민첩한데 몸이 경직돼있어요",
     animalDescriptionBullets: [
       "빠르게 방향 전환하지만 몸은 뻣뻣한 뻣뻣 족제비.",
@@ -425,7 +425,7 @@ export const FITNESS_MBTI_LIST: FitnessMbtiEntry[] = [
     strongestLabel: "민첩성",
     weakest: "QUICKNESS",
     weakestLabel: "순발력",
-    animalName: "지그재그 원숭이 🐒",
+    animalName: "지그재그 원숭이",
     animalDescription: "방향 전환은 잘하는데 반응은 느려요",
     animalDescriptionBullets: [
       "좌우로 방향 전환은 잘하지만 순간 반응은 느린 지그재그 원숭이.",
@@ -439,7 +439,7 @@ export const FITNESS_MBTI_LIST: FitnessMbtiEntry[] = [
     strongestLabel: "근력",
     weakest: "STRENGTH",
     weakestLabel: "근력",
-    animalName: "완벽주의 사자 🦁",
+    animalName: "완벽주의 사자",
     animalDescription: "모든 면에서 힘이 넘치는 만능 동물이에요",
     animalDescriptionBullets: [
       "모든 면에서 힘이 넘치는 완벽한 사자 공주.",
@@ -453,7 +453,7 @@ export const FITNESS_MBTI_LIST: FitnessMbtiEntry[] = [
     strongestLabel: "근지구력",
     weakest: "ENDURANCE",
     weakestLabel: "근지구력",
-    animalName: "끝없는 음유시인 낙타 🐫",
+    animalName: "끝없는 음유시인 낙타",
     animalDescription: "사막을 횡단하는 지칠 줄 모르는 동물이에요",
     animalDescriptionBullets: [
       "지치지 않고 끝없이 버틸 수 있는 끝없는 낙타.",
@@ -467,7 +467,7 @@ export const FITNESS_MBTI_LIST: FitnessMbtiEntry[] = [
     strongestLabel: "심폐지구력",
     weakest: "CARDIO",
     weakestLabel: "심폐지구력",
-    animalName: "무한방랑자 늑대 🐺",
+    animalName: "무한방랑자 늑대",
     animalDescription: "끝없이 달릴 수 있는 스태미나의 왕이에요",
     animalDescriptionBullets: [
       "숨이 차는 걸 모르는 심폐 최강 무한 늑대.",
@@ -481,7 +481,7 @@ export const FITNESS_MBTI_LIST: FitnessMbtiEntry[] = [
     strongestLabel: "유연성",
     weakest: "FLEXIBILITY",
     weakestLabel: "유연성",
-    animalName: "흐르는 우아 고양이 🐱",
+    animalName: "흐르는 우아 고양이",
     animalDescription: "어떤 자세도 가능한 유연함의 끝판왕이에요",
     animalDescriptionBullets: [
       "몸의 모든 관절이 자유로운 요가의 여왕 완벽한 고양이.",
@@ -495,7 +495,7 @@ export const FITNESS_MBTI_LIST: FitnessMbtiEntry[] = [
     strongestLabel: "순발력",
     weakest: "QUICKNESS",
     weakestLabel: "순발력",
-    animalName: "우사인볼트 치타 🐆",
+    animalName: "우사인볼트 치타",
     animalDescription: "순간 스피드로는 누구도 따라올 수 없어요",
     animalDescriptionBullets: [
       "0.1초의 반응속도로 움직이는 번개 같은 최고 치타.",
@@ -509,7 +509,7 @@ export const FITNESS_MBTI_LIST: FitnessMbtiEntry[] = [
     strongestLabel: "민첩성",
     weakest: "AGILITY",
     weakestLabel: "민첩성",
-    animalName: "금메달 클라이머 원숭이 🐵",
+    animalName: "금메달 클라이머 원숭이",
     animalDescription: "나무에서 자유롭게 날아다니는 민첩함의 달인이에요",
     animalDescriptionBullets: [
       "어떤 방향으로도 자유자재로 움직이는 완벽한 원숭이.",

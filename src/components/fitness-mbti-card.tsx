@@ -21,10 +21,11 @@ export default function FitnessMbtiCard({ fitness }: FitnessMbtiCardProps) {
   return (
     <div className="w-full bg-white rounded-[24px] px-6 py-8 flex flex-col items-center">
       <h2 className={`${FONT_STYLES.heading4} text-center mb-6`}>
-        당신의 체력 MBTI는 {mbti.animalName}입니다!
+        당신의 체력 MBTI는{" "}
+        <span style={{ color: "#5A01A7" }}>{mbti.animalName}</span>입니다!
       </h2>
 
-      <HexagonCharacterChart fitness={fitness} width={220} height={220} />
+      <HexagonCharacterChart fitness={fitness} width={374} height={374} />
 
       <p className={`${FONT_STYLES.body6} text-center mt-6 mb-5`}>
         {mbti.animalName} 체력유형은...
