@@ -1,4 +1,5 @@
 import React from "react";
+import { useRouter } from "next/navigation";
 import HexagonChart from "@/components/hexagon-chart";
 import { FONT_COLORS, FONT_STYLES } from "@/styles/fontStyles";
 import { HEX_COLORS } from "./hex-colors";
@@ -28,7 +29,7 @@ export default function HexChartSection({ data, onDateClick }: HexChartSectionPr
 
   return (
     <section className="w-full flex flex-col items-center py-8" >
-      <HexTitle />
+      <HexTitle measureDay={data.measureDay} />
       <div className="my-0">
         <HexagonChart hexDataArray={hexDataArray} />
       </div>
@@ -37,11 +38,21 @@ export default function HexChartSection({ data, onDateClick }: HexChartSectionPr
   );
 }
 
-const HexTitle = () => {
+const HexTitle = ({ measureDay }: { measureDay: string }) => {
+  const router = useRouter();
+
   return (
     <div className="w-full flex flex-col pl-5">
       <p className={FONT_STYLES.body13} style={{  color: HEX_COLORS.hexLabel }}>체력측정 6각형</p>
-    <h2 className={FONT_STYLES.heading1} style={{ marginBottom: 8 }}>6-Data</h2>
+      <div className="flex items-center gap-2" style={{ marginBottom: 8 }}>
+        <h2 className={FONT_STYLES.heading1}>6-Data</h2>
+        <button
+          onClick={() => router.push(`/hex/mbti?date=${measureDay}`)}
+          aria-label="체력 MBTI 결과 보기"
+        >
+          <img src="/share.svg" alt="" className="w-5 h-5" />
+        </button>
+      </div>
     </div>
   )
 }
