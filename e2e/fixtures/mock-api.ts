@@ -107,6 +107,13 @@ export async function mockBackend(page: Page, options: MockOptions = {}) {
     requests: [] as RecordedRequest[],
   };
 
+  // dev 모드의 Next.js 개발 표시기(좌하단 N 버튼)가 하단 탭바 클릭을 가로막지 않도록 숨김
+  await page.addInitScript(() => {
+    const hide = () =>
+      document.querySelectorAll<HTMLElement>('nextjs-portal').forEach((el) => el.style.setProperty('display', 'none', 'important'));
+    new MutationObserver(hide).observe(document, { childList: true, subtree: true });
+  });
+
   // ---- 카카오 OAuth ----
   await page.route('https://kauth.kakao.com/oauth/authorize**', (route) =>
     route.fulfill({ status: 200, contentType: 'text/html', body: '<html><body>kakao-authorize-mock</body></html>' }),
